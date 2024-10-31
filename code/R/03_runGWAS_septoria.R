@@ -6,7 +6,7 @@ load("data/septoria_data.Rdata")
 
 for(i in 1:5){
   new_dir <- paste0("outputs/GWAS_PC", i)
-  dir.create(new_dir)
+  dir.create(new_dir, recursive = T)
   setwd(new_dir)
   tmp <- capture.output({
     scores <- GAPIT(Y = BLUPs_df,
