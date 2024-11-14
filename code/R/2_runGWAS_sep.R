@@ -7,7 +7,7 @@ dim(septoria_pheno); dim(septoria_geno); dim(septoria_map); dim(septoria_kinship
 str(septoria_pheno); str(septoria_geno[1:5, 1:5]); str(septoria_map); str(septoria_kinship[1:5, 1:5])
 
 # Retrieve iteration ID from SLURM
-#iter <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
+iter <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 dir <- paste0("outputs/GWAS_sep/PC_", iter)
 if (!dir.exists(dir)) dir.create(dir, recursive = TRUE)
 setwd(dir)
