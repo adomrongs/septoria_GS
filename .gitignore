@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# vcf file
+data/septoria_ale_clean.vcf.gz
