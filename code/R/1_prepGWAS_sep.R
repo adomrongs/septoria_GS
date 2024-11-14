@@ -23,17 +23,17 @@ pos <- sapply(strsplit(marker_names, "_"), function(x) x[[3]])
 
 new_markers <- data.frame(Old = chr) %>% 
   left_join(chr_names, by = c("Old" = "RefSeq seq accession"))
-new_markers_names <- paste0(new_markers$`Chromosome name`, "_", pos) # make the change and assign the new names
+new_markers_names <- paste0("X", new_markers$`Chromosome name`, "_", pos) # make the change and assign the new names
 colnames(numeric_gt) <- new_markers_names
 
-# Create the map file ans dubset the markers in chr 1-13 and then readjust geno
-map <- data.frame(CHROM = new_markers$`Chromosome name`,
-                  POS = pos,
-                  ID = colnames(numeric_gt))
+# Create the map file ans subset the markers in chr 1-13 and then readjust geno
+map <- data.frame(Name = colnames(numeric_gt),
+                  CHROM = new_markers$`Chromosome name`,
+                  POS = as.numeric(pos))
 map <- map %>% 
   filter(CHROM <= 13)
 
-genotype_septoria <- numeric_gt[, colnames(numeric_gt) %in% map$ID]
+genotype_septoria <- numeric_gt[, colnames(numeric_gt) %in% map$Name]
 
 # adjust rownames to convert from fasta to isolates
 samples <- substr(rownames(genotype_septoria), 1, nchar(rownames(genotype_septoria)) - 
