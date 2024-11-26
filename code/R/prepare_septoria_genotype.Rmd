@@ -1,0 +1,313 @@
+---
+title: "Untitled"
+author: "me"
+date: "2024-11-26"
+output: html_document
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(vcfR)
+library(impute)
+library(rrBLUP)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_knit$set(root.dir = here())
+```
+
+# Prepare Zymoseptoria tritici genotypic data
+
+```{r}
+vcf_clean <- read.vcfR("data/raw_data/septoria_ale_clean.vcf.gz")
+allele_mat <- t(extract.gt(vcf_clean, return.alleles = T))
+rownames(allele_mat)
+dim(allele_mat)
+```
+
+Now we have to change the names from Fasta to Isolate
+
+```{r}
+# fix the rownames frm the vcf to match the fasta names in info_strain
+samples <- substr(rownames(allele_mat), 1, nchar(rownames(allele_mat)) - 
+                    ifelse(grepl("merge", rownames(allele_mat)), 27, 13))
+samples[samples == "S25_combined_EKDN23H000001-1A"] <- "S25_combined"
+
+#load info strain and match the names
+info_strains <- read_csv("data/raw_data/INFO_STRAINS.csv")
+info_strains <- info_strains %>% 
+  mutate(Fasta = sapply(strsplit(Fasta, "_"), function(x) paste(x[1:2], collapse = "_")))
+length(intersect(samples, info_strains$Fasta))
+
+# change the rownames from FASTA to ISOLATE
+rownames_df <- data.frame(Fasta = samples) %>% 
+  left_join(info_strains, by = "Fasta")
+fasta_to_isolate <- setNames(rownames_df$Isolate, rownames_df$Fasta)
+rownames(allele_mat) <- unname(fasta_to_isolate[samples])
+rownames(allele_mat) <- gsub("\\.", "_", rownames(allele_mat))
+```
+
+
+Lets see how many and which strains do we have in the phenotype to match them too
+
+```{r}
+raw_phenotype <- read_csv("data/raw_data/raw_phenotypes.csv")
+
+# Extracting Year and Isolate from the Picture column
+raw_phenotype <- raw_phenotype %>% 
+  mutate(
+    Year = unname(sapply(strsplit(Picture, "_"), function(x) x[[2]])),
+    Isolate = unname(sapply(strsplit(Picture, "_"), function(x) paste0(x[[2]], "_", x[[3]], "_", x[[4]])))
+  )
+
+# How many lines matches the rownames in allele_mat, and holw many differ?
+length(intersect(phenotype$Isolate, rownames(allele_mat)))
+setdiff(rownames(allele_mat), phenotype$Isolate)
+```
+
+Fix the 3 names that differ from the genotype
+
+```{r}
+phenotype$Isolate[phenotype$Isolate=="22_Conil_Fer"]<-"22_ConilFer_L1"
+phenotype$Isolate[phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22_EcijaSecSah_L1"
+phenotype$Isolate[phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
+
+# Now all the Isolates should match 
+length(intersect(phenotype$Isolate, rownames(allele_mat)))
+```
+
+
+Lets now convert the matrix to numeric. But first lets replace the "." by NA
+
+```{r}
+allele_mat[allele_mat == "."] <- NA
+
+# The function that I am going to use to do the numeric vonversion is the following one
+allele2numeric <- function(matrix, maf.filter = NULL, heter.filter = NULL) {
+  # Internal function to convert genotypes to numeric values
+  convert <- function(col) {
+    # Split the alleles
+    alleles <- strsplit(col, "/")
+    alleles <- do.call(rbind, alleles) # Convert the list into a two-column matrix
+    
+    # Handle NA: if any entry is NA, keep it as NA
+    alleles[is.na(alleles)] <- NA
+    
+    # Frequency table of the alleles
+    allele_counts <- sort(table(alleles), decreasing = TRUE)
+    
+    # Identify the second most frequent allele (minor allele)
+    if (length(allele_counts) < 2) return(rep(NA, length(col))) # If there's only one allele, return NA
+    
+    minor_allele <- names(allele_counts)[2]
+    
+    # Convert alleles into 0/1 while preserving NA for missing values
+    numeric_values <- ifelse(alleles == minor_allele, 1, 
+                             ifelse(alleles != minor_allele, 0, NA))
+    
+    # Sum by row while preserving NA values
+    numeric_values_sum <- rowSums(numeric_values, na.rm = F)
+    
+    return(numeric_values_sum)
+  }
+  
+  # Internal function to calculate the Minor Allele Frequency (MAF)
+  extract.maf <- function(col) {
+    # Exclude NA values for frequency calculation
+    col_no_na <- col[!is.na(col)]
+    
+    # Frequency table of numeric values
+    allele_counts <- sort(table(col_no_na), decreasing = TRUE)
+    n <- length(col_no_na) # Total number of non-NA observations
+    
+    if (length(allele_counts) < 2) return(0) # If no second allele exists, MAF is zero
+    
+    maf_value <- allele_counts[2] / n
+    return(maf_value)
+  }
+  
+  # Apply the conversion to each column
+  M <- apply(matrix, 2, convert)
+  
+  # Calculate MAF for each column
+  maf <- apply(M, 2, extract.maf)
+  
+  # Filter columns based on MAF if maf.filter is defined
+  if (!is.null(maf.filter)) {
+    valid_markers <- which(maf >= maf.filter) # Indices of valid columns
+    M <- M[, valid_markers, drop = FALSE]
+    cat("Markers removed with Minor Allele Frequency below", maf.filter, ":",
+        ncol(matrix) - length(valid_markers), "\n")
+  }
+  
+  if(!is.null(heter.filter)){
+    het_snps <- apply(M, 2, function(column) sum(column == 1, na.rm = T))
+    het_snps_per_sample <- het_snps / nrow(M)
+    het_snps <- het_snps_per_sample[het_snps_per_sample > heter.filter]
+    
+    M <- M[, !colnames(M) %in% names(het_snps)]
+    cat("Markers removed with Heterozygosity over", heter.filter, ":",
+        length(het_snps), "\n")
+  }
+  
+  return(M)
+}
+```
+
+Lets use it now
+
+```{r}
+M <- allele2numeric(allele_mat, maf.filter = 0.05)
+dim(M)
+```
+
+Lets check a few parameters on the marker matrix
+
+```{r}
+# First lets check that we only have 0 and 1, given that it is an haploid organism, 
+# there shouldnt be any heterozygous
+table(M) # only 1s and 0s
+
+extract.maf <- function(col) {
+    # Exclude NA values for frequency calculation
+    col_no_na <- col[!is.na(col)]
+    
+    # Frequency table of numeric values
+    allele_counts <- sort(table(col_no_na), decreasing = TRUE)
+    n <- length(col_no_na) # Total number of non-NA observations
+    
+    if (length(allele_counts) < 2) return(0) # If no second allele exists, MAF is zero
+    
+    maf_value <- allele_counts[2] / n
+    return(maf_value)
+}
+
+maf <- apply(M, 2, extract.maf) # calculate maf as the frequency of the second most abundant snp 
+maf2 <- colMeans(M, na.rm = T) # calcualte maf as the colmeans ( which is essentially the same but just double checking)
+range(maf); range(maf2) # range is correct, should go from 0.0.5 to 0.5
+
+# lets also check the missingness per variant
+vmiss <- apply(M, MARGIN = 2, function(x){ sum(is.na(x)) })
+vmiss <- vmiss/nrow(M)
+# and the missingness per sample
+smiss <- apply(M, MARGIN = 1, function(x){ sum(is.na(x)) })
+smiss <- smiss/ncol(M)
+```
+
+Lets plot what we have just calculated
+
+```{r}
+# Define colors for the plots
+fill_color <- "lightgreen"
+line_color <- "red"
+
+# Histogram with minor allele frequency
+hist(maf, col = fill_color, xlim = c(0, 0.6), main = "Histogram of Minor Allele Frequency")
+abline(v = 0.05, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.05
+abline(v = 0.5, col = line_color, lty = 2, lwd = 2)   # Red dashed line at 0.5
+
+# Histogram of missingness (vmiss)
+hist(vmiss, col = fill_color, main = "Histogram of Missingness Proportion")
+abline(v = 0.2, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.2
+
+# Barplot of missingness per variant
+par(mar = c(12, 4, 4, 2))
+barplot(smiss, las = 2, col = fill_color, main = "Barplot of Missingness per Variant")
+title(ylab = "Missingness (%)")
+abline(h = 0.20, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.20
+
+```
+
+The parameter look nice, thus lets continue by imputing, adding the Isolate column 
+and create the map file 
+
+```{r}
+# impute using impute
+imputation <- impute::impute.knn(M, k = 2, colmax = 1)
+M_imputed <- imputation$data
+dim(M); dim(M_imputed)
+sum(is.na(M)); sum(is.na(M_imputed)) 
+```
+
+We also have to adjust the names of the markers(colnames)
+
+```{r}
+chr_names <- read_tsv("data/raw_data/chr_names.tsv")
+chr_names <- chr_names %>% 
+  dplyr::select(`Chromosome name`, `RefSeq seq accession`)
+
+marker_names <- colnames(M_imputed) 
+chr <- sapply(strsplit(marker_names, "_"), function(x) paste0(x[[1]], "_", x[[2]])) #split marker names in chr and position
+pos <- sapply(strsplit(marker_names, "_"), function(x) x[[3]])
+
+marker_names <- data.frame(old_chr = chr, pos = pos)
+marker_names <- marker_names %>% 
+  left_join(chr_names, by = c("old_chr" = "RefSeq seq accession"))
+marker_names <- marker_names %>% 
+  mutate(new_marker_names = paste0("X", `Chromosome name`, "_", pos))
+
+colnames(M_imputed) <- marker_names$new_marker_names
+```
+
+
+```{r}
+fix <- data.frame(vcf_clean@fix)
+fix <- fix %>% 
+  left_join(chr_names, by = c("CHROM" = "RefSeq seq accession")) %>% 
+  mutate(Name = paste0("X", `Chromosome name`, "_", POS)) %>% 
+  dplyr::select(Name, Chromosome = "Chromosome name", POS)
+
+map <- fix %>% 
+  mutate(Chromosome = as.numeric(Chromosome)) %>% 
+  filter(Chromosome <= 13)
+
+M_13 <- data.frame(M_imputed)
+M_13 <- M_13[, colnames(M_13) %in% map$Name]
+dim(map); dim(M_13)
+```
+
+Lets add the Isolate column and build the GRM
+
+```{r}
+genotype_septoria <- M_13 %>% 
+  mutate(Isolate = rownames(M_13)) %>% 
+  dplyr::select(Isolate, everything())
+
+rownames(genotype_septoria) <- NULL
+
+K <- A.mat(M_13)
+K <- data.frame(K) %>% 
+  mutate(Isolate = rownames(M_13)) %>% 
+  dplyr::select(Isolate, everything())
+rownames(K) <- NULL
+```
+
+Final renaiming
+
+```{r}
+genotype_septoria <- genotype_septoria
+map_septoria <- map
+k_septoria <- K
+```
+
+Save the data 
+```{r}
+save(genotype_septoria, map_septoria, k_septoria, file = "data/modified_data/1_septoria.Rdata")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
