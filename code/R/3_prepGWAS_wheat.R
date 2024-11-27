@@ -23,6 +23,7 @@ blups_leaf2 <- extract_blups_df(cleaned_phenotype_leaf2, traits, formula2)
 # prepare the data to run the GWAS
 blups_wheat_list <- list(blups_wheat, blups_leaf2)
 colnames(k_wheat) <- c("GenoID", k_wheat[,1])
+map_wheat$Position <- as.numeric(map_wheat$Position)
 
 names(blups_wheat_list) <- c("All_leaves", "Leaf2")
 save(genotype_wheat, map_wheat, k_wheat, blups_wheat_list,

@@ -4,12 +4,11 @@ source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("code/R/function_septoria_GS.R")
 
 load("data/modified_data/3_wheat_GWAS.Rdata")
-
 i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 out_dir <- "outputs/GWAS_wheat"
 
 for(j in seq_along(blups_wheat_list)){
-  # sselect blups
+  # select blups
   blups <- blups_wheat_list[[j]]
   name <- names(blups_wheat_list)[[j]]
   
@@ -26,20 +25,16 @@ for(j in seq_along(blups_wheat_list)){
   ]
   
   print(paste("Working on model", i, "and PC", j))
-  tryCatch({
+
     myGAPIT <- GAPIT(
       Y = blups,
       GD = genotype,
       GM = map_wheat,
       KI = kinship,
       CV = NULL,
-      PCA.total = j,
-      model = c('Blink', 'FarmCPU')
+      PCA.total = i,
+      model = c('Blink')
     )
-    print("GAPIT analysis completed.")
-  }, error = function(e) {
-    message("Error in GAPIT for model ", i, " PC ", j, ": ", e$message)
-  })
   # Reset working directory
   setwd(here())
   # Confirm progress
