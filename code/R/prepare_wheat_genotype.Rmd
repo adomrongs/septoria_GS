@@ -1,0 +1,284 @@
+---
+title: "Untitled"
+author: "me"
+date: "2024-11-26"
+output: html_document
+---
+
+```{r}
+library(here)
+library(tidyverse)
+library(vcfR)
+library(impute)
+library(rrBLUP)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_knit$set(root.dir = here())
+```
+
+# Prepare Wheat genotypic data
+
+Lets see which are the IDs that matches phenotype and genotype
+
+```{bash, eval = F}
+#extract the samples IDs from the vcf
+bcftools query -l data/raw_data/UPM2022Cristina_01-03.CSv2.vcf > data/raw_data/genotype_IDs.txt
+```
+
+
+```{r}
+# prepare the phenotype IDs
+wheat_information <- readxl::read_xlsx("data/raw_data/wheat_families.xlsx")
+raw_phenotype <- readxl::read_xlsx("data/raw_data/Output_reps_unidas_12cm_mock_checks.xlsx")
+raw_phenotype <- raw_phenotype %>% 
+  mutate(Plant = paste0("PyrSep.", sprintf("%03d", Plant))) %>% 
+  left_join(wheat_information, by = c("Plant"= "Sample_Name")) %>% 
+  mutate(Plant = gsub("\\.", "_", Plant))
+
+
+# prepare genoIDs  obtained from the code above
+genotype_IDs <- read_delim("data/raw_data/genotype_IDs.txt", delim = "/t", col_names = F)
+genotype_IDs_mod <- gsub("-", "_", trimws(genotype_IDs$X1))
+
+# find intersect
+intersect_isolates <- intersect(unique(genotype_IDs_mod), unique(raw_phenotype$Plant))
+length(unique(genotype_IDs_mod)); length(unique(raw_phenotype$Plant)); length(intersect_isolates)
+```
+
+Lets see the GIDs from the original format that has to be substracted
+
+```{r}
+subtract_IDs <- data.frame(Old = genotype_IDs, New = genotype_IDs_mod)
+subtract_IDs <- subtract_IDs %>% 
+  filter(genotype_IDs_mod %in% intersect_isolates) %>% 
+  dplyr::select(X1)
+write_tsv(subtract_IDs, file = "data/raw_data/intersect_IDs.txt", col_names = F)
+```
+
+```{bash, eval = FALSE}
+zcat data/raw_data/UPM2022Cristina_01-03.CSv2.vcf.gz | \
+grep -v "^#" | \
+sort -k1,1 -k2,2n > data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.data.vcf
+
+# Extract the header and append it to the sorted data
+zcat data/raw_data/UPM2022Cristina_01-03.CSv2.vcf.gz | \
+grep "^#" > data/raw_data/UPM2022Cristina_01-03.CSv2.header.vcf
+
+# Concatenate the header and the sorted data
+cat data/raw_data/UPM2022Cristina_01-03.CSv2.header.vcf data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.data.vcf > data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.vcf
+
+#compress the file 
+bgzip -c data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.vcf > data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.vcf.gz
+
+# index with csi format
+tabix -C data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.vcf.gz
+
+# subset
+bcftools view -S data/raw_data/intersect_IDs.txt \
+-o data/raw_data/raw_wheat.vcf.gz \
+-Oz data/raw_data/UPM2022Cristina_01-03.CSv2.sorted.vcf.gz
+
+# confirm correct subset
+bcftools query -l data/raw_data/raw_wheat.vcf.gz | wc -l # should be equal to length(genotype_IDs_keep). In this case 202
+
+```
+
+And now we can filter the raw vcf file
+
+```{bash, eval = F}
+vcftools --gzvcf data/raw_data/raw_wheat.vcf.gz \
+--remove-indels --maf 0.05 --max-missing 0.8 \
+--min-alleles 2 --max-alleles 2 --recode --stdout | gzip -c > \
+data/raw_data/wheat_clean.vcf.gz
+```
+
+Lets do the conversion now to numeric 
+
+```{r}
+vcf_clean <- read.vcfR("data/raw_data/wheat_clean.vcf.gz")
+allele_mat <- t(extract.gt(vcf_clean, return.alleles = T, convertNA = TRUE))
+allele_mat[allele_mat == "."] <- NA
+table(allele_mat); sum(is.na(allele_mat))
+```
+
+```{r}
+allele2numeric <- function(matrix, maf.filter = NULL, heter.filter = NULL) {
+  # Internal function to convert genotypes to numeric values
+  convert <- function(col) {
+    # Split the alleles
+    alleles <- strsplit(col, "/")
+    alleles <- do.call(rbind, alleles) # Convert the list into a two-column matrix
+    
+    # Handle NA: if any entry is NA, keep it as NA
+    alleles[is.na(alleles)] <- NA
+    
+    # Frequency table of the alleles
+    allele_counts <- sort(table(alleles), decreasing = TRUE)
+    
+    # Identify the second most frequent allele (minor allele)
+    if (length(allele_counts) < 2) return(rep(NA, length(col))) # If there's only one allele, return NA
+    
+    minor_allele <- names(allele_counts)[2]
+    
+    # Convert alleles into 0/1 while preserving NA for missing values
+    numeric_values <- ifelse(alleles == minor_allele, 1, 
+                             ifelse(alleles != minor_allele, 0, NA))
+    
+    # Sum by row while preserving NA values
+    numeric_values_sum <- rowSums(numeric_values, na.rm = F)
+    
+    return(numeric_values_sum)
+  }
+  
+  # Internal function to calculate the Minor Allele Frequency (MAF)
+  extract.maf <- function(col) {
+    # Exclude NA values for frequency calculation
+    col_no_na <- col[!is.na(col)]
+    
+    # Frequency table of numeric values
+    allele_counts <- sort(table(col_no_na), decreasing = TRUE)
+    n <- length(col_no_na) # Total number of non-NA observations
+    
+    if (length(allele_counts) < 2) return(0) # If no second allele exists, MAF is zero
+    
+    maf_value <- allele_counts[2] / n
+    return(maf_value)
+  }
+  
+  # Apply the conversion to each column
+  M <- apply(matrix, 2, convert)
+  
+  # Calculate MAF for each column
+  maf <- apply(M, 2, extract.maf)
+  
+  # Filter columns based on MAF if maf.filter is defined
+  if (!is.null(maf.filter)) {
+    valid_markers <- which(maf >= maf.filter) # Indices of valid columns
+    M <- M[, valid_markers, drop = FALSE]
+    cat("Markers removed with Minor Allele Frequency below", maf.filter, ":",
+        ncol(matrix) - length(valid_markers), "\n")
+  }
+  
+  if(!is.null(heter.filter)){
+    het_snps <- apply(M, 2, function(column) sum(column == 1, na.rm = T))
+    het_snps_per_sample <- het_snps / nrow(M)
+    het_snps <- het_snps_per_sample[het_snps_per_sample > heter.filter]
+    
+    M <- M[, !colnames(M) %in% names(het_snps)]
+    cat("Markers removed with Heterozygosity over", heter.filter, ":",
+        length(het_snps), "\n")
+  }
+  
+  return(M)
+}
+
+M <- allele2numeric(allele_mat, maf.filter = 0.05)
+```
+
+```{r}
+table(M) 
+
+extract.maf <- function(col) {
+    # Exclude NA values for frequency calculation
+    col_no_na <- col[!is.na(col)]
+    
+    # Frequency table of numeric values
+    allele_counts <- sort(table(col_no_na), decreasing = TRUE)
+    n <- length(col_no_na) # Total number of non-NA observations
+    
+    if (length(allele_counts) < 2) return(0) # If no second allele exists, MAF is zero
+    
+    maf_value <- allele_counts[2] / n
+    return(maf_value)
+}
+
+maf <- apply(M, 2, extract.maf) # calculate maf as the frequency of the second most abundant snp 
+maf2 <- colMeans(M, na.rm = T)/2 # calcualte maf as the colmeans ( which is essentially the same but just double checking)
+range(maf); range(maf2) # range is correct, should go from 0.0.5 to 0.5
+
+# lets also check the missingness per variant
+vmiss <- apply(M, MARGIN = 2, function(x){ sum(is.na(x)) })
+vmiss <- vmiss/nrow(M)
+# and the missingness per sample
+smiss <- apply(M, MARGIN = 1, function(x){ sum(is.na(x)) })
+smiss <- smiss/ncol(M)
+```
+
+```{r}
+# Define colors for the plots
+fill_color <- "lightgreen"
+line_color <- "red"
+
+# Histogram with minor allele frequency
+hist(maf, col = fill_color, xlim = c(0, 0.6), main = "Histogram of Minor Allele Frequency")
+abline(v = 0.05, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.05
+abline(v = 0.5, col = line_color, lty = 2, lwd = 2)   # Red dashed line at 0.5
+
+# Histogram of missingness (vmiss)
+hist(vmiss, col = fill_color, main = "Histogram of Missingness Proportion")
+abline(v = 0.2, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.2
+
+# Barplot of missingness per variant
+par(mar = c(12, 4, 4, 2))
+barplot(smiss, las = 2, col = fill_color, main = "Barplot of Missingness per Variant")
+title(ylab = "Missingness (%)")
+abline(h = 0.20, col = line_color, lty = 2, lwd = 2)  # Red dashed line at 0.20
+
+```
+
+```{r}
+# impute using impute
+imputation <- impute::impute.knn(M, k = 2, colmax = 1)
+M_imputed <- imputation$data
+dim(M); dim(M_imputed)
+sum(is.na(M)); sum(is.na(M_imputed)) 
+```
+
+```{r}
+fix <- data.frame(vcf_clean@fix)
+map <- fix %>% 
+  dplyr::select(Name = ID, Chromosome = CHROM, Position = POS) %>% 
+  filter(Name %in% colnames(M_imputed))
+```
+
+```{r}
+genotype_wheat <- data.frame(M_imputed) %>% 
+  mutate(GenoID = gsub("-", "_", rownames(M_imputed))) %>% 
+  dplyr::select(GenoID, everything())
+
+rownames(genotype_wheat) <- NULL
+
+K <- A.mat(M_imputed)
+K <- data.frame(K) %>% 
+  mutate(GenoID = gsub("-", "_", rownames(M_imputed))) %>% 
+  dplyr::select(GenoID, everything())
+rownames(K) <- NULL
+```
+
+
+```{r}
+genotype_wheat <- genotype_wheat
+map_wheat <- map
+k_wheat <- K
+
+dim(genotype_wheat); dim(map_wheat); dim(k_wheat)
+```
+
+
+Save the data 
+```{r}
+save(genotype_wheat, map_wheat, k_wheat, file = "data/modified_data/2_wheat.Rdata")
+```
+
+
+
+
+
+
+
+
+

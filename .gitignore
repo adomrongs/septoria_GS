@@ -6,3 +6,6 @@
 # vcf files
 /data/raw_data/septoria_ale_clean.vcf.gz
 /data/raw_data/UPM2022Cristina_01-03.CSv2.vcf
+
+# all raw data
+/data/raw_data
