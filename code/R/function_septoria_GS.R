@@ -384,7 +384,7 @@ eval_S1 <- function(strategy, phenotype, trait) {
   return(cor_results)
 }
 
-runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wModel = FALSE) {
+runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wModel = NULL) {
   #===============================================
   # Run GWAS 
   # ==============================================
@@ -497,7 +497,7 @@ eval_S2 <- function(strategy, phenotype, trait) {
   return(list(CorrelationResults = correlationResults))
 }
 
-run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel = FALSE) {
+run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel = NULL) {
   #===============================================
   # Create data for train and test
   # ==============================================
