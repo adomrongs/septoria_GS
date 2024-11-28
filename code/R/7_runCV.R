@@ -19,7 +19,7 @@ allResults <- list()
 wtest_lines <- list()  # Initialize wtest_lines before using it
 
 # Select test lines for wheat
-wheat_test <- sample(rownames(K_wheat), ceiling(0.2 * nrow(K_wheat)))
+wheat_test <- sample(rownames(k_wheat), ceiling(0.2 * nrow(k_wheat)))
 wtest_lines[[iter]] <- wheat_test
 
 # Loop over wheat and mix kernels
