@@ -235,7 +235,7 @@ grepGAPITres <- function(parent_directory){
   return(results)
 }
 
-runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, wModel = NULL){
+runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, wModel = FALSE){
   #===============================================
   # Create data for train and test
   # ==============================================
@@ -384,7 +384,7 @@ eval_S1 <- function(strategy, phenotype, trait) {
   return(cor_results)
 }
 
-runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wModel = NULL) {
+runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wModel = FALSE) {
   #===============================================
   # Run GWAS 
   # ==============================================
@@ -497,7 +497,7 @@ eval_S2 <- function(strategy, phenotype, trait) {
   return(list(CorrelationResults = correlationResults))
 }
 
-run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel = NULL) {
+run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel = FALSE) {
   #===============================================
   # Create data for train and test
   # ==============================================
