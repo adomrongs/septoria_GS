@@ -8,6 +8,7 @@ summary(phenotype)
 
 traits <- c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
 cleaned_phenotype <- remove_outliers(df = phenotype, cols = traits)
+write_csv(cleaned_phenotype, file = "data/modified_data/clean_phenotype_no_outliers.csv")
 dim(phenotype); dim(cleaned_phenotype)
 
 # First we will calculate the blups including the Leaf in the model

@@ -218,3 +218,19 @@ extract_blups_df <- function(phenotype, traits, formula) {
     return(blups_list)
   }
 }
+
+grepGAPITres <- function(parent_directory){
+  subdirs <- list.dirs(parent_directory, recursive = F)
+  results <- list()
+  
+  for(i in seq_along(subdirs)){
+    message("Working on file ", dir)
+    dir <- subdirs[[i]]
+    file <- paste0(dir, "/GAPIT.Association.Filter_GWAS_results.csv")
+    results_df <- read_csv(file) %>% 
+      mutate(File = dir)
+    results[[i]] <- results_df
+  }
+  
+  return(results)
+}
