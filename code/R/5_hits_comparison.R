@@ -31,36 +31,6 @@ shared_snps <- map(common_rows$SNP, function(snp) {
   return(tmp_df)
 })
 shared_snps_all_df <- do.call(rbind, shared_snps)
-shared_snps_all_df %>%
-  gt() %>%
-  # Poner los nombres de las columnas en negrita
-  tab_style(
-    style = list(cell_text(weight = "bold")),
-    locations = cells_column_labels()
-  ) %>%
-  # Añadir un color de fondo alternado a las filas 1 y 2 (rojo claro) y filas 4, 5, y 6 (verde claro)
-  tab_style(
-    style = list(cell_fill(color = "lightcoral")),
-    locations = cells_body(rows = c(1, 2)) # Filas 1 y 2
-  ) %>%
-  tab_style(
-    style = list(cell_fill(color = "lightgreen")),
-    locations = cells_body(rows = c(4, 5, 6)) # Filas 4, 5 y 6
-  ) %>%
-  # Cambiar el color del texto de toda la tabla a negro
-  tab_style(
-    style = list(cell_text(color = "black")),
-    locations = cells_body()
-  ) %>%
-  # Añadir un título
-  tab_header(
-    title = md("**HITS ALL_LEAVES**") # Título en negrita
-  ) %>%
-  # Ajustar espaciado y estilos generales
-  tab_options(
-  )
-table(shared_snps_all_df$SNP)
-
 
 shared_snps_leaf2 <- map(common_rows$SNP, function(snp) {
   tmp_df <- leaf2 %>% 
@@ -68,25 +38,3 @@ shared_snps_leaf2 <- map(common_rows$SNP, function(snp) {
   return(tmp_df)
 })
 shared_snps_leaf2_df <- do.call(rbind, shared_snps_leaf2)
-shared_snps_leaf2_df %>%
-  gt() %>%
-  # Poner los nombres de las columnas en negrita
-  tab_style(
-    style = list(cell_text(weight = "bold")),
-    locations = cells_column_labels()
-  ) %>%
-  # Añadir un color de fondo alternado a las filas 1 y 2 (rojo claro) y filas 4, 5, y 6 (verde claro)
-  tab_style(
-    style = list(cell_fill(color = "lightcoral")),
-    locations = cells_body(rows = c(1, 2, 5, 6)) # Filas 1 y 2
-  ) %>%
-  # Cambiar el color del texto de toda la tabla a negro
-  tab_style(
-    style = list(cell_text(color = "black")),
-    locations = cells_body()
-  ) %>%
-  # Añadir un título
-  tab_header(
-    title = md("**HITS LEAF2**") # Título en negrita
-  )
-

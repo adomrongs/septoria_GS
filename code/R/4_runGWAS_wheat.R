@@ -33,7 +33,7 @@ for(j in seq_along(blues_wheat_list)){
       KI = kinship,
       CV = NULL,
       PCA.total = i,
-      model = c('Blink')
+      model = c('Blink', 'FarmCPU', 'MLM')
     )
   # Reset working directory
   setwd(here())
