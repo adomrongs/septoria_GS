@@ -185,37 +185,39 @@ remove_outliers <- function(df, cols) {
   return(df_clean)
 }
 
-extract_blups <- function(phenotype, trait, formula) {
-  model <- lmer(as.formula(paste(trait, formula)), data = phenotype)
-  blups <- data.frame(ranef(model)$Plant) %>% 
+extract_blues <- function(phenotype, trait, formula) {
+  model <- lm(as.formula(paste(trait, formula)), data = phenotype)
+  blues <- coef(model)[grep("Plant", names(coef(model)), value = T)]
+  names(blues) <- gsub("Plant", "", names(blues))
+  blues_df <- data.frame(blues) %>% 
     rownames_to_column("GenoID") %>% 
     dplyr::select(GenoID, everything())
   
-  colnames(blups) <- c("GenoID", trait)
-  rownames(blups) <- NULL
-  return(blups)
+  colnames(blues_df) <- c("GenoID", trait)
+  rownames(blues_df) <- NULL
+  return(blues_df)
 }
 
-extract_blups_df <- function(phenotype, traits, formula) {
-  blups_list <- list()
+extract_blues_df <- function(phenotype, traits, formula) {
+  blues_list <- list()
   
-  # Populate blups_list and capture dimensions
+  # Populate blues_list and capture dimensions
   dims_list <- vector("list", length(traits))
   for (i in seq_along(traits)) {
     trait <- traits[i]
-    blups <- extract_blups(phenotype, trait, formula)
-    blups_list[[i]] <- blups
+    blups <- extract_blues(phenotype, trait, formula)
+    blues_list[[i]] <- blups
     dims_list[[i]] <- dim(blups)
   }
   
   # Check if dimensions match
   if (length(unique(sapply(dims_list, paste, collapse = "x"))) == 1) {
     message("Dimensions match. Returning a combined blups data frame.")
-    blups_df <- purrr::reduce(blups_list, ~ dplyr::left_join(.x, .y, by = "GenoID"))
-    return(blups_df)
+    blues_df <- purrr::reduce(blues_list, ~ dplyr::left_join(.x, .y, by = "GenoID"))
+    return(blues_df)
   } else {
     message("Dimensions do not match. Returning blups as a list.")
-    return(blups_list)
+    return(blues_list)
   }
 }
 
