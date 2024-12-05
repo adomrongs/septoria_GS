@@ -15,8 +15,11 @@ phenotype <- raw_phenotype %>%
   mutate(Plant = paste0("PyrSep_", sprintf("%03d", Plant)),
          across(all_of(factor_cols), as.factor),
          across(all_of(numeric_cols), as.numeric)) %>% 
-  dplyr::select(all_of(c(factor_cols, numeric_cols)))
+  dplyr::select(all_of(c(factor_cols, numeric_cols))) %>% 
+  arrange(Plant)
 
+phenotype[phenotype$PLACL > 100 & !is.na(phenotype$PLACL), 
+          c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")] <- NA
 write_csv(phenotype, file = "data/modified_data/clean_phenotype.csv")
 
 # Exploratory data analysis
