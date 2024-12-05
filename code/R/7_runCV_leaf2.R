@@ -7,9 +7,8 @@ source("code/R/function_septoria_GS.R")
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
 
 load("data/modified_data/4_CV_data.Rdata")
-
 phenotype <- phenotype %>% 
-  filter(Leaf == 2)
+  filter(Leaf ==2)
 
 Kw_list <- list(G = k_wheat, Diagonal = I_wheat)
 Ks_list <- list(G = k_mixes, Diagonal = I_mixes)
@@ -56,7 +55,8 @@ for (wheatKey in names(Kw_list)) {
                            genoW = genotype_wheat,
                            map = map_wheat,
                            wtest = wheat_test,
-                           wModel = TRUE)
+                           wModel = TRUE,
+                           formula = formula)
     
     scenarioResults$Scenario1w <- eval_S1(strategy = weightedModel,
                                           phenotype = phenotype,
@@ -82,7 +82,8 @@ for (wheatKey in names(Kw_list)) {
                               genoW = genotype_wheat,
                               map = map_wheat,
                               sMix = mix,
-                              wModel = TRUE)
+                              wModel = TRUE,
+                              formula = formula)
       scenarioResults[[paste("Scenario2w", mix)]] <- eval_S2(strategy = weightedModel2,
                                                              phenotype = phenotype,
                                                              trait = "PLACL")
@@ -110,7 +111,8 @@ for (wheatKey in names(Kw_list)) {
                                genoW = genotype_wheat,
                                map = map_wheat,
                                wtest = wheat_test,
-                               wModel = TRUE)
+                               wModel = TRUE,
+                               formula = formula)
       scenarioResults[[paste("Scenario3w", mix)]] <- eval_S3(strategy = weightedModel3,
                                                              phenotype = phenotype,
                                                              trait = "PLACL")

@@ -53,7 +53,8 @@ for (wheatKey in names(Kw_list)) {
                            genoW = genotype_wheat,
                            map = map_wheat,
                            wtest = wheat_test,
-                           wModel = TRUE)
+                           wModel = TRUE,
+                           formula = formula)
     
     scenarioResults$Scenario1w <- eval_S1(strategy = weightedModel,
                                           phenotype = phenotype,
@@ -79,7 +80,8 @@ for (wheatKey in names(Kw_list)) {
                               genoW = genotype_wheat,
                               map = map_wheat,
                               sMix = mix,
-                              wModel = TRUE)
+                              wModel = TRUE,
+                              formula = formula)
       scenarioResults[[paste("Scenario2w", mix)]] <- eval_S2(strategy = weightedModel2,
                                                              phenotype = phenotype,
                                                              trait = "PLACL")
@@ -107,7 +109,8 @@ for (wheatKey in names(Kw_list)) {
                                genoW = genotype_wheat,
                                map = map_wheat,
                                wtest = wheat_test,
-                               wModel = TRUE)
+                               wModel = TRUE,
+                               formula = formula)
       scenarioResults[[paste("Scenario3w", mix)]] <- eval_S3(strategy = weightedModel3,
                                                              phenotype = phenotype,
                                                              trait = "PLACL")
