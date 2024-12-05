@@ -15,18 +15,15 @@ dim(phenotype); dim(cleaned_phenotype)
 formula <- "~ -1 + Plant + Strain + Rep + Leaf "
 blues_wheat <- extract_blues_df(cleaned_phenotype, traits, formula)
 
-# Additionally we will also calcualte the blups when using just leaf 2
-cleaned_phenotype_leaf2 <- cleaned_phenotype %>% 
-  filter(Leaf == 2)
-formula2 <- "~ -1 + Plant + Strain + Rep"
-blues_leaf2 <- extract_blues_df(cleaned_phenotype_leaf2, traits, formula2)
-
 # prepare the data to run the GWAS
-blues_wheat_list <- list(blues_wheat, blues_leaf2)
 colnames(k_wheat) <- c("GenoID", k_wheat[,1])
 map_wheat$Position <- as.numeric(map_wheat$Position)
+k_wheat <- k_wheat[k_wheat$GenoID %in% blues_wheat$GenoID, ]
+k_wheat <- k_wheat[, colnames(k_wheat) %in% c("GenoID", blues_wheat$GenoID)]
+genotype_wheat <- genotype_wheat[genotype_wheat[, "GenoID"] %in% blues_wheat$GenoID,]
 
-names(blues_wheat_list) <- c("All_leaves", "Leaf2")
-save(genotype_wheat, map_wheat, k_wheat, blues_wheat_list,
+dim(genotype_wheat); dim(map_wheat); dim(k_wheat); dim(blues_wheat)
+str(blues_wheat)
+save(genotype_wheat, map_wheat, k_wheat, blues_wheat,
      file = "data/modified_data/3_wheat_GWAS.Rdata")
 
