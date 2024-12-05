@@ -2,6 +2,8 @@ library(tidyverse)
 library(factoextra)
 library(ggrepel)
 library(RColorBrewer)
+library(ggiraph)
+library(vcfR)
 source("code/R/function_septoria_GS.R")
 
 #-------------------------------------------------------------------------------
@@ -65,9 +67,12 @@ pca_df <- pca_df %>%
 
 # create pca and screeplot 
 PCA_plot_sep <- plotPCA(genotype = genotype_septoria,
-                          regions = pca_df$Region,
-                          colors = colors,
-                          shapes = shapes)
+                        regions = pca_df$Region,
+                        colors = colors,
+                        shapes = shapes,
+                        names = pca_df$Isolate,
+                        interactive = TRUE
+                      )
 
 # save results
 png(paste0("outputs/plots/PCA_sep.png"), width = 3000, height = 3000, res = 400)
@@ -142,4 +147,10 @@ heatmap(k_wheat_mat, col = colorRampPalette(brewer.pal(8, "Oranges"))(25),
         labRow = k_wheat[,1],
         labCol = k_wheat[,1])
 dev.off()
+
+
+#-------------------------------------------------------------------------------
+# PCA and GRM Zymoseptoria (119)
+#-------------------------------------------------------------------------------
+
 

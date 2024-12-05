@@ -104,7 +104,7 @@ traits <- c("PLACL" = "#0F7BA2FF",
              "pycnidiaPerCm2Lesion" = "#FAB255FF")
 
 hist <- plotHist(phenotype, columns = numeric_cols, color = traits)
-png(paste0("outputs/plots/hist_traits.png"), width = 3000, height = 3000, res = 400)
+png(paste0("outputs/plots/hist_traits.png"), width = 5000, height = 2000, res = 400)
 grid.arrange(grobs = hist, ncol = 3)
 dev.off()
 

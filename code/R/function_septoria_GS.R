@@ -1,4 +1,4 @@
-plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shapes = NULL){
+plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shapes = NULL, interactive = NULL){
   if (!is.matrix(genotype) && !is.data.frame(genotype)) {
     stop("Input must be a matrix or data frame.")
   }
@@ -39,7 +39,8 @@ plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shape
   }
   
     pca_plot <- ggplot(data = pca_data) +
-      geom_point(aes(x = PC1, y = PC2, color = regions, shape = regions), size = 3) +
+      geom_point_interactive(aes(x = PC1, y = PC2, color = regions, shape = regions, tooltip = Names, data_id = Names),
+                             size = 3) +
       geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # Horizontal line
       geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
       geom_text_repel(
@@ -72,8 +73,15 @@ plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shape
       ) +
       scale_color_manual(values = colors) +
       scale_shape_manual(values = shapes)
-  
-  return(list(scree_plot = scree_plot, pca_plot = pca_plot))
+    
+    if(!is.null(interactive)){
+      interactive_plot <- girafe(ggobj = pca_plot, 
+                                 options = list(opts_hover(css = "stroke:#000; stroke-width: 0.5px; transition: all 0.3s ease;"),
+                                                opts_hover_inv("opacity:0.5;filter:saturate(10%);")))
+      return(list(scree_plot = scree_plot, pca_plot = pca_plot, interactive = interactive_plot))
+    } else {
+      return(list(scree_plot = scree_plot, pca_plot = pca_plot))
+    }
 }
 
 
@@ -237,7 +245,7 @@ grepGAPITres <- function(parent_directory){
   return(results)
 }
 
-runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, wModel = FALSE){
+runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE){
   #===============================================
   # Create data for train and test
   # ==============================================
@@ -259,18 +267,17 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, wModel = FALSE){
     mutate(GenoID = gtrain[,1]) %>% 
     dplyr::select(GenoID, everything())
   
-  formula <- "~ Strain + Rep + Leaf + (1|Plant)"
-  BLUPs <- extract_blups_df(ptrain_GWAS, "PLACL", formula) # obtain blups
-  gtrain_GWAS <- gtrain %>% # adjust genotype to blups lines
-    filter(GenoID %in% BLUPs$GenoID)
-  Ktrain_GWAS <- Ktrain %>% # adjust kinship to blups lines
-    filter(GenoID %in% BLUPs$GenoID) %>% 
-    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUPs$GenoID)))
+  BLUEs <- extract_blues_df(ptrain_GWAS, "PLACL", formula) # obtain BLUEs
+  gtrain_GWAS <- gtrain %>% # adjust genotype to BLUEs lines
+    filter(GenoID %in% BLUEs$GenoID)
+  Ktrain_GWAS <- Ktrain %>% # adjust kinship to BLUEs lines
+    filter(GenoID %in% BLUEs$GenoID) %>% 
+    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUEs$GenoID)))
   
-  dim(BLUPs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
+  dim(BLUEs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
   # run GWAS
   tmp <- capture.output({
-    scores <- GAPIT(Y = BLUPs,
+    scores <- GAPIT(Y = BLUEs,
                     GD = gtrain_GWAS,
                     GM = map,
                     KI = Ktrain_GWAS,
@@ -386,22 +393,20 @@ eval_S1 <- function(strategy, phenotype, trait) {
   return(cor_results)
 }
 
-runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wModel = FALSE) {
+runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel = FALSE) {
   #===============================================
   # Run GWAS 
   # ==============================================
   bonferroni <- 0.05/nrow(map)
-  Kw <- Kw %>% 
+  Kw <- data.frame(Kw) %>% 
     rownames_to_column("GenoID") %>% 
     dplyr::select(GenoID, everything())
   
+  BLUEs <- extract_blues_df(phenotype, "PLACL", formula) 
   
-  formula <- "~ Strain + Rep + Leaf + (1|Plant)"
-  BLUPs <- extract_blups_df(phenotype, "PLACL", formula) 
-  
-  dim(BLUPs); dim(genoW); dim(map); dim(Kw)
+  dim(BLUEs); dim(genoW); dim(map); dim(Kw)
   tmp <- capture.output({
-    scores <- GAPIT(Y = BLUPs,
+    scores <- GAPIT(Y = BLUEs,
                     GD = genoW,
                     GM = map,
                     KI = Kw,
@@ -499,7 +504,7 @@ eval_S2 <- function(strategy, phenotype, trait) {
   return(list(CorrelationResults = correlationResults))
 }
 
-run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel = FALSE) {
+run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest, wModel = FALSE) {
   #===============================================
   # Create data for train and test
   # ==============================================
@@ -515,22 +520,21 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, wtest, wModel =
   ptrain_GWAS <- phenotype[phenotype$Plant %in% gtrain[,1], ]
   Ktrain <- data.frame(A.mat(gtrain[,-1]))
   colnames(Ktrain) <- rownames(Ktrain) <- gtrain[,1]
-  Ktrain <- Ktrain %>% 
+  Ktrain <- data.frame(Ktrain) %>% 
     rownames_to_column("GenoID") %>% 
     dplyr::select(GenoID, everything())
   rownames(Ktrain) <- NULL
   
-  formula <- "~ Strain + Rep + Leaf + (1|Plant)"
-  BLUPs <- extract_blups_df(ptrain_GWAS, "PLACL", formula) 
-  gtrain_GWAS <- gtrain %>% # adjust genotype to blups lines
-    filter(GenoID %in% BLUPs$GenoID)
-  Ktrain_GWAS <- Ktrain %>% # adjust kinship to blups lines
-    filter(GenoID %in% BLUPs$GenoID) %>% 
-    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUPs$GenoID)))
+  BLUEs <- extract_blues_df(ptrain_GWAS, "PLACL", formula) 
+  gtrain_GWAS <- gtrain %>% # adjust genotype to BLUEs lines
+    filter(GenoID %in% BLUEs$GenoID)
+  Ktrain_GWAS <- Ktrain %>% # adjust kinship to BLUEs lines
+    filter(GenoID %in% BLUEs$GenoID) %>% 
+    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUEs$GenoID)))
   
-  dim(BLUPs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
+  dim(BLUEs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
   tmp <- capture.output({
-    scores <- GAPIT(Y = BLUPs,
+    scores <- GAPIT(Y = BLUEs,
                     GD = gtrain_GWAS,
                     GM = map,
                     KI = Ktrain_GWAS,

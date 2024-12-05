@@ -21,6 +21,7 @@ wtest_lines <- list()  # Initialize wtest_lines before using it
 # Select test lines for wheat
 wheat_test <- sample(rownames(k_wheat), ceiling(0.2 * nrow(k_wheat)))
 wtest_lines[[iter]] <- wheat_test
+formula <- "~ -1 + Plant + Strain + Rep + Leaf "
 
 # Loop over wheat and mix kernels
 for (wheatKey in names(Kw_list)) {
@@ -37,7 +38,8 @@ for (wheatKey in names(Kw_list)) {
                        pheno = phenotype,
                        genoW = genotype_wheat,
                        map = map_wheat,
-                       wtest = wheat_test)
+                       wtest = wheat_test,
+                       formula = formula)
     
     scenarioResults$Scenario1 <- eval_S1(strategy = ST1Models,
                                          phenotype = phenotype,
@@ -64,7 +66,8 @@ for (wheatKey in names(Kw_list)) {
                            phenotype = phenotype,
                            genoW = genotype_wheat,
                            map = map_wheat,
-                           sMix = mix)
+                           sMix = mix, 
+                           formula = formula)
       scenarioResults[[paste("Scenario2", mix)]] <- eval_S2(strategy = ST2strategy,
                                                             phenotype = phenotype,
                                                             trait = "PLACL")
@@ -90,7 +93,8 @@ for (wheatKey in names(Kw_list)) {
                           sMix = mix,
                           genoW = genotype_wheat,
                           map = map_wheat,
-                          wtest = wheat_test)
+                          wtest = wheat_test, 
+                          formula = formula)
       scenarioResults[[paste("Scenario3", mix)]] <- eval_S3(strategy = ST3Models,
                                                             phenotype = phenotype,
                                                             trait = "PLACL")
@@ -115,5 +119,5 @@ for (wheatKey in names(Kw_list)) {
 }
 
 # Save allResults and wtest_lines for this iteration in a separate file
-dir.create("data/modified_data/cv", recursive = T)
-save(allResults, wtest_lines, file = paste0("data/modified_data/cv/iter_", iter, ".Rdata"))
+dir.create("data/modified_data/cv/all", recursive = T)
+save(allResults, wtest_lines, file = paste0("data/modified_data/cv/all/iter_", iter, ".Rdata"))
