@@ -1,3 +1,73 @@
+allele2numeric <- function(matrix, maf.filter = NULL, heter.filter = NULL) {
+  # Internal function to convert genotypes to numeric values
+  convert <- function(col) {
+    # Split the alleles
+    alleles <- strsplit(col, "/")
+    alleles <- do.call(rbind, alleles) # Convert the list into a two-column matrix
+    
+    # Handle NA: if any entry is NA, keep it as NA
+    alleles[is.na(alleles)] <- NA
+    
+    # Frequency table of the alleles
+    allele_counts <- sort(table(alleles), decreasing = TRUE)
+    
+    # Identify the second most frequent allele (minor allele)
+    if (length(allele_counts) < 2) return(rep(NA, length(col))) # If there's only one allele, return NA
+    
+    minor_allele <- names(allele_counts)[2]
+    
+    # Convert alleles into 0/1 while preserving NA for missing values
+    numeric_values <- ifelse(alleles == minor_allele, 1, 
+                             ifelse(alleles != minor_allele, 0, NA))
+    
+    # Sum by row while preserving NA values
+    numeric_values_sum <- rowSums(numeric_values, na.rm = F)
+    
+    return(numeric_values_sum)
+  }
+  
+  # Internal function to calculate the Minor Allele Frequency (MAF)
+  extract.maf <- function(col) {
+    # Exclude NA values for frequency calculation
+    col_no_na <- col[!is.na(col)]
+    
+    # Frequency table of numeric values
+    allele_counts <- sort(table(col_no_na), decreasing = TRUE)
+    n <- length(col_no_na) # Total number of non-NA observations
+    
+    if (length(allele_counts) < 2) return(0) # If no second allele exists, MAF is zero
+    
+    maf_value <- allele_counts[2] / n
+    return(maf_value)
+  }
+  
+  # Apply the conversion to each column
+  M <- apply(matrix, 2, convert)
+  
+  # Calculate MAF for each column
+  maf <- apply(M, 2, extract.maf)
+  
+  # Filter columns based on MAF if maf.filter is defined
+  if (!is.null(maf.filter)) {
+    valid_markers <- which(maf >= maf.filter) # Indices of valid columns
+    M <- M[, valid_markers, drop = FALSE]
+    cat("Markers removed with Minor Allele Frequency below", maf.filter, ":",
+        ncol(matrix) - length(valid_markers), "\n")
+  }
+  
+  if(!is.null(heter.filter)){
+    het_snps <- apply(M, 2, function(column) sum(column == 1, na.rm = T))
+    het_snps_per_sample <- het_snps / nrow(M)
+    het_snps <- het_snps_per_sample[het_snps_per_sample > heter.filter]
+    
+    M <- M[, !colnames(M) %in% names(het_snps)]
+    cat("Markers removed with Heterozygosity over", heter.filter, ":",
+        length(het_snps), "\n")
+  }
+  
+  return(M)
+}
+
 plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shapes = NULL, interactive = NULL){
   if (!is.matrix(genotype) && !is.data.frame(genotype)) {
     stop("Input must be a matrix or data frame.")
@@ -83,7 +153,6 @@ plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shape
       return(list(scree_plot = scree_plot, pca_plot = pca_plot))
     }
 }
-
 
 plotGrid <- function(phenotype_long, trait, colors) {
   plot <- ggplot(data = phenotype_long) +
@@ -635,4 +704,176 @@ eval_S3 <- function(strategy, phenotype, trait) {
   )
   
   return(list(CorrelationResults = correlationResults))
+}
+
+functS1 <- function(list, weighted, interaction) {
+  # Determina los índices basados en 'weighted' e 'interaction'
+  list2 <- ifelse(weighted == FALSE, 1, 2)
+  list3 <- ifelse(interaction == FALSE, 3, 4)
+  
+  # Crear una lista para almacenar los dataframes resultantes
+  all_models_df <- list()
+  
+  # Define la función auxiliar para convertir la lista en un dataframe
+  list2df <- function(input_list, name) {
+    new_df <- data.frame(value = unlist(input_list)) %>%
+      mutate(
+        mix = rep(c("mix1", "mix2", "mix3", "mix4"), length.out = length(unlist(input_list)))
+      ) %>%
+      mutate(Model = name)
+    
+    return(new_df)
+  }
+  
+  # Obtener nombres correctos de los modelos sin 'Iteration'
+  new_names <- gsub("Iteration [0-9]+ ", "", names(list))
+  
+  # Iterar del 1 al 4 para extraer modelos y aplicar 'list2df'
+  for (i in 1:4) {
+    model <- list[[i]][[list2]][[list3]]  # Extraer el modelo correspondiente
+    model_name <- new_names[i]  # Obtener el nombre del modelo
+    model_df <- list2df(model, model_name)  # Aplicar 'list2df' y pasar el nombre
+    all_models_df[[i]] <- model_df  # Guardar el dataframe en la lista
+  }
+  
+  if(weighted == FALSE && interaction == FALSE){
+    strategy <- "CV w/o Interaction"
+  }
+  if(weighted == TRUE && interaction == FALSE){
+    strategy <- "CV weighted model"
+  }
+  if(weighted == FALSE && interaction == TRUE){
+    strategy <- "CV with I"
+  }
+  if(weighted == TRUE && interaction == TRUE){
+    strategy <- "CV weighted model with I"
+  }
+  # Combinar todos los dataframes en uno solo y agregar la columna 'Strategy'
+  S1 <- do.call(rbind, all_models_df) %>%
+    mutate(Strategy = strategy)
+  
+  return(S1)
+}
+
+functS2 <- function(list, weighted, interaction){
+  mix_lists <- list(
+    mix1_list = list(),
+    mix2_list = list(),
+    mix3_list = list(),
+    mix4_list = list()
+  )
+  
+  # Determine the correct indices based on the 'weighted' and 'interaction' flags
+  list2 <- if (weighted == FALSE) {
+    c(3, 5, 7, 9)  # When weighted is FALSE
+  } else {
+    c(4, 6, 8, 10)  # When weighted is TRUE
+  }
+  list3 <- ifelse(interaction == FALSE, 1, 2)
+  
+  # Loop through the main list and assign the appropriate elements to each mix list
+  for (i in seq_along(allResults)) {  # Loop over each model (1 to 4)
+    for (j in seq_along(mix_lists)) {  # Loop over each mix (1 to 4) # Loop over mix lists (1 to 4)
+      mix_lists[[i]][[j]] <- allResults[[i]][[list2[j]]][[1]][[list3]]
+    }
+  }
+  
+  if(weighted == FALSE && interaction == FALSE){
+    strategy <- "CV w/o Interaction"
+  }
+  if(weighted == TRUE && interaction == FALSE){
+    strategy <- "CV weighted model"
+  }
+  if(weighted == FALSE && interaction == TRUE){
+    strategy <- "CV with I"
+  }
+  if(weighted == TRUE && interaction == TRUE){
+    strategy <- "CV weighted model with I"
+  }
+  
+  mixdf <- do.call(cbind, lapply(mix_lists, function(x) {
+    sapply(x, unlist)  # "Aplana" las listas o vectores de longitud 1
+  })) %>% 
+    data.frame()
+  
+  colnames(mixdf) <-  gsub("Iteration [0-9]+ ", "", names(list))
+  mixdf <- mixdf %>% 
+    mutate(strategy = strategy,
+           mix = c("mix1", "mix2", "mix3", "mix4")) %>% 
+    pivot_longer(cols = starts_with("Wheat"),
+                 names_to = "Model",
+                 values_to = "value")
+  
+  return(mixdf)
+}
+
+functS3 <- function(list, weighted, interaction){
+  mix_lists <- list(
+    mix1_list = list(),
+    mix2_list = list(),
+    mix3_list = list(),
+    mix4_list = list()
+  )
+  
+  # Determine the correct indices based on the 'weighted' and 'interaction' flags
+  list2 <- if (weighted == FALSE) {
+    c(11, 13, 15, 17)  # When weighted is FALSE
+  } else {
+    c(12, 14, 16, 18)  # When weighted is TRUE
+  }
+  list3 <- ifelse(interaction == FALSE, 1, 2)
+  
+  # Loop through the main list and assign the appropriate elements to each mix list
+  for (i in seq_along(allResults)) {  # Loop over each model (1 to 4)
+    for (j in seq_along(mix_lists)) {  # Loop over each mix (1 to 4) # Loop over mix lists (1 to 4)
+      mix_lists[[i]][[j]] <- allResults[[i]][[list2[j]]][[1]][[list3]]
+    }
+  }
+  
+  if(weighted == FALSE && interaction == FALSE){
+    strategy <- "CV w/o Interaction"
+  }
+  if(weighted == TRUE && interaction == FALSE){
+    strategy <- "CV weighted model"
+  }
+  if(weighted == FALSE && interaction == TRUE){
+    strategy <- "CV with I"
+  }
+  if(weighted == TRUE && interaction == TRUE){
+    strategy <- "CV weighted model with I"
+  }
+  
+  mixdf <- do.call(cbind, lapply(mix_lists, function(x) {
+    sapply(x, unlist)  # "Aplana" las listas o vectores de longitud 1
+  })) %>% 
+    data.frame()
+  
+  colnames(mixdf) <-  gsub("Iteration [0-9]+ ", "", names(list))
+  mixdf <- mixdf %>% 
+    mutate(strategy = strategy,
+           mix = c("mix1", "mix2", "mix3", "mix4")) %>% 
+    pivot_longer(cols = starts_with("Wheat"),
+                 names_to = "Model",
+                 values_to = "value")
+  
+  return(mixdf)
+}
+
+plotCV <- function(df){
+  ggplot(df, aes(x = mix, y = Mean, fill = Model)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(ymin = Mean - SE, ymax = Mean + SE),
+                  position = position_dodge(width = 0.9), width = 0.25) +
+    labs(title = "Mean Correlation for Strategy 1", x = "Mix", y = "Mean Correlation") +
+    scale_fill_manual(values = c("#DD5129FF", "#0F7BA2FF", "#43B284FF","#FAB255FF")) +
+    theme_ipsum() +
+    theme(
+      legend.position = "top",
+      plot.title = element_text(hjust = 0.5, size = 14, face = "plain"),
+      strip.text = element_text(size = 10, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = "lightgray"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.y = element_text(size = 12),
+      axis.title.x = element_blank()) +
+    facet_grid(. ~ strategy)
 }
