@@ -1,4 +1,9 @@
 library(tidyverse)
+library(vcfR)
+library(rrBLUP)
+library(factoextra)
+library(ggiraph)
+library(ggrepel)
 source("code/R/function_septoria_GS.R")
 
 # we have to subset the snps selected for the train in the test so that we can intergate fairly 
@@ -20,12 +25,14 @@ snp_list <- cbind(chr_df, pos) %>%
 
 write_tsv(snp_list, file = "data/modified_data/snp_subset.txt", col_names = F)
 
+# subset both samples and snps from the raw_snps.vcf.gz containing 119 samples x 3 M snps
+
 #==============================================================================
 # Prepare genotype
 #==============================================================================
 
 # load the vcf file correspondent to the test samples
-raw_test_vcf <- read.vcfR("data/raw_data/raw_test.vcf.gz")
+raw_test_vcf <- read.vcfR("data/raw_data/clean_test.vcf.gz")
 raw_allele_mat <- t(extract.gt(raw_test_vcf, return.alleles = T)) # extract allele matrix
 # asjust marker names
 chr_names <- read_tsv("data/raw_data/chr_names.tsv")
@@ -71,29 +78,13 @@ genotype_test <- data.frame(M) %>%
 ncol(genotype_test) == ncol(genotype_septoria)
 
 genotype_combined <- rbind(genotype_septoria, genotype_test)
-imputation <- impute::impute.knn(genotype_combined[,-1], k = 2, colmax = 1)
-M_imputed <- imputation$data
-M_imputed <- data.frame(M_imputed) %>% 
-  mutate(Isolate = rownames(genotype_combined)) %>% 
+M_imputed <- A.mat(genotype_combined[,-1], return.imputed = T, impute.method = "EM")
+M_impute <- M_imputed$imputed
+M_impute <- data.frame(M_impute) %>% 
+  mutate(Isolate = genotype_combined[,1]) %>% 
   dplyr::select(Isolate, everything())
 
-genotype_all <- M_imputed
-save(genotype_all, file = "data/modified_data/5_predictions.Rdata")
-
-# calculate PCA plot for the combined dataset
-info_strains$Isolate <- gsub("\\.", "_", info_strains$Isolate )
-pca_df <- data.frame(Isolate = genotype_all[,1]) %>% 
-  left_join(info_strains, by = "Isolate") %>% 
-  dplyr::select(Isolate, Region = Partition)
-colors <- c("Train" = "#DD5129FF", 
-            "Test" = "#0F7BA2FF")
-
-
-PCA_all <- plotPCA(genotype = genotype_all,
-        regions = pca_df$Region,
-        colors = colors,
-        names = pca_df$Isolate, 
-        interactive = T)
+genotype_all <- M_impute
 
 #==============================================================================
 # Prepare phenotype
@@ -125,11 +116,75 @@ septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
 
 cleaned_septoria_phenotype <- septoria_phenotype %>% 
-  filter(Isolate %in% genotype_septoria[,1])
+  filter(Isolate %in% genotype_all[,1])
 
-save(genotype_combined, cleaned_septoria_phenotype, 
+k_all <- A.mat(as.matrix(genotype_all[,-1]))
+rownames(k_all) <- colnames(k_all) <- genotype_all[,1]
+
+#==============================================================================
+# Prepare test phenotype 
+#==============================================================================
+
+raw_test_pheno <- readxl::read_xlsx("data/raw_data/Output-2.xlsx", col_names = T)
+test_pheno <- raw_test_pheno %>% 
+  mutate(
+    Isolate = str_replace_all(
+      str_c(
+        map_chr(str_split(Picture, "_"), ~ paste0(.x[2], "_", .x[1], "_", .x[3]))
+      ), "\\.", "_"
+    ),
+    across(c(PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion), as.numeric),
+    Rep = map_chr(str_split(Picture, "_"), ~ .x[length(.x) - 1]),
+    N = map_chr(str_split(Picture, "_"), ~ .x[length(.x)]),
+    Line = map_chr(str_split(Picture, "_"), ~ paste0(.x[4]))
+  ) %>% 
+  dplyr::select(Isolate, PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion, Rep, N, Line)
+test_pheno[test_pheno$Line == "Don", "Line"] <- "Don_Ricardo"
+
+test_pheno <- test_pheno %>% 
+  mutate(across(c(Rep, N, Line), as.factor))
+
+length(intersect(unique(test_pheno$Isolate), colnames(k_all)))
+diff <- setdiff(test_pheno$Isolate, colnames(k_all))
+
+test_pheno <- test_pheno %>% 
+  mutate(Isolate = if_else(Isolate %in% diff, 
+                           str_replace(Isolate, "_1", ""), 
+                           Isolate))
+
+test_K <- grep("23", colnames(k_all), value = T)
+clean_test_pheno <- test_pheno %>% 
+  filter(Isolate %in% test_K)
+
+save(genotype_all, k_all, cleaned_septoria_phenotype, clean_test_pheno, 
      file = "data/modified_data/5_predictions.Rdata")
 
+#==============================================================================
+# Plot combined PCA
+#==============================================================================
+
+info_strains$Isolate <- gsub("\\.", "_", info_strains$Isolate )
+pca_df <- data.frame(Isolate = genotype_all[,1]) %>% 
+  left_join(info_strains, by = "Isolate") %>% 
+  dplyr::select(Isolate, Region = Partition)
+
+colors <- c("Train" = "#DD5129FF", 
+            "Test" = "#0F7BA2FF")
+
+shapes <- c("Train" = 16,
+            "Test" = 16)
+
+# calculate PCA plot for the combined dataset
+PCA_all <- plotPCA(genotype = genotype_all,
+        regions = pca_df$Region,
+        colors = colors,
+        names = pca_df$Isolate, 
+        interactive = T,
+        shapes = shapes)
+
+png(paste0("outputs/plots/PCA_all_sep.png"), width = 3000, height = 3000, res = 400)
+PCA_all$pca_plot
+dev.off()
 
 
 

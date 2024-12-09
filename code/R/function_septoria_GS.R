@@ -275,6 +275,20 @@ extract_blues <- function(phenotype, trait, formula) {
   return(blues_df)
 }
 
+extract_blues_isolates <- function(phenotype, trait, formula) {
+  model <- lm(as.formula(paste(trait, formula)), data = phenotype)
+  blues <- coef(model)[grep("Isolate", names(coef(model)), value = T)]
+  names(blues) <- gsub("Isolate", "", names(blues))
+  blues_df <- data.frame(blues) %>% 
+    rownames_to_column("Isolate") %>% 
+    dplyr::select(Isolate, everything())
+  
+  colnames(blues_df) <- c("Isolate", trait)
+  rownames(blues_df) <- NULL
+  return(blues_df)
+}
+
+
 extract_blues_df <- function(phenotype, traits, formula) {
   blues_list <- list()
   
@@ -289,11 +303,34 @@ extract_blues_df <- function(phenotype, traits, formula) {
   
   # Check if dimensions match
   if (length(unique(sapply(dims_list, paste, collapse = "x"))) == 1) {
-    message("Dimensions match. Returning a combined blups data frame.")
+    message("Dimensions match. Returning a combined blues data frame.")
     blues_df <- purrr::reduce(blues_list, ~ dplyr::left_join(.x, .y, by = "GenoID"))
     return(blues_df)
   } else {
-    message("Dimensions do not match. Returning blups as a list.")
+    message("Dimensions do not match. Returning blues as a list.")
+    return(blues_list)
+  }
+}
+
+extract_blues_df_isolates <- function(phenotype, traits, formula) {
+  blues_list <- list()
+  
+  # Populate blues_list and capture dimensions
+  dims_list <- vector("list", length(traits))
+  for (i in seq_along(traits)) {
+    trait <- traits[i]
+    blups <- extract_blues_isolates(phenotype, trait, formula)
+    blues_list[[i]] <- blups
+    dims_list[[i]] <- dim(blups)
+  }
+  
+  # Check if dimensions match
+  if (length(unique(sapply(dims_list, paste, collapse = "x"))) == 1) {
+    message("Dimensions match. Returning a combined blues data frame.")
+    blues_df <- purrr::reduce(blues_list, ~ dplyr::left_join(.x, .y, by = "Isolate"))
+    return(blues_df)
+  } else {
+    message("Dimensions do not match. Returning blues as a list.")
     return(blues_list)
   }
 }
