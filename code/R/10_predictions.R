@@ -2,42 +2,41 @@ library(tidyverse)
 library(sommer)
 source("code/R/function_septoria_GS.R")
 
+# Load necessary data
 load("data/modified_data/5_predictions.Rdata")
-test <- unique(clean_test_pheno$Isolate)
 
-# extract the blues for the test lines 
-formula <- "~ -1 + Isolate + Line + N"
-blues <- extract_blues_df_isolates(clean_test_pheno,
-                                   traits = colnames(clean_test_pheno)[2:4],
-                                   formula = formula)
+# Retrieve task ID
+i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 
-
-# First stage model
+# Ensure task ID is valid
 traits <- c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
+
+# Select trait for this run
+trait <- traits[i]
+
+# Define formula
+formula <- as.formula(paste0(trait, " ~ Line + Year + REP + Leaf"))
+
+# Fit model
+model <- mmer(
+  formula,
+  random = ~ vsr(Isolate, Gu = k_all),
+  rcov = ~ units,
+  data = cleaned_septoria_phenotype,
+  verbose = TRUE
+)
+
+# Extract BLUPs and create data frame
 blups_list <- list()
+blups_list[[trait]] <- model$U$`u:Isolate`[[trait]]
 
-# Loop over traits to fit the model and extract BLUPs
-for (i in seq_along(traits)) {
-  trait <- traits[i]
-  formula <- as.formula(paste0(trait, " ~ Line + Year + REP + Leaf"))
-  
-  model <- mmer(
-    formula,
-    random = ~ vsr(Isolate, Gu = k_all),
-    rcov = ~ units,
-    data = cleaned_septoria_phenotype,
-    verbose = TRUE
-  )
-  
-  # Store BLUPs in the list, naming by trait
-  blups_list[[trait]] <- model$U$`u:Isolate`[[trait]]
-}
+blups_df <- data.frame(Isolate = names(blups_list[[trait]]), 
+                       BLUP = blups_list[[trait]]) %>% 
+  mutate(Trait = trait)
 
-# Combine BLUPs into a single data frame
-blups_df <- data.frame(do.call(cbind, blups_list)) %>% 
-  rownames_to_column("Isolate") %>% 
-  dplyr::select(Isolate, everything())
+# Save results
+dir.create("data/modified_data/predictions/", recursive = TRUE, showWarnings = FALSE)
+save(blups_df, file = paste0("data/modified_data/predictions/pred_", trait, ".Rdata"))
 
-save(blues, blups_df, file = "data/modified_data/6_pred_results.Rdata")
 
 
