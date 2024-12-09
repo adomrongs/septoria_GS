@@ -3,6 +3,7 @@ library(sommer)
 source("code/R/function_septoria_GS.R")
 
 load("data/modified_data/5_predictions.Rdata")
+test <- unique(clean_test_pheno$Isolate)
 
 # extract the blues for the test lines 
 formula <- "~ -1 + Isolate + Line + N"
@@ -18,6 +19,11 @@ model <- mmer(PLACL ~ Line + Year + REP + Leaf,
               data = cleaned_septoria_phenotype,
               verbose = TRUE)
 
+blups <- model$U$`u:Isolate`
+blups_df <- data.frame(do.call(cbind, blups)) %>% 
+  rownames_to_column("Isolate") %>%
+  dplyr::select(Isolate, everything())
 
+save(blues, blups_df, file = "data/modified_data/6_pred_results.Rdata")
 
 
