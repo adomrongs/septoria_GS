@@ -13,15 +13,29 @@ blues <- extract_blues_df_isolates(clean_test_pheno,
 
 
 # First stage model
-model <- mmer(PLACL ~ Line + Year + REP + Leaf,
-              random = ~ vsr(Isolate, Gu = k_all),
-              rcov = ~ units,
-              data = cleaned_septoria_phenotype,
-              verbose = TRUE)
+traits <- c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
+blups_list <- list()
 
-blups <- model$U$`u:Isolate`
-blups_df <- data.frame(do.call(cbind, blups)) %>% 
-  rownames_to_column("Isolate") %>%
+# Loop over traits to fit the model and extract BLUPs
+for (i in seq_along(traits)) {
+  trait <- traits[i]
+  formula <- as.formula(paste0(trait, " ~ Line + Year + REP + Leaf"))
+  
+  model <- mmer(
+    formula,
+    random = ~ vsr(Isolate, Gu = k_all),
+    rcov = ~ units,
+    data = cleaned_septoria_phenotype,
+    verbose = TRUE
+  )
+  
+  # Store BLUPs in the list, naming by trait
+  blups_list[[trait]] <- model$U$`u:Isolate`[[trait]]
+}
+
+# Combine BLUPs into a single data frame
+blups_df <- data.frame(do.call(cbind, blups_list)) %>% 
+  rownames_to_column("Isolate") %>% 
   dplyr::select(Isolate, everything())
 
 save(blues, blups_df, file = "data/modified_data/6_pred_results.Rdata")

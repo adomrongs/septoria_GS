@@ -154,6 +154,99 @@ plotPCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, shape
     }
 }
 
+plotPCA2 <- function(genotype, regions = NULL, names = NULL, colors = NULL, shape_col = NULL,  shapes = NULL, interactive = NULL){
+  if (!is.matrix(genotype) && !is.data.frame(genotype)) {
+    stop("Input must be a matrix or data frame.")
+  }
+  
+  # Check if regions is provided and has the correct length
+  if (!is.null(regions)) {
+    if (length(regions) != nrow(genotype)) {
+      stop("The length of 'regions' must match the number of rows in 'genotype'.")
+    }
+  }
+  
+  # double center the genotypic matrix for the PCA
+  row_means <- rowMeans(genotype[, -1])
+  col_means <- colMeans(genotype[, -1])
+  overall_mean <- mean(as.matrix(genotype[, -1]))
+  genotype[, -1] <- genotype[, -1] - row_means + overall_mean
+  genotype[, -1] <- t(t(genotype[, -1]) - col_means)
+  
+  # compute the PC analysis
+  PCA <- prcomp(genotype[, -1], center = F)
+  PCs <- PCA$x
+  scree_plot <- fviz_eig(PCA, addlabels = TRUE, ylim = c(0, 100)) # extract scree plot
+  
+  # Prepare the data for PCA plot
+  pca_data <- as.data.frame(PCs) %>% 
+    mutate(GenoID = genotype[,1])
+  if (!is.null(regions)) {
+    pca_data$regions <- as.factor(regions)  # Add regions as a factor
+    pca_data$shape <- as.factor(ifelse(pca_data$regions == "CHECK", 17, 16))
+  } else {
+    pca_data$regions <- as.factor("All")  # Default value if no regions are provided
+  }
+  
+  if(!is.null(names)){
+    pca_data$Names <- names
+  } else {
+    pca_data$Names <- NA
+  }
+  
+  if(!is.null(shape_col)){
+    pca_data$other <- shape_col
+  } else {
+    pca_data$other <- NA
+  }
+  
+  pca_plot <- ggplot(data = pca_data) +
+    geom_point_interactive(aes(x = PC1, y = PC2, color = regions, shape = other, tooltip = Names, data_id = Names),
+                           size = 3) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # Horizontal line
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+    geom_text_repel(
+      data = pca_data %>% filter(regions == "CHECK"),  # Filter data where regions == "CHECK"
+      aes(x = PC1, y = PC2, label = Names),  # Ensure x and y are mapped to PC1 and PC2
+      size = 4,  # Text size
+      box.padding = 1.5, max.overlaps = Inf # Push text farther vertically
+    ) +
+    labs(
+      x = paste("PC1 (", round(100 * PCA$sdev[1]^2 / sum(PCA$sdev^2), 1), "%)", sep = ""),
+      y = paste("PC2 (", round(100 * PCA$sdev[2]^2 / sum(PCA$sdev^2), 1), "%)", sep = "")
+    ) +  # Axis labels
+    theme_minimal() +  # Clean theme
+    theme(
+      panel.grid = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "top",  # Move legend to the top
+      legend.title = element_blank(),  # Remove legend title
+      legend.key = element_blank(),  # Optional: remove key background
+      legend.text = element_text(size = 18),  # Increase text size of legend
+      plot.title = element_blank(),  # Remove title from the plot
+      axis.title.x = element_text(size = 18),  # Axis label sizes
+      axis.title.y = element_text(size = 18),
+      axis.text = element_text(size = 17),  # Axis text sizes
+      strip.text = element_text(size = 10, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = "lightgray"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      plot.margin = margin(t = 10, r = 40, b = 10, l = 10) # Panel border
+    ) +
+    scale_color_manual(values = colors) +
+    scale_shape_manual(values = shapes)
+  
+  if(!is.null(interactive)){
+    interactive_plot <- girafe(ggobj = pca_plot, 
+                               options = list(opts_hover(css = "stroke:#000; stroke-width: 0.5px; transition: all 0.3s ease;"),
+                                              opts_hover_inv("opacity:0.5;filter:saturate(10%);")))
+    return(list(scree_plot = scree_plot, pca_plot = pca_plot, interactive = interactive_plot))
+  } else {
+    return(list(scree_plot = scree_plot, pca_plot = pca_plot))
+  }
+}
+
+
 plotGrid <- function(phenotype_long, trait, colors) {
   plot <- ggplot(data = phenotype_long) +
     stat_halfeye(aes_string(y = "Value", fill = trait), 

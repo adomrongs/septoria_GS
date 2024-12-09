@@ -60,9 +60,12 @@ shapes <- c("Córdoba" = 16,
 
 # adjust pca_df to match the isolates in genotype_septoria
 pca_df <- pca_df %>% 
-  mutate(color = colors[Region],
-                 shape = shapes[Region]) %>% 
-  filter(Isolate %in% genotype_septoria[, "Isolate"]) %>% 
+  mutate(
+    color = colors[Region],
+    shape = shapes[Region],
+    year = (map_chr(strsplit(Isolate, "_"), ~ .x[1]))  # Ensure `year` is numeric
+  ) %>% 
+  filter(Isolate %in% genotype_septoria$Isolate) %>%  # Ensure Isolate column exists in genotype_septoria
   distinct()
 
 # create pca and screeplot 
@@ -81,6 +84,20 @@ dev.off()
 
 png(paste0("outputs/plots/screeplot_sep.png"), width = 3000, height = 3000, res = 400)
 PCA_plot_sep$scree_plot
+dev.off()
+
+shapes2 <- c("21" = 17,
+             "22" = 16)
+PCA_plot_sep2 <- plotPCA2(genotype = genotype_septoria,
+                        regions = pca_df$Region,
+                        colors = colors,
+                        shapes = shapes2,
+                        names = pca_df$Isolate,
+                        interactive = TRUE, shape_col = pca_df$year
+)
+
+png(paste0("outputs/plots/PCA_sep_complete.png"), width = 3000, height = 3000, res = 400)
+PCA_plot_sep2$pca_plot
 dev.off()
 
 # create heatmap for the GRM
@@ -149,8 +166,5 @@ heatmap(k_wheat_mat, col = colorRampPalette(brewer.pal(8, "Oranges"))(25),
 dev.off()
 
 
-#-------------------------------------------------------------------------------
-# PCA and GRM Zymoseptoria (119)
-#-------------------------------------------------------------------------------
 
 
