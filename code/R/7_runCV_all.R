@@ -122,5 +122,5 @@ for (wheatKey in names(Kw_list)) {
 }
 
 # Save allResults and wtest_lines for this iteration in a separate file
-dir.create("data/modified_data/cv/all", recursive = T)
-save(allResults, wtest_lines, file = paste0("data/modified_data/cv/all/iter_", iter, ".Rdata"))
+dir.create("data/modified_data/cv/all2", recursive = T)
+save(allResults, wtest_lines, file = paste0("data/modified_data/cv/all2/iter_", iter, ".Rdata"))
