@@ -125,36 +125,18 @@ rownames(k_all) <- colnames(k_all) <- genotype_all[,1]
 # Prepare test phenotype 
 #==============================================================================
 
-raw_test_pheno <- readxl::read_xlsx("data/raw_data/Output-2.xlsx", col_names = T)
+raw_test_pheno <- readxl::excel_sheets("data/raw_data/Output_Exp5greenhouse2023_19strains_Rep1and2.xlsx") %>%
+  map_df(~ readxl::read_xlsx("data/raw_data/Output_Exp5greenhouse2023_19strains_Rep1and2.xlsx", 
+                     col_names = TRUE, sheet = .x) %>% dplyr::select(-1))
+
 test_pheno <- raw_test_pheno %>% 
+  dplyr::select(strain, dpi, cultivar, replicate, PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion) %>% 
   mutate(
-    Isolate = str_replace_all(
-      str_c(
-        map_chr(str_split(Picture, "_"), ~ paste0(.x[2], "_", .x[1], "_", .x[3]))
-      ), "\\.", "_"
-    ),
-    across(c(PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion), as.numeric),
-    Rep = map_chr(str_split(Picture, "_"), ~ .x[length(.x) - 1]),
-    N = map_chr(str_split(Picture, "_"), ~ .x[length(.x)]),
-    Line = map_chr(str_split(Picture, "_"), ~ paste0(.x[4]))
-  ) %>% 
-  dplyr::select(Isolate, PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion, Rep, N, Line)
-test_pheno[test_pheno$Line == "Don", "Line"] <- "Don_Ricardo"
+    across(c(strain, dpi, cultivar, replicate), as.factor),
+    across(c(PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion), as.numeric)
+  )
 
-test_pheno <- test_pheno %>% 
-  mutate(across(c(Rep, N, Line), as.factor))
-
-length(intersect(unique(test_pheno$Isolate), colnames(k_all)))
-diff <- setdiff(test_pheno$Isolate, colnames(k_all))
-
-test_pheno <- test_pheno %>% 
-  mutate(Isolate = if_else(Isolate %in% diff, 
-                           str_replace(Isolate, "_1", ""), 
-                           Isolate))
-
-test_K <- grep("23", colnames(k_all), value = T)
-clean_test_pheno <- test_pheno %>% 
-  filter(Isolate %in% test_K)
+clean_test_pheno <- remove_outliers(test_pheno, c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
 save(genotype_all, k_all, cleaned_septoria_phenotype, clean_test_pheno, 
      file = "data/modified_data/5_predictions.Rdata")

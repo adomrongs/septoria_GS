@@ -246,7 +246,6 @@ plotPCA2 <- function(genotype, regions = NULL, names = NULL, colors = NULL, shap
   }
 }
 
-
 plotGrid <- function(phenotype_long, trait, colors) {
   plot <- ggplot(data = phenotype_long) +
     stat_halfeye(aes_string(y = "Value", fill = trait), 
@@ -380,7 +379,6 @@ extract_blues_isolates <- function(phenotype, trait, formula) {
   rownames(blues_df) <- NULL
   return(blues_df)
 }
-
 
 extract_blues_df <- function(phenotype, traits, formula) {
   blues_list <- list()
@@ -983,3 +981,22 @@ results2plot <- function(list, name, colors){
   print(plot)
   dev.off()
 }
+
+computeH2 <- function(model, interaction = NULL){
+  varGw <- model$ETA[[2]]$varU
+  varGm <- model$ETA[[3]]$varU
+  varE <- model$varE
+  
+  if(is.null(interaction)){
+    Hw <- varGw/(varGw + (varE/16))
+    Hm <- varGm/(varGm + (varE/800))
+  }else{
+    varGE <- model$ETA[[4]]$varU
+    Hw <- varGw/(varGw + (varE/16) + (varGE/800))
+    Hm <- varGm/(varGm + (varE/800) + (varGE/800))
+  }
+  
+  H2 <- (Hw + Hm)/2
+  return(H2)
+}
+

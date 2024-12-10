@@ -6,7 +6,7 @@ load("data/modified_data/5_predictions.Rdata")
 test <- unique(clean_test_pheno$Isolate)
 
 # extract the blues for the test lines 
-formula <- "~ -1 + Isolate + Line + N"
+formula <- "~ -1 + strain + dpi + cultivar + replicate"
 blues_test <- extract_blues_df_isolates(clean_test_pheno,
                                    traits = colnames(clean_test_pheno)[2:4],
                                    formula = formula)
