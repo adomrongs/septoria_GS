@@ -17,6 +17,7 @@ map <- map_wheat
 wtest <- sample(rownames(Kw), ceiling(0.2 * nrow(Kw)))
 wModel <- TRUE
 sMix <- unique(phenotype$Strain)[1]
+formula <- "~ -1 + Plant + Strain + Rep + Leaf "
 
 runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE){
   #===============================================
@@ -73,7 +74,7 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -94,7 +95,7 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -202,7 +203,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   ptrain[ptrain$Strain %in% sMix, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -223,7 +224,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -232,7 +233,6 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
-  Xwtrain <- model.matrix(~1, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)
@@ -331,7 +331,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   ptrain[ptrain$Plant %in% wtest, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -352,7 +352,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -361,7 +361,6 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
-  Xwtrain <- model.matrix(~1, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)

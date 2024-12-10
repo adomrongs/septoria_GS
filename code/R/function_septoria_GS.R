@@ -499,7 +499,7 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -520,7 +520,7 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -628,7 +628,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   ptrain[ptrain$Strain %in% sMix, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -649,7 +649,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -658,7 +658,6 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
-  Xwtrain <- model.matrix(~1, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)
@@ -757,7 +756,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   ptrain[ptrain$Plant %in% wtest, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~1, data = ptrain) 
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
   } 
   if (wModel) {
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
@@ -778,7 +777,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~1, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -787,7 +786,6 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
-  Xwtrain <- model.matrix(~1, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)
@@ -836,174 +834,152 @@ eval_S3 <- function(strategy, phenotype, trait) {
   return(list(CorrelationResults = correlationResults))
 }
 
-functS1 <- function(list, weighted, interaction) {
-  # Determina los índices basados en 'weighted' e 'interaction'
-  list2 <- ifelse(weighted == FALSE, 1, 2)
-  list3 <- ifelse(interaction == FALSE, 3, 4)
+scenario1 <- function(allResults) {
+  # Initialize lists to store data
+  cor_strain_list <- list()
+  cor_strain_I_list <- list()
   
-  # Crear una lista para almacenar los dataframes resultantes
-  all_models_df <- list()
-  
-  # Define la función auxiliar para convertir la lista en un dataframe
-  list2df <- function(input_list, name) {
-    new_df <- data.frame(value = unlist(input_list)) %>%
-      mutate(
-        mix = rep(c("mix1", "mix2", "mix3", "mix4"), length.out = length(unlist(input_list)))
-      ) %>%
-      mutate(Model = name)
+  for (result_name in names(allResults)) {
+    s1_models <- grep("Scenario1", names(allResults[[result_name]]), value = TRUE)
     
-    return(new_df)
-  }
-  
-  # Obtener nombres correctos de los modelos sin 'Iteration'
-  new_names <- gsub("Iteration [0-9]+ ", "", names(list))
-  
-  # Iterar del 1 al 4 para extraer modelos y aplicar 'list2df'
-  for (i in 1:4) {
-    model <- list[[i]][[list2]][[list3]]  # Extraer el modelo correspondiente
-    model_name <- new_names[i]  # Obtener el nombre del modelo
-    model_df <- list2df(model, model_name)  # Aplicar 'list2df' y pasar el nombre
-    all_models_df[[i]] <- model_df  # Guardar el dataframe en la lista
-  }
-  
-  if(weighted == FALSE && interaction == FALSE){
-    strategy <- "CV w/o Interaction"
-  }
-  if(weighted == TRUE && interaction == FALSE){
-    strategy <- "CV weighted model"
-  }
-  if(weighted == FALSE && interaction == TRUE){
-    strategy <- "CV with I"
-  }
-  if(weighted == TRUE && interaction == TRUE){
-    strategy <- "CV weighted model with I"
-  }
-  # Combinar todos los dataframes en uno solo y agregar la columna 'Strategy'
-  S1 <- do.call(rbind, all_models_df) %>%
-    mutate(Strategy = strategy)
-  
-  return(S1)
-}
-
-functS2 <- function(list, weighted, interaction){
-  mix_lists <- list(
-    mix1_list = list(),
-    mix2_list = list(),
-    mix3_list = list(),
-    mix4_list = list()
-  )
-  
-  # Determine the correct indices based on the 'weighted' and 'interaction' flags
-  list2 <- if (weighted == FALSE) {
-    c(3, 5, 7, 9)  # When weighted is FALSE
-  } else {
-    c(4, 6, 8, 10)  # When weighted is TRUE
-  }
-  list3 <- ifelse(interaction == FALSE, 1, 2)
-  
-  # Loop through the main list and assign the appropriate elements to each mix list
-  for (i in seq_along(allResults)) {  # Loop over each model (1 to 4)
-    for (j in seq_along(mix_lists)) {  # Loop over each mix (1 to 4) # Loop over mix lists (1 to 4)
-      mix_lists[[i]][[j]] <- allResults[[i]][[list2[j]]][[1]][[list3]]
+    for (model in s1_models) {
+      # Process cor_strain
+      tmp_df <- data.frame(allResults[[result_name]][[model]][[3]]) %>% 
+        mutate(Matrix = result_name,
+               Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
+               Interaction = "")
+      cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
+      
+      # Process cor_strain_I
+      tmp_df_I <- data.frame(allResults[[result_name]][[model]][[4]]) %>% 
+        mutate(Matrix = result_name,
+               Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
     }
   }
   
-  if(weighted == FALSE && interaction == FALSE){
-    strategy <- "CV w/o Interaction"
-  }
-  if(weighted == TRUE && interaction == FALSE){
-    strategy <- "CV weighted model"
-  }
-  if(weighted == FALSE && interaction == TRUE){
-    strategy <- "CV with I"
-  }
-  if(weighted == TRUE && interaction == TRUE){
-    strategy <- "CV weighted model with I"
-  }
+  # Combine results from lists
+  cor_strain <- bind_rows(cor_strain_list)
+  cor_strain_I <- bind_rows(cor_strain_I_list)
   
-  mixdf <- do.call(cbind, lapply(mix_lists, function(x) {
-    sapply(x, unlist)  # "Aplana" las listas o vectores de longitud 1
-  })) %>% 
-    data.frame()
+  # Combine both datasets and add Info column
+  s1_df <- bind_rows(cor_strain, cor_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(-Model, -Interaction)
   
-  colnames(mixdf) <-  gsub("Iteration [0-9]+ ", "", names(list))
-  mixdf <- mixdf %>% 
-    mutate(strategy = strategy,
-           mix = c("mix1", "mix2", "mix3", "mix4")) %>% 
-    pivot_longer(cols = starts_with("Wheat"),
-                 names_to = "Model",
-                 values_to = "value")
+  # Pivot longer for final format
+  s1_df <- s1_df %>% 
+    pivot_longer(cols = -c(Info, Matrix), names_to = "Mix", values_to = "Cor") %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor)
   
-  return(mixdf)
+  return(s1_df)
 }
 
-functS3 <- function(list, weighted, interaction){
-  mix_lists <- list(
-    mix1_list = list(),
-    mix2_list = list(),
-    mix3_list = list(),
-    mix4_list = list()
-  )
+scenario2 <- function(allResults){
+  cor_strain_list <- list()
+  cor_strain_I_list <- list()
   
-  # Determine the correct indices based on the 'weighted' and 'interaction' flags
-  list2 <- if (weighted == FALSE) {
-    c(11, 13, 15, 17)  # When weighted is FALSE
-  } else {
-    c(12, 14, 16, 18)  # When weighted is TRUE
-  }
-  list3 <- ifelse(interaction == FALSE, 1, 2)
-  
-  # Loop through the main list and assign the appropriate elements to each mix list
-  for (i in seq_along(allResults)) {  # Loop over each model (1 to 4)
-    for (j in seq_along(mix_lists)) {  # Loop over each mix (1 to 4) # Loop over mix lists (1 to 4)
-      mix_lists[[i]][[j]] <- allResults[[i]][[list2[j]]][[1]][[list3]]
+  for (result_name in names(allResults)) {
+    s2_models <- grep("Scenario2", names(allResults[[result_name]]), value = TRUE)
+    for (model in s2_models) {
+      tmp_df <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[1]]) %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("2w", model), "Weighted", "Normal"),
+               Interaction = "")
+      colnames(tmp_df)[1] <- "Cor"
+      cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
+      
+      tmp_df_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[2]]) %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("2w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      colnames(tmp_df_I)[1] <- "Cor"
+      cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
     }
   }
   
-  if(weighted == FALSE && interaction == FALSE){
-    strategy <- "CV w/o Interaction"
-  }
-  if(weighted == TRUE && interaction == FALSE){
-    strategy <- "CV weighted model"
-  }
-  if(weighted == FALSE && interaction == TRUE){
-    strategy <- "CV with I"
-  }
-  if(weighted == TRUE && interaction == TRUE){
-    strategy <- "CV weighted model with I"
-  }
+  cor_strain <- bind_rows(cor_strain_list)
+  cor_strain_I <- bind_rows(cor_strain_I_list)
   
-  mixdf <- do.call(cbind, lapply(mix_lists, function(x) {
-    sapply(x, unlist)  # "Aplana" las listas o vectores de longitud 1
-  })) %>% 
-    data.frame()
+  s2_df <- bind_rows(cor_strain, cor_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor) %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor))
   
-  colnames(mixdf) <-  gsub("Iteration [0-9]+ ", "", names(list))
-  mixdf <- mixdf %>% 
-    mutate(strategy = strategy,
-           mix = c("mix1", "mix2", "mix3", "mix4")) %>% 
-    pivot_longer(cols = starts_with("Wheat"),
-                 names_to = "Model",
-                 values_to = "value")
-  
-  return(mixdf)
+  return(s2_df)
 }
 
-plotCV <- function(df){
-  ggplot(df, aes(x = mix, y = Mean, fill = Model)) +
-    geom_bar(stat = "identity", position = "dodge") +
-    geom_errorbar(aes(ymin = Mean - SE, ymax = Mean + SE),
-                  position = position_dodge(width = 0.9), width = 0.25) +
-    labs(title = "Mean Correlation for Strategy 1", x = "Mix", y = "Mean Correlation") +
-    scale_fill_manual(values = c("#DD5129FF", "#0F7BA2FF", "#43B284FF","#FAB255FF")) +
-    theme_ipsum() +
+scenario3 <- function(allResults){
+  cor_strain_list <- list()
+  cor_strain_I_list <- list()
+  
+  for (result_name in names(allResults)) {
+    s3_models <- grep("Scenario3", names(allResults[[result_name]]), value = TRUE)
+    for (model in s3_models) {
+      tmp_df <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[1]]) %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("3w", model), "Weighted", "Normal"),
+               Interaction = "")
+      colnames(tmp_df)[1] <- "Cor"
+      cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
+      
+      tmp_df_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[2]]) %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("3w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      colnames(tmp_df_I)[1] <- "Cor"
+      cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
+    }
+  }
+  
+  cor_strain <- bind_rows(cor_strain_list)
+  cor_strain_I <- bind_rows(cor_strain_I_list)
+  
+  s3_df <- bind_rows(cor_strain, cor_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor) %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor))
+  
+  return(s3_df)
+}
+
+plotCV <- function(results, colors){
+  p <- ggplot(results, aes(x = Mix, y = Cor, fill = Matrix)) +
+    geom_boxplot(width = 0.6) +
+    scale_fill_manual(values = colors) + 
+    labs(
+      title = NULL,
+      x = NULL,
+      y = "Accuracy"
+    ) +
     theme(
+      legend.title = element_blank(), 
       legend.position = "top",
+      panel.background = element_rect(fill = "white"),
+      panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
       plot.title = element_text(hjust = 0.5, size = 14, face = "plain"),
-      strip.text = element_text(size = 10, face = "plain", color = "black", hjust = 0.5),
-      strip.background = element_rect(fill = "lightgray"),
+      strip.text = element_text(size = 10, color = "black"),
+      strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),  # Agrega el borde alrededor de las etiquetas
       panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
       axis.title.y = element_text(size = 12),
-      axis.title.x = element_blank()) +
-    facet_grid(. ~ strategy)
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(size = 14)
+    )+ 
+    facet_grid(. ~ Info)
+  return(p)
+}
+
+results2plot <- function(list, name, colors){
+  results <- do.call(rbind, list)
+  plot <- plotCV(results, colors)
+  # Guardar el gráfico
+  png(paste0("outputs/plots/", name, ".png"), width = 6000, height = 3000, res = 400)
+  print(plot)
+  dev.off()
 }
