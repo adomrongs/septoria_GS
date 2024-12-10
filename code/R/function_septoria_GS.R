@@ -536,6 +536,8 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     list(K = K12_mix, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2 <- computeH2(model1)
+  
   model1_I <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
     list(X = Xwtrain, model = "FIXED"),
     list(K = K12_wheat, model = "RKHS"),
@@ -543,12 +545,15 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     list(K = K12_combined, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2_I <- computeH2(model1_I, interaction = T)
+  
   return(list(
     S1 = model1, # results model without interaction term
     S1_I = model1_I, # results with interaction term
     wtest = wtest, # partition test 
     wtrain = wtrain,
-    hits = results
+    hits = results,
+    H_list = list(H2, H2_I)
   ))
 }
 
@@ -563,6 +568,7 @@ eval_S1 <- function(strategy, phenotype, trait) {
   cor <- cor(predictions[lines_test],
              pheno_test[[trait]],
              use = "complete.obs")
+  
   cor_I <- cor(predictions_I[lines_test],
                pheno_test[[trait]],
                use = "complete.obs")
@@ -577,14 +583,18 @@ eval_S1 <- function(strategy, phenotype, trait) {
   }
   
   cor_withinStrain <- withinStrainCorrelations(predictions, phenotype, lines_test)
+  accuracy_withinStrain <- lapply(cor_withinStrain, function(x) x / sqrt(strategy$H_list[[1]]))
   cor_withinStrain_I <- withinStrainCorrelations(predictions_I, phenotype, lines_test)
+  accuracy_withinStrain_I <- lapply(cor_withinStrain_I, function(x) x / sqrt(strategy$H_list[[2]]))
   
   cor_results <- list(
     cor = cor,
     cor_I = cor_I,
     cor_withinStrain = cor_withinStrain,
     cor_withinStrain_I = cor_withinStrain_I,
-    hits <- strategy$hits
+    hits <- strategy$hits,
+    accuracy = accuracy_withinStrain,
+    accuracy_I = accuracy_withinStrain_I
   )
   
   return(cor_results)
@@ -595,18 +605,18 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   # Run GWAS 
   # ==============================================
   bonferroni <- 0.05/nrow(map)
-  Kw <- data.frame(Kw) %>% 
+  Kw_GWAS <- data.frame(Kw) %>% 
     rownames_to_column("GenoID") %>% 
     dplyr::select(GenoID, everything())
   
   BLUEs <- extract_blues_df(phenotype, "PLACL", formula) 
   
-  dim(BLUEs); dim(genoW); dim(map); dim(Kw)
+  dim(BLUEs); dim(genoW); dim(map); dim(Kw_GWAS)
   tmp <- capture.output({
     scores <- GAPIT(Y = BLUEs,
                     GD = genoW,
                     GM = map,
-                    KI = Kw,
+                    KI = Kw_GWAS,
                     CV = NULL,
                     PCA.total = 2,
                     model = "Blink",
@@ -659,7 +669,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)
-  K12_wheat <- Zwtrain %*% as.matrix(Kw[,-1]) %*% t(Zwtrain)
+  K12_wheat <- Zwtrain %*% as.matrix(Kw_GWAS[,-1]) %*% t(Zwtrain)
   K12_combined <- K12_mix * K12_wheat
   
   model2 <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
@@ -668,6 +678,8 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
     list(K = K12_mix, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2 <- computeH2(model2)
+  
   model2_I <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
     list(X = Xwtrain, model = "FIXED"),
     list(K = K12_mix, model = "RKHS"),
@@ -675,9 +687,12 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
     list(K = K12_combined, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2_I <- computeH2(model2_I, interaction = T)
+  
   return(list(model2 = model2,
               model2_I = model2_I,
-              sMix = sMix))
+              sMix = sMix,
+              H_list = list(H2, H2_I)))
 }
 
 eval_S2 <- function(strategy, phenotype, trait) {
@@ -692,9 +707,14 @@ eval_S2 <- function(strategy, phenotype, trait) {
   cor <- cor(predictions[mix_test], ptestTrait)
   cor_I <- cor(predictions_I[mix_test], ptestTrait)
   
+  accuracy <- cor/sqrt(strategy$H_list[[1]])
+  accuracy_I <- cor_I/sqrt(strategy$H_list[[2]])
+  
   correlationResults <- list(
     cor = cor, 
-    corInteraction = cor_I 
+    corInteraction = cor_I,
+    accuracy = accuracy,
+    accuracy_I = accuracy_I
   )
   
   return(list(CorrelationResults = correlationResults))
@@ -796,6 +816,8 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
     list(K = K12_mix, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2 <- computeH2(model3)
+  
   model3_I <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
     list(X = Xwtrain, model = "FIXED"),
     list(K = K12_mix, model = "RKHS"),
@@ -803,10 +825,13 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
     list(K = K12_combined, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  H2_I <- computeH2(model3_I, interaction = T)
+  
   return(list(model3 = model3,
               model3_I = model3_I,
               sMix = sMix,
-              wtest = wtest))
+              wtest = wtest,
+              H_list = list(H2, H2_I)))
 }
 
 eval_S3 <- function(strategy, phenotype, trait) {
@@ -824,9 +849,15 @@ eval_S3 <- function(strategy, phenotype, trait) {
   cor <- cor(predictions[all_test], ptestTrait)
   cor_I <- cor(predictions_I[all_test], ptestTrait)
   
+  accuracy <- cor/sqrt(strategy$H_list[[1]])
+  accuracy_I <- cor_I/sqrt(strategy$H_list[[2]])
+  
+  
   correlationResults <- list(
     cor = cor, 
-    corInteraction = cor_I
+    corInteraction = cor_I,
+    accuracy = accuracy,
+    accuracy_I = accuracy_I
   )
   
   return(list(CorrelationResults = correlationResults))
