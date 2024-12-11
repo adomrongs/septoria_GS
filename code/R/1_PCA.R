@@ -86,6 +86,7 @@ png(paste0("outputs/plots/screeplot_sep.png"), width = 3000, height = 3000, res 
 PCA_plot_sep$scree_plot
 dev.off()
 
+# plot PCA based in regions AND YEARS
 shapes2 <- c("21" = 17,
              "22" = 16)
 PCA_plot_sep2 <- plotPCA2(genotype = genotype_septoria,
@@ -99,6 +100,43 @@ PCA_plot_sep2 <- plotPCA2(genotype = genotype_septoria,
 png(paste0("outputs/plots/PCA_sep_complete.png"), width = 3000, height = 3000, res = 400)
 PCA_plot_sep2$pca_plot
 dev.off()
+
+#plot PCA to visualize the strains used for the mixes
+mix1 <- c("22_EcijaSec83Ica_L2", "22_EcijaSecCris_L1", "22_EcijaRegTej_L1")
+mix2 <- c("22_CorKiko_L1", "22_CorCale_L1", "22_Cor3927_L1")
+mix3 <- c("22_ConilAmi_L1", "22_Conil3806_L1", "22_Jerez3927_L1")
+mix4 <- "22_CorVal_L1"
+
+mix_df <- data.frame(mix1, mix2, mix3, mix4) %>% 
+  pivot_longer(cols = everything(), names_to = "Mix", values_to = "Isolate")
+
+pca_df_mixes <- pca_df %>% 
+  left_join(mix_df) %>% 
+  mutate(Mix = replace(Mix, is.na(Mix), "Not selected")) %>% 
+  distinct()
+
+colors_mixes <- c("mix1" = "#DD5129FF",
+            "mix2" = "#0F7BA2FF",
+            "mix3" = "#43B284FF",
+            "mix4" = "#FAB255FF",
+            "Not selected" = "grey")
+
+shapes_mixes <- c("mix1" = 16,
+            "mix2" = 16,
+            "mix3" = 16,
+            "mix4" = 16,
+            "Not selected" = 16)
+
+PCA_plot_mixes <- plotPCA(genotype = genotype_septoria,
+                          regions = pca_df_mixes$Mix,
+                          colors = colors_mixes,
+                          shapes = shapes_mixes,
+                          names = pca_df_mixes$Isolate,
+                          interactive = TRUE)
+png(paste0("outputs/plots/PCA_mixes.png"), width = 3000, height = 3000, res = 400)
+PCA_plot_mixes$pca_plot
+dev.off()
+
 
 # create heatmap for the GRM
 k_sep_mat <- as.matrix(k_septoria[,-1])

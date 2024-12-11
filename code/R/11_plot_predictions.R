@@ -3,13 +3,22 @@ library(lme4)
 source("code/R/function_septoria_GS.R")
 
 load("data/modified_data/5_predictions.Rdata")
-test <- unique(clean_test_pheno$Isolate)
+
+info_strains <- read_csv("data/raw_data/INFO_STRAINS.csv")
+test <- info_strains %>% 
+  filter(Partition == "Test") %>% 
+  pull(Isolate)
+test_name <- unlist(map(strsplit(test, "_"), ~.x[2]))
 
 # extract the blues for the test lines 
 formula <- "~ -1 + strain + dpi + cultivar + replicate"
-blues_test <- extract_blues_df_isolates(clean_test_pheno,
-                                   traits = colnames(clean_test_pheno)[2:4],
-                                   formula = formula)
+blues_test <- extract_blues_df_adapted(clean_test_pheno,
+                                   traits = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
+                                   formula = formula,
+                                   colname = "strain")
+blues_test <- blues_test %>% 
+  filter(strain %in% test_name) %>% 
+  rename(Isolate = strain)
 
 files <- list.files("data/modified_data/predictions/", full.names = T)
 blups_list <- list()
@@ -25,25 +34,10 @@ colnames(blups_df) <- c("Isolate", "PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm
 rownames(blups_df) <- NULL
 
 blups_test <- blups_df %>% 
-  filter(Isolate %in% blues_test$Isolate)
+  filter(Isolate %in% test)
 
 blups_test <- blups_test %>% arrange(Isolate)
 blues_test <- blues_test %>% arrange(Isolate)
-
-corCalculation <- function(df1, df2) {
-  # Asegurarse de que ambos data frames tienen el mismo número de columnas
-  if (ncol(df1) != ncol(df2)) {
-    stop("Los data frames deben tener el mismo número de columnas.")
-  }
-  # Calcular la correlación para cada par de columnas (excluyendo la primera columna)
-  correlations <- map2_dbl(df1[, -1], df2[, -1], ~ cor(.x, .y))
-  # Crear un data frame con los resultados
-  results <- data.frame(
-    Column = colnames(df1)[-1],  # Nombres de las columnas correlacionadas
-    Correlation = correlations
-  )
-  return(results)
-}
 
 correlations <- corCalculation(blups_test, blues_test)
 

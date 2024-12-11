@@ -367,19 +367,6 @@ extract_blues <- function(phenotype, trait, formula) {
   return(blues_df)
 }
 
-extract_blues_isolates <- function(phenotype, trait, formula) {
-  model <- lm(as.formula(paste(trait, formula)), data = phenotype)
-  blues <- coef(model)[grep("Isolate", names(coef(model)), value = T)]
-  names(blues) <- gsub("Isolate", "", names(blues))
-  blues_df <- data.frame(blues) %>% 
-    rownames_to_column("Isolate") %>% 
-    dplyr::select(Isolate, everything())
-  
-  colnames(blues_df) <- c("Isolate", trait)
-  rownames(blues_df) <- NULL
-  return(blues_df)
-}
-
 extract_blues_df <- function(phenotype, traits, formula) {
   blues_list <- list()
   
@@ -403,14 +390,27 @@ extract_blues_df <- function(phenotype, traits, formula) {
   }
 }
 
-extract_blues_df_isolates <- function(phenotype, traits, formula) {
+extract_blues_adapted <- function(phenotype, trait, formula, colname) {
+  model <- lm(as.formula(paste(trait, formula)), data = phenotype)
+  blues <- coef(model)[grep(colname, names(coef(model)), value = T)]
+  names(blues) <- gsub(colname, "", names(blues))
+  blues_df <- data.frame(blues) %>% 
+    rownames_to_column(colname) %>% 
+    dplyr::select(colname, everything())
+  
+  colnames(blues_df) <- c(colname, trait)
+  rownames(blues_df) <- NULL
+  return(blues_df)
+}
+
+extract_blues_df_adapted <- function(phenotype, traits, formula, colname) {
   blues_list <- list()
   
   # Populate blues_list and capture dimensions
   dims_list <- vector("list", length(traits))
   for (i in seq_along(traits)) {
     trait <- traits[i]
-    blups <- extract_blues_isolates(phenotype, trait, formula)
+    blups <- extract_blues_adapted(phenotype, trait, formula, colname)
     blues_list[[i]] <- blups
     dims_list[[i]] <- dim(blups)
   }
@@ -418,7 +418,7 @@ extract_blues_df_isolates <- function(phenotype, traits, formula) {
   # Check if dimensions match
   if (length(unique(sapply(dims_list, paste, collapse = "x"))) == 1) {
     message("Dimensions match. Returning a combined blues data frame.")
-    blues_df <- purrr::reduce(blues_list, ~ dplyr::left_join(.x, .y, by = "Isolate"))
+    blues_df <- purrr::reduce(blues_list, ~ dplyr::left_join(.x, .y, by = colname))
     return(blues_df)
   } else {
     message("Dimensions do not match. Returning blues as a list.")
@@ -865,8 +865,7 @@ eval_S3 <- function(strategy, phenotype, trait) {
 
 scenario1 <- function(allResults) {
   # Initialize lists to store data
-  cor_strain_list <- list()
-  cor_strain_I_list <- list()
+  cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
   
   for (result_name in names(allResults)) {
     s1_models <- grep("Scenario1", names(allResults[[result_name]]), value = TRUE)
@@ -879,21 +878,39 @@ scenario1 <- function(allResults) {
                Interaction = "")
       cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
       
+      tmp_acc <- data.frame(allResults[[result_name]][[model]][[6]]) %>% 
+        mutate(Matrix = result_name,
+               Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
+               Interaction = "")
+      acc_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_acc
+      
       # Process cor_strain_I
       tmp_df_I <- data.frame(allResults[[result_name]][[model]][[4]]) %>% 
         mutate(Matrix = result_name,
                Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
                Interaction = "+I")
       cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
+      
+      tmp_acc_I <- data.frame(allResults[[result_name]][[model]][[7]]) %>% 
+        mutate(Matrix = result_name,
+               Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
     }
   }
   
   # Combine results from lists
   cor_strain <- bind_rows(cor_strain_list)
   cor_strain_I <- bind_rows(cor_strain_I_list)
+  acc_strain <- bind_rows(acc_strain_list)
+  acc_strain_I <- bind_rows(acc_strain_I_list)
   
   # Combine both datasets and add Info column
   s1_df <- bind_rows(cor_strain, cor_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(-Model, -Interaction)
+  
+  acc_df <- bind_rows(acc_strain, acc_strain_I) %>% 
     mutate(Info = paste0(Model, Interaction)) %>% 
     dplyr::select(-Model, -Interaction)
   
@@ -903,12 +920,17 @@ scenario1 <- function(allResults) {
     mutate(across(c(Info, Mix, Matrix), as.factor)) %>% 
     dplyr::select(Info, Matrix, Mix, Cor)
   
-  return(s1_df)
+  acc_df <- acc_df %>% 
+    pivot_longer(cols = -c(Info, Matrix), names_to = "Mix", values_to = "Cor") %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor)
+  
+  
+  return(list(ability = s1_df,  accuracy = acc_df))
 }
 
 scenario2 <- function(allResults){
-  cor_strain_list <- list()
-  cor_strain_I_list <- list()
+  cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
   
   for (result_name in names(allResults)) {
     s2_models <- grep("Scenario2", names(allResults[[result_name]]), value = TRUE)
@@ -921,6 +943,14 @@ scenario2 <- function(allResults){
       colnames(tmp_df)[1] <- "Cor"
       cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
       
+      tmp_acc <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[3]]) %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("2w", model), "Weighted", "Normal"),
+               Interaction = "")
+      colnames(tmp_acc)[1] <- "Cor"
+      acc_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_acc
+      
       tmp_df_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[2]]) %>% 
         mutate(Mix = sub(".* ", "", model), 
                Matrix = result_name,
@@ -928,23 +958,37 @@ scenario2 <- function(allResults){
                Interaction = "+I")
       colnames(tmp_df_I)[1] <- "Cor"
       cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
+      
+      tmp_acc_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[4]])  %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("2w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      colnames(tmp_acc_I)[1] <- "Cor"
+      acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
     }
   }
   
   cor_strain <- bind_rows(cor_strain_list)
   cor_strain_I <- bind_rows(cor_strain_I_list)
+  acc_strain <- bind_rows(acc_strain_list)
+  acc_strain_I <- bind_rows(acc_strain_I_list)
   
   s2_df <- bind_rows(cor_strain, cor_strain_I) %>% 
     mutate(Info = paste0(Model, Interaction)) %>% 
     dplyr::select(Info, Matrix, Mix, Cor) %>% 
     mutate(across(c(Info, Mix, Matrix), as.factor))
   
-  return(s2_df)
+  acc_df <- bind_rows(acc_strain, acc_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor) %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor))
+  
+  return(list(ability = s2_df,  accuracy = acc_df))
 }
 
 scenario3 <- function(allResults){
-  cor_strain_list <- list()
-  cor_strain_I_list <- list()
+  cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
   
   for (result_name in names(allResults)) {
     s3_models <- grep("Scenario3", names(allResults[[result_name]]), value = TRUE)
@@ -957,6 +1001,14 @@ scenario3 <- function(allResults){
       colnames(tmp_df)[1] <- "Cor"
       cor_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_df
       
+      tmp_acc <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[3]])%>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("3w", model), "Weighted", "Normal"),
+               Interaction = "")
+      colnames(tmp_acc)[1] <- "Cor"
+      acc_strain_list[[paste(result_name, model, "noI", sep = "_")]] <- tmp_acc
+      
       tmp_df_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[2]]) %>% 
         mutate(Mix = sub(".* ", "", model), 
                Matrix = result_name,
@@ -964,49 +1016,87 @@ scenario3 <- function(allResults){
                Interaction = "+I")
       colnames(tmp_df_I)[1] <- "Cor"
       cor_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_df_I
+      
+      tmp_acc_I <- data.frame(allResults[[result_name]][[model]][["CorrelationResults"]][[4]])  %>% 
+        mutate(Mix = sub(".* ", "", model), 
+               Matrix = result_name,
+               Model = ifelse(grepl("3w", model), "Weighted", "Normal"),
+               Interaction = "+I")
+      colnames(tmp_acc_I)[1] <- "Cor"
+      acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
     }
   }
   
   cor_strain <- bind_rows(cor_strain_list)
   cor_strain_I <- bind_rows(cor_strain_I_list)
+  acc_strain <- bind_rows(acc_strain_list)
+  acc_strain_I <- bind_rows(acc_strain_I_list)
   
   s3_df <- bind_rows(cor_strain, cor_strain_I) %>% 
     mutate(Info = paste0(Model, Interaction)) %>% 
     dplyr::select(Info, Matrix, Mix, Cor) %>% 
     mutate(across(c(Info, Mix, Matrix), as.factor))
   
-  return(s3_df)
+  acc_df <- bind_rows(acc_strain, acc_strain_I) %>% 
+    mutate(Info = paste0(Model, Interaction)) %>% 
+    dplyr::select(Info, Matrix, Mix, Cor) %>% 
+    mutate(across(c(Info, Mix, Matrix), as.factor))
+  
+  return(list(ability = s3_df,  accuracy = acc_df))
 }
 
-plotCV <- function(results, colors){
+combine_elements <- function(data_list, element_name) {
+  # Check if the element exists in the first list item for safety
+  if (!element_name %in% names(data_list[[1]])) {
+    stop(paste("Element", element_name, "not found in the list items."))
+  }
+  
+  # Extract and combine the specified element from all sublists
+  combined_df <- data_list %>%
+    purrr::map(element_name) %>%
+    dplyr::bind_rows()
+  
+  return(combined_df)
+}
+
+plotCV <- function(results, colors, stat, strategy, subheader){
+  subheader_main <- "The boxplots are colored based on the different Genomic Relationship Matrices employed in the calculations. These are described in the legend following the structure Wheat_GRM/Mixes_GRM.
+Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' represent the identity."
+  
+  
   p <- ggplot(results, aes(x = Mix, y = Cor, fill = Matrix)) +
     geom_boxplot(width = 0.6) +
     scale_fill_manual(values = colors) + 
+    scale_y_continuous(breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 0.1)) +
     labs(
-      title = NULL,
+      title = paste0("Strategy ", strategy),
+      subtitle = subheader_main,
+      caption = subheader, 
       x = NULL,
-      y = "Accuracy"
+      y = paste("prediction", stat)
     ) +
     theme(
+      plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
       legend.title = element_blank(), 
       legend.position = "top",
       panel.background = element_rect(fill = "white"),
       panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
-      plot.title = element_text(hjust = 0.5, size = 14, face = "plain"),
-      strip.text = element_text(size = 10, color = "black"),
-      strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),  # Agrega el borde alrededor de las etiquetas
+      plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+      strip.text = element_text(size = 10, color = "black", family = "Arial"),
+      strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),
       panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
-      axis.title.y = element_text(size = 12),
+      axis.title.y = element_text(size = 12, family = "Arial"),
       axis.title.x = element_blank(),
-      axis.text.x = element_text(size = 14)
-    )+ 
+      axis.text.x = element_text(size = 14, family = "Arial"),
+      plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20))
+    ) + 
     facet_grid(. ~ Info)
+  
   return(p)
 }
 
-results2plot <- function(list, name, colors){
-  results <- do.call(rbind, list)
-  plot <- plotCV(results, colors)
+results2plot <- function(df, name, colors, stat, strategy, subheader){
+  plot <- plotCV(df, colors, stat, strategy, subheader)
   # Guardar el gráfico
   png(paste0("outputs/plots/", name, ".png"), width = 6000, height = 3000, res = 400)
   print(plot)
@@ -1030,4 +1120,20 @@ computeH2 <- function(model, interaction = NULL){
   H2 <- (Hw + Hm)/2
   return(H2)
 }
+
+corCalculation <- function(df1, df2) {
+  # Asegurarse de que ambos data frames tienen el mismo número de columnas
+  if (ncol(df1) != ncol(df2)) {
+    stop("Los data frames deben tener el mismo número de columnas.")
+  }
+  # Calcular la correlación para cada par de columnas (excluyendo la primera columna)
+  correlations <- map2_dbl(df1[, -1], df2[, -1], ~ cor(.x, .y))
+  # Crear un data frame con los resultados
+  results <- data.frame(
+    Column = colnames(df1)[-1],  # Nombres de las columnas correlacionadas
+    Correlation = correlations
+  )
+  return(results)
+}
+
 
