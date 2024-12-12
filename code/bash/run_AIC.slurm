@@ -2,7 +2,7 @@
 #SBATCH --job-name=AIC
 #SBATCH --output=AIC_%j.log
 #SBATCH --error=AIC_%j.err
-#SBATCH --partition=fast
+#SBATCH --partition=medium
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
