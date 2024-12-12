@@ -17,7 +17,12 @@ wModel <- TRUE
 test <- sample(rownames(kinship), ceiling(0.2 * nrow(kinship)))
 formula <- "~ Isolate + Line + REP + Year"
 
-cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, wModel = FALSE){
+blues_all <- extract_blues_df_adapted(cleaned_septoria_phenotype,
+                                   trait = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
+                                   formula = formula, 
+                                   colname = "Isolate")
+
+cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_all,  wModel = FALSE){
   #===============================================
   # Create data for train and test
   # ==============================================
@@ -26,28 +31,22 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, wModel =
   # Run GWAS on train set
   # ==============================================
   bonferroni <- 0.05/nrow(map)
-  gtrain <- genotype %>% filter(genotype[,1] %in% train)
   ptrain <- phenotype %>% filter(Isolate %in% train, )
-  k <- kinship %>% 
-    filter(rownames(.) %in% train) %>% 
-    dplyr::select(all_of(train)) %>% 
-    rownames_to_column("Isolate") %>% 
+  blues <- extract_blues_adapted(ptrain, trait, formula, "Isolate")
+  gtrain <- genotype %>% filter(genotype[,1] %in% blues$Isolate)
+  ktrain <- kinship %>%
+    filter(rownames(.) %in% blues$Isolate) %>%
+    dplyr::select(all_of(blues$Isolate)) %>%
+    rownames_to_column("Isolate") %>%
     dplyr::select(Isolate, everything())
   
-
-  blues <- extract_blues_adapted(ptrain, trait, formula, "Isolate")
-  gtrain <- gtrain %>% filter(gtrain[,1] %in% blues$Isolate)
-  k <- k %>% # 
-    filter(Isolate %in% blues$Isolate) %>% 
-    dplyr::select(c(Isolate, which(colnames(k) %in% blues$Isolate)))
-  
-  dim(blues); dim(gtrain); dim(map); dim(k)
+  dim(blues); dim(gtrain); dim(map); dim(ktrain)
   
   tmp <- capture.output({
     scores <- GAPIT(Y = blues,
                     GD = gtrain,
                     GM = map,
-                    KI = k,
+                    KI = ktrain,
                     CV = NULL,
                     PCA.total = 3,
                     model = "Blink",
@@ -97,5 +96,23 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, wModel =
                 rcov = ~ units,
                 data = ptrain,
                 verbose = TRUE)
+  H2 <- 
+  
+  blups <- data.frame(Isolate = names(model$U$`u:Isolate`$PLACL)) %>%
+    mutate(!!trait := model$U$`u:Isolate`$PLACL)
+  rownames(blups) <- NULL
+  blups_test <- blups %>% 
+    filter(Isolate %in% test) %>% 
+    arrange(Isolate)
+  
+  blues_test <- blues_all %>% 
+    filter(Isolate %in% test) %>% 
+    arrange(Isolate)
+  
+  ability <- cor(blups_test[,2], blues_test[,2])
+  accuracy <- ability/sqrt(H2)
+  
+  
+  
   
 }

@@ -85,6 +85,8 @@ M_impute <- data.frame(M_impute) %>%
   dplyr::select(Isolate, everything())
 
 genotype_all <- M_impute
+k_all <- A.mat(as.matrix(genotype_all[,-1]))
+rownames(k_all) <- colnames(k_all) <- genotype_all[,1]
 
 #==============================================================================
 # Prepare phenotype
@@ -92,8 +94,9 @@ genotype_all <- M_impute
 
 raw_septoria_phenotype <- read_csv("data/raw_data/raw_phenotypes.csv")
 
-factor_cols <- c("leave_id", "REP", "varieties")
-septoria_phenotype <- raw_septoria_phenotype %>% 
+factor_cols <- c("REP", "varieties")
+septoria_phenotype <- raw_septoria_phenotype %>%
+  filter(leave_id == 2) %>% 
   mutate(
     Isolate = if_else(
       varieties == "Don Ricardo",
@@ -107,19 +110,26 @@ septoria_phenotype <- raw_septoria_phenotype %>%
       sapply(str_split(Picture, "_"), function(x) x[3]),
       sapply(str_split(Picture, "_"), function(x) x[2])
     ),
+    BRep = if_else(
+      varieties == "Don Ricardo",
+      sapply(str_split(Picture, "_"), function(x) x[6]),
+      sapply(str_split(Picture, "_"), function(x) x[5])
+    ), 
     across(all_of(factor_cols), as.factor)
   ) %>% 
-  dplyr::select(Isolate, Line = varieties, Leaf = leave_id, REP, Year, PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
+  dplyr::select(Isolate, Line = varieties, REP, Year, BRep,
+                PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
 
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_Conil_Fer"]<-"22_ConilFer_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22_EcijaSecSah_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
 
-cleaned_septoria_phenotype <- septoria_phenotype %>% 
+septoria_phenotype <- septoria_phenotype %>% 
   filter(Isolate %in% genotype_all[,1])
 
-k_all <- A.mat(as.matrix(genotype_all[,-1]))
-rownames(k_all) <- colnames(k_all) <- genotype_all[,1]
+cleaned_septoria_phenotype <- remove_outliers(septoria_phenotype,
+                                              cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
+
 
 #==============================================================================
 # Prepare test phenotype 
