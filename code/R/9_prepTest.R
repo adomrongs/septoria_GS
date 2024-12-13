@@ -123,11 +123,14 @@ septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_Conil_Fer"]<-"22_Coni
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22_EcijaSecSah_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
 
-cleaned_septoria_phenotype <- septoria_phenotype %>% 
+cleaned_septoria_phenotype_1 <- septoria_phenotype %>% 
   filter(Isolate %in% genotype_all[,1])
 
-# cleaned_septoria_phenotype <- remove_outliers(septoria_phenotype,
-#                                               cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
+cleaned_septoria_phenotype_2 <- cleaned_septoria_phenotype_1 %>% 
+  filter(Leaf == 2) %>% 
+  dplyr::select(-Leaf)
+cleaned_septoria_phenotype_2 <- remove_outliers(cleaned_septoria_phenotype_2,
+                                               cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
 
 #==============================================================================
@@ -149,8 +152,8 @@ test_pheno <- raw_test_pheno %>%
 
 clean_test_pheno <- remove_outliers(test_pheno, c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
-save(genotype_all, k_all, cleaned_septoria_phenotype, clean_test_pheno, 
-     file = "data/modified_data/5_predictions.Rdata")
+save(genotype_all, k_all, cleaned_septoria_phenotype_1, cleaned_septoria_phenotype_2,
+     clean_test_pheno, file = "data/modified_data/5_predictions.Rdata")
 
 #==============================================================================
 # Plot combined PCA

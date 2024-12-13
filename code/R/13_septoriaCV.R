@@ -13,9 +13,9 @@ kinship <- k_septoria[,-1]
 colnames(kinship) <- rownames(kinship) <- k_septoria[,1]
 map <- map_septoria
 trait <- "PLACL"
-wModel <- TRUE
+wModel <- F
 test <- sample(rownames(kinship), ceiling(0.2 * nrow(kinship)))
-formula <- "~ Isolate + Line + REP + Year"
+formula <- "~ Isolate + Line + Trial + Year + BRep"
 
 blues_all <- extract_blues_df_adapted(cleaned_septoria_phenotype,
                                    trait = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
@@ -41,31 +41,30 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     dplyr::select(Isolate, everything())
   
   dim(blues); dim(gtrain); dim(map); dim(ktrain)
-  
-  tmp <- capture.output({
-    scores <- GAPIT(Y = blues,
-                    GD = gtrain,
-                    GM = map,
-                    KI = ktrain,
-                    CV = NULL,
-                    PCA.total = 3,
-                    model = "Blink",
-                    file.output = F)
-  })
-  rm(tmp)
-  gc()
-  setwd(here())
-  
-  results <- scores[["GWAS"]] %>% 
-    arrange(P.value)
   #===============================================
   # Run predictions with/withouth markers
   # ==============================================
   
   if (!wModel) {
-    formula_blups <- as.formula(trait, "~ Line + REP + Year")
+    formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + Leaf + BRep"))
   } 
   if (wModel) {
+    tmp <- capture.output({
+      scores <- GAPIT(Y = blues,
+                      GD = gtrain,
+                      GM = map,
+                      KI = ktrain,
+                      CV = NULL,
+                      PCA.total = 3,
+                      model = "Blink",
+                      file.output = F)
+    })
+    rm(tmp)
+    gc()
+    setwd(here())
+    
+    results <- scores[["GWAS"]] %>% 
+      arrange(P.value)
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
     
     if (nrow(hits_bonferroni) == 0) {
@@ -87,7 +86,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
-      paste0(trait, "~ Line + REP + Year + ", paste(sSNPs, collapse = " + "))
+      paste0(trait, "~ Line + Year + Trial + Leaf + BRe", paste(sSNPs, collapse = " + "))
     )
   }
   
