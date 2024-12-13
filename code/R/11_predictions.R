@@ -15,7 +15,7 @@ traits <- c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
 trait <- traits[i]
 
 # Define formula
-formula <- as.formula(paste0(trait, " ~ Line + Year + Trial + BRep"))
+formula <- as.formula(paste0(trait, " ~ Line + Year + Trial"))
 
 # Fit model
 model <- mmer(
@@ -35,8 +35,8 @@ blups_df <- data.frame(Isolate = names(blups_list[[trait]]),
   mutate(Trait = trait)
 
 # Save results
-dir.create("data/modified_data/predictions/", recursive = TRUE, showWarnings = FALSE)
-save(blups_df, file = paste0("data/modified_data/predictions/pred_", trait, ".Rdata"))
+dir.create("data/modified_data/predictions3/", recursive = TRUE, showWarnings = FALSE)
+save(blups_df, file = paste0("data/modified_data/predictions3/pred_", trait, ".Rdata"))
 
 
 
