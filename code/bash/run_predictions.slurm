@@ -11,4 +11,4 @@
 #SBATCH --array=1-3
 
 module load R
-srun Rscript code/R/10_predictions.R
+srun Rscript code/R/11_predictions.R

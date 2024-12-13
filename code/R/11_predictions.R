@@ -15,7 +15,7 @@ traits <- c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
 trait <- traits[i]
 
 # Define formula
-formula <- as.formula(paste0(trait, " ~ Line + Year + REP + Leaf"))
+formula <- as.formula(paste0(trait, " ~ Line + Year + Trial + BRep"))
 
 # Fit model
 model <- mmer(
