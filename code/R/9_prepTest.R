@@ -144,7 +144,9 @@ test_pheno <- raw_test_pheno %>%
   mutate(
     across(c(strain, dpi, cultivar, replicate), as.factor),
     across(c(PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion), as.numeric)
-  )
+  ) %>% 
+  dplyr::select(Isolate = strain, Line = cultivar, TRep = dpi, BRep = replicate,
+                PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
 
 clean_test_pheno <- remove_outliers(test_pheno, c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
