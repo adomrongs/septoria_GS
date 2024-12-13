@@ -67,3 +67,26 @@ blues_test <- blues_test %>% arrange(Isolate)
 
 correlations2 <- corCalculation(blups_test2, blues_test)
 
+# THIS IS THE SAME BUT FOR THE "OLD new BLUPS" " trait ~ Line + Year + Trial + (1|Isolate)"
+# predictions without BRep
+files <- list.files("data/modified_data/predictions3/", full.names = T)
+blups_list <- list()
+for(i in seq_along(files)){
+  rdata <- files[[i]]
+  load(rdata)
+  blups_list[[i]] <- blups_df
+}
+
+blups_df <- do.call(cbind, blups_list)
+blups_df <- blups_df[, c(1, 2, 5, 8)]
+colnames(blups_df) <- c("Isolate", "PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
+rownames(blups_df) <- NULL
+
+blups_test <- blups_df %>% 
+  filter(Isolate %in% test)
+
+blups_test2 <- blups_test %>% arrange(Isolate)
+blues_test <- blues_test %>% arrange(Isolate)
+
+correlations3 <- corCalculation(blups_test2, blues_test)
+

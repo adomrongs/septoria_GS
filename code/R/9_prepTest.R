@@ -96,7 +96,6 @@ raw_septoria_phenotype <- read_csv("data/raw_data/raw_phenotypes.csv")
 
 factor_cols <- c("REP", "varieties")
 septoria_phenotype <- raw_septoria_phenotype %>%
-  filter(leave_id == 2) %>% 
   mutate(
     Isolate = if_else(
       varieties == "Don Ricardo",
@@ -117,18 +116,18 @@ septoria_phenotype <- raw_septoria_phenotype %>%
     ), 
     across(all_of(factor_cols), as.factor)
   ) %>% 
-  dplyr::select(Isolate, Line = varieties, Trial = REP, Year, BRep,
+  dplyr::select(Isolate, Line = varieties, Trial = REP, Leaf = leave_id, Year, BRep,
                 PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
 
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_Conil_Fer"]<-"22_ConilFer_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22_EcijaSecSah_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
 
-septoria_phenotype <- septoria_phenotype %>% 
+cleaned_septoria_phenotype <- septoria_phenotype %>% 
   filter(Isolate %in% genotype_all[,1])
 
-cleaned_septoria_phenotype <- remove_outliers(septoria_phenotype,
-                                              cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
+# cleaned_septoria_phenotype <- remove_outliers(septoria_phenotype,
+#                                               cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
 
 #==============================================================================
