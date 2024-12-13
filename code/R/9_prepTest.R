@@ -117,7 +117,7 @@ septoria_phenotype <- raw_septoria_phenotype %>%
     ), 
     across(all_of(factor_cols), as.factor)
   ) %>% 
-  dplyr::select(Isolate, Line = varieties, REP, Year, BRep,
+  dplyr::select(Isolate, Line = varieties, Trial = REP, Year, BRep,
                 PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
 
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_Conil_Fer"]<-"22_ConilFer_L1"
