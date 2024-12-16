@@ -1146,7 +1146,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   # ==============================================
   bonferroni <- 0.05/nrow(map)
   ptrain <- phenotype %>% filter(Isolate %in% train)
-  blues <- extract_blues_adapted(ptrain, trait, formula, "Isolate")
+  blues <- blues_all %>% filter(Isolate %in% train)
   gtrain <- genotype %>% filter(genotype[,1] %in% blues$Isolate)
   ktrain <- kinship %>%
     filter(rownames(.) %in% blues$Isolate) %>%
