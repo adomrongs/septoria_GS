@@ -1136,4 +1136,10 @@ corCalculation <- function(df1, df2) {
   return(results)
 }
 
-
+h2_sommer <- function(model, n){
+  varG <- model$sigma[[1]]
+  varE <- model$sigma[[2]]
+  h2 <- varG/(varG+(varE/n))
+  
+  return(h2)
+}

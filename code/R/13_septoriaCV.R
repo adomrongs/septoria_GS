@@ -95,12 +95,10 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
                 rcov = ~ units,
                 data = ptrain,
                 verbose = TRUE)
-  H2 <- 
+  H2 <- h2_sommer(model, n = 12)
   
-  blups <- data.frame(Isolate = names(model$U$`u:Isolate`$PLACL)) %>%
-    mutate(!!trait := model$U$`u:Isolate`$PLACL)
-  rownames(blups) <- NULL
-  blups_test <- blups %>% 
+  blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
+    mutate(!!trait := model$U[[1]][[1]]) %>% 
     filter(Isolate %in% test) %>% 
     arrange(Isolate)
   
@@ -111,7 +109,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   ability <- cor(blups_test[,2], blues_test[,2])
   accuracy <- ability/sqrt(H2)
   
-  
-  
-  
+  results <- list(ability = ability, accuracy = accuracy)
+  return(results)
+
 }

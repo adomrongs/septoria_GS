@@ -25,7 +25,7 @@ for(j in seq_along(phenotypes)){
   formula <- formulas[[j]]
   
   sub_f1 <- formula
-  sub_f2 <- paste(formula, "+ BRep")
+  sub_f2 <- update(sub_f1, . ~ . + BRep)
   sub_formulas <- list(sub_f1, sub_f2)
   
   for(z in seq_along(sub_formulas)){
