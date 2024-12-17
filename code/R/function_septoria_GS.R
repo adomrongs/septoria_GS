@@ -1121,21 +1121,6 @@ computeH2 <- function(model, interaction = NULL){
   return(H2)
 }
 
-corCalculation <- function(df1, df2) {
-  # Asegurarse de que ambos data frames tienen el mismo número de columnas
-  if (ncol(df1) != ncol(df2)) {
-    stop("Los data frames deben tener el mismo número de columnas.")
-  }
-  # Calcular la correlación para cada par de columnas (excluyendo la primera columna)
-  correlations <- map2_dbl(df1[, -1], df2[, -1], ~ cor(.x, .y))
-  # Crear un data frame con los resultados
-  results <- data.frame(
-    Column = colnames(df1)[-1],  # Nombres de las columnas correlacionadas
-    Correlation = correlations
-  )
-  return(results)
-}
-
 cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_all,  wModel = FALSE){
   #===============================================
   # Create data for train and test
@@ -1234,4 +1219,51 @@ h2_sommer <- function(model, n){
   h2 <- varG/(varG+(varE/n))
   
   return(h2)
+}
+
+combine_trait <- function(trait_name) {
+  # Crear una lista vacía para almacenar resultados
+  results <- list()
+  
+  # Recorrer cada pheno y modelo, extrayendo el trait correspondiente
+  for (pheno_name in names(blups_list)) {
+    for (model_name in names(blups_list[[pheno_name]])) {
+      # Extraer la data frame del trait
+      trait_data <- blups_list[[pheno_name]][[model_name]][[trait_name]]
+      
+      # Verificar si el trait_data existe
+      if (!is.null(trait_data)) {
+        # Extraer la columna BLUP y añadirla a los resultados
+        results[[paste0(pheno_name, "_", model_name)]] <- trait_data$BLUP
+        # Conservar los rownames
+        names(results[[paste0(pheno_name, "_", model_name)]]) <- rownames(trait_data)
+      }
+    }
+  }
+  
+  # Combinar las columnas en un data frame
+  results_df <- as.data.frame(results)
+  
+  # Mantener los rownames
+  rownames(results_df) <- rownames(trait_data)
+  
+  return(results_df)
+}
+
+process_and_filter <- function(trait_name, test) {
+  combine_trait(trait_name) %>%
+    filter(rownames(.) %in% test) %>%
+    arrange(rownames(.))
+}
+
+correlation_dfs <- function(ref_df, ref_col, df) {
+  ref_values <- ref_df[[ref_col]]
+  # Calculate the correlation with each column in df
+  correlations <- sapply(colnames(df), function(col) {
+    cor(ref_values, df[[col]], use = "complete.obs", method = "pearson")
+  })
+  # Return a data frame with column names and corresponding correlation values
+  result <- data.frame(Model = names(correlations), Correlation = correlations)
+  rownames(result) <- NULL
+  return(result)
 }

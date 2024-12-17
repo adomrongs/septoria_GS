@@ -11,13 +11,12 @@ load("data/modified_data/4_CV_data.Rdata")
 trait <- "PLACL"
 Kw <- k_wheat
 Kmix <- k_mixes
-pheno <- phenotype
+pheno <- phenotype <- adjusted_phenotype
 genoW <- genotype_wheat
 map <- map_wheat
 wtest <- sample(rownames(Kw), ceiling(0.2 * nrow(Kw)))
 wModel <- TRUE
-sMix <- unique(phenotype$Strain)[1]
-formula <- "~ -1 + Plant + Strain + Rep + Leaf"
+sMix <- unique(adjusted_phenotype$Strain)[1]
 
 runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE){
   #===============================================
@@ -28,44 +27,6 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
   
   ptrain <- pheno
   ptrain[ptrain$Plant %in% wtest, trait] <- NA
-  #===============================================
-  # Run GWAS on train set
-  # ==============================================
-  bonferroni <- 0.05/nrow(map)
-  # prepare train data
-  gtrain <- data.frame(genoW[genoW[,1] %in% wtrain, ]) # subset genotype
-  ptrain_GWAS <- pheno[pheno$Plant %in% gtrain[,1], ] # subset pheno
-  Ktrain <- data.frame(A.mat(gtrain[,-1])) 
-  colnames(Ktrain) <- gtrain[,1]
-  Ktrain <- Ktrain %>% #subset K
-    mutate(GenoID = gtrain[,1]) %>% 
-    dplyr::select(GenoID, everything())
-  
-  BLUEs <- extract_blues_df(ptrain_GWAS, "PLACL", formula) # obtain BLUEs
-  gtrain_GWAS <- gtrain %>% # adjust genotype to BLUEs lines
-    filter(GenoID %in% BLUEs$GenoID)
-  Ktrain_GWAS <- Ktrain %>% # adjust kinship to BLUEs lines
-    filter(GenoID %in% BLUEs$GenoID) %>% 
-    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUEs$GenoID)))
-  
-  dim(BLUEs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
-  # run GWAS
-  tmp <- capture.output({
-    scores <- GAPIT(Y = BLUEs,
-                    GD = gtrain_GWAS,
-                    GM = map,
-                    KI = Ktrain_GWAS,
-                    CV = NULL,
-                    PCA.total = 2,
-                    model = "Blink",
-                    file.output = F)
-  })
-  rm(tmp)
-  gc()
-  setwd(here())
-  
-  results <- scores[["GWAS"]] %>% 
-    arrange(P.value)
   
   #===============================================
   # Run predictions with/withouth markers
@@ -74,9 +35,38 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   if (!wModel) {
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
+    Xwtrain <- model.matrix(~ 1, data = ptrain)
   } 
   if (wModel) {
+    bonferroni <- 0.05/nrow(map)
+    # prepare train data
+    gwas_geno <- data.frame(genoW[genoW[,1] %in% wtrain, ]) # subset genotype
+    gwas_pheno <- pheno[pheno$Plant %in% gwas_geno[,1], c("Plant", trait)] # subset pheno
+    gwas_k <- Kw %>% 
+      filter(rownames(.) %in% gwas_geno[,1]) %>% 
+      dplyr::select(all_of(gwas_geno[,1])) %>% 
+      rownames_to_column("GenoID") %>% 
+      dplyr::select(GenoID, everything())
+    
+    dim(gwas_geno); dim(gwas_pheno); dim(map); dim(gwas_k)
+    # run GWAS
+    tmp <- capture.output({
+      scores <- GAPIT(Y = gwas_pheno,
+                      GD = gwas_geno,
+                      GM = map,
+                      KI = gwas_k,
+                      CV = NULL,
+                      PCA.total = 2,
+                      model = "Blink",
+                      file.output = F)
+    })
+    rm(tmp)
+    gc()
+    setwd(here())
+    
+    results <- scores[["GWAS"]] %>% 
+      arrange(P.value)
+    
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
     
     if (nrow(hits_bonferroni) == 0) {
@@ -95,7 +85,7 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ 1, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -138,32 +128,34 @@ eval_S1 <- function(strategy, phenotype, trait) {
   predictions <- predict(strategy$S1)
   predictions_I <- predict(strategy$S1_I)
   
+  total_results <- data.frame(Plant = phenotype$Plant, 
+                      Strain = phenotype$Strain,
+                      Observed = phenotype[[trait]], 
+                      Predicted = predictions,
+                      Predicted_I = predictions_I)
+  test_results <- total_results %>% 
+    filter(Plant %in% strategy$wtest)
+  # overall correlation
   lines_test <- phenotype$Plant %in% strategy$wtest
-  
   pheno_test <- phenotype[lines_test,]
-  
   cor <- cor(predictions[lines_test],
              pheno_test[[trait]],
              use = "complete.obs")
-  
   cor_I <- cor(predictions_I[lines_test],
                pheno_test[[trait]],
                use = "complete.obs")
   
-  withinStrainCorrelations <- function(predictions, phenotypeData, testLocations) {
-    data <- data.frame(predictions = predictions[testLocations],
-                       traits = phenotypeData[[trait]][testLocations],
-                       Strain = phenotypeData$Strain[testLocations])
-    
-    listData <- split(data, data$Strain)
-    lapply(listData, function(df) cor(df$predictions, df$traits, use = "complete.obs"))
-  }
-  
-  cor_withinStrain <- withinStrainCorrelations(predictions, phenotype, lines_test)
-  accuracy_withinStrain <- lapply(cor_withinStrain, function(x) x / sqrt(strategy$H_list[[1]]))
-  cor_withinStrain_I <- withinStrainCorrelations(predictions_I, phenotype, lines_test)
-  accuracy_withinStrain_I <- lapply(cor_withinStrain_I, function(x) x / sqrt(strategy$H_list[[2]]))
-  
+  # within strain correlation for both model and model_I
+  cor_withinStrain <- test_results %>%
+    split(.$Strain) %>%  # Divide el dataframe por cada valor único de 'Strain'
+    map(~ cor(.x$Observed, .x$Predicted, use = "complete.obs"))
+  cor_withinStrain_I <- test_results %>%
+    split(.$Strain) %>%  # Divide el dataframe por cada valor único de 'Strain'
+    map(~ cor(.x$Observed, .x$Predicted_I, use = "complete.obs"))
+  # prediction accuracy calculation as the prediction ability divided by srt of h2
+  accuracy_withinStrain <- map(cor_withinStrain, ~ .x/sqrt(strategy$H_list[[1]]))
+  accuracy_withinStrain_I <- map(cor_withinStrain, ~ .x/sqrt(strategy$H_list[[2]]))
+  # save resulst
   cor_results <- list(
     cor = cor,
     cor_I = cor_I,
@@ -178,44 +170,41 @@ eval_S1 <- function(strategy, phenotype, trait) {
 }
 
 runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel = FALSE) {
-  #===============================================
-  # Run GWAS 
-  # ==============================================
-  bonferroni <- 0.05/nrow(map)
-  Kw_GWAS <- data.frame(Kw) %>% 
-    rownames_to_column("GenoID") %>% 
-    dplyr::select(GenoID, everything())
-    
-  BLUEs <- extract_blues_df(phenotype, "PLACL", formula) 
-  
-  dim(BLUEs); dim(genoW); dim(map); dim(Kw_GWAS)
-  tmp <- capture.output({
-    scores <- GAPIT(Y = BLUEs,
-                    GD = genoW,
-                    GM = map,
-                    KI = Kw_GWAS,
-                    CV = NULL,
-                    PCA.total = 2,
-                    model = "Blink",
-                    file.output = F)
-  })
-  rm(tmp)
-  gc()
-  setwd(here())
-  
-  results <- scores[["GWAS"]] %>% 
-    arrange(P.value)
-  
-  #===============================================
+#===============================================
   # Run predictions with/withouth markers
   # ==============================================
   ptrain <- phenotype
   ptrain[ptrain$Strain %in% sMix, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
+    Xwtrain <- model.matrix(~ 1, data = ptrain)
   } 
   if (wModel) {
+    bonferroni <- 0.05/nrow(map)
+    gwas_geno <- genoW
+    gwas_pheno <- phenotype %>% 
+      dplyr::select(Plant, trait)
+    gwas_k <- data.frame(Kw) %>% 
+      rownames_to_column("GenoID") %>% 
+      dplyr::select(GenoID, everything())
+    
+    dim(gwas_pheno); dim(gwas_geno); dim(map); dim(gwas_k)
+    tmp <- capture.output({
+      scores <- GAPIT(Y = gwas_pheno,
+                      GD = gwas_geno,
+                      GM = map,
+                      KI = gwas_k,
+                      CV = NULL,
+                      PCA.total = 2,
+                      model = "Blink",
+                      file.output = F)
+    })
+    rm(tmp)
+    gc()
+    setwd(here())
+    
+    results <- scores[["GWAS"]] %>% 
+      arrange(P.value)
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
     
     if (nrow(hits_bonferroni) == 0) {
@@ -234,7 +223,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ 1, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -246,7 +235,7 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   Zmixtrain <- model.matrix(~0 + Strain, data = ptrain)
   
   K12_mix <- Zmixtrain %*% as.matrix(Kmix) %*% t(Zmixtrain)
-  K12_wheat <- Zwtrain %*% as.matrix(Kw_GWAS[,-1]) %*% t(Zwtrain)
+  K12_wheat <- Zwtrain %*% as.matrix(Kw) %*% t(Zwtrain)
   K12_combined <- K12_mix * K12_wheat
   
   model2 <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
@@ -276,13 +265,16 @@ eval_S2 <- function(strategy, phenotype, trait) {
   predictions <- predict(strategy$model2)
   predictions_I <- predict(strategy$model2_I)
   
-  mix_test <- phenotype$Strain %in% strategy$sMix
+  total_results <- data.frame(Plant = phenotype$Plant, 
+                              Strain = phenotype$Strain, 
+                              Observed = phenotype[[trait]], 
+                              Predicted = predictions, 
+                              Predicted_I = predictions_I)
+  test_results <- total_results %>% 
+    filter(Strain %in% strategy$sMix)
   
-  ptest <- phenotype[mix_test,]
-  ptestTrait <- ptest[[trait]]
-  
-  cor <- cor(predictions[mix_test], ptestTrait)
-  cor_I <- cor(predictions_I[mix_test], ptestTrait)
+  cor <- cor(test_results$Observed, test_results$Predicted)
+  cor_I <- cor(test_results$Observed, test_results$Predicted_I)
   
   accuracy <- cor/sqrt(strategy$H_list[[1]])
   accuracy_I <- cor_I/sqrt(strategy$H_list[[2]])
@@ -303,57 +295,46 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   # ==============================================
   wlines <- rownames(Kw)
   wtrain <- setdiff(wlines, wtest)
-  
-  #===============================================
-  # Run GWAS on train set
-  # ==============================================
-  bonferroni <- 0.05/nrow(map)
-  gtrain <- data.frame(genoW[genoW[,1] %in% wtrain, ])
-  
-  ptrain_GWAS <- phenotype[phenotype$Plant %in% gtrain[,1], ]
-  Ktrain <- data.frame(A.mat(gtrain[,-1]))
-  colnames(Ktrain) <- rownames(Ktrain) <- gtrain[,1]
-  Ktrain <- data.frame(Ktrain) %>% 
-    rownames_to_column("GenoID") %>% 
-    dplyr::select(GenoID, everything())
-  rownames(Ktrain) <- NULL
-    
-  BLUEs <- extract_blues_df(ptrain_GWAS, "PLACL", formula) 
-  gtrain_GWAS <- gtrain %>% # adjust genotype to BLUEs lines
-    filter(GenoID %in% BLUEs$GenoID)
-  Ktrain_GWAS <- Ktrain %>% # adjust kinship to BLUEs lines
-    filter(GenoID %in% BLUEs$GenoID) %>% 
-    dplyr::select(c(GenoID, which(colnames(Ktrain) %in% BLUEs$GenoID)))
-  
-  dim(BLUEs); dim(gtrain_GWAS); dim(map); dim(Ktrain_GWAS)
-  tmp <- capture.output({
-    scores <- GAPIT(Y = BLUEs,
-                    GD = gtrain_GWAS,
-                    GM = map,
-                    KI = Ktrain_GWAS,
-                    CV = NULL,
-                    PCA.total = 2,
-                    model = "Blink",
-                    file.output = F)
-  })
-  rm(tmp)
-  gc()
-  setwd(here())
-  
-  results <- scores[["GWAS"]] %>% 
-    arrange(P.value)
   #===============================================
   # Run predictions with/withouth markers
   # ==============================================
-  
   ptrain <- phenotype
   ptrain[ptrain$Strain %in% sMix, trait] <- NA
   ptrain[ptrain$Plant %in% wtest, trait] <- NA
   
   if (!wModel) {
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain)
+    Xwtrain <- model.matrix(~ 1, data = ptrain)
   } 
   if (wModel) {
+    bonferroni <- 0.05/nrow(map)
+    gwas_pheno <- phenotype %>% 
+      filter(Plant %in% wtrain, 
+             Strain %in% sMix) %>% 
+      dplyr::select(Plant, trait)
+    gwas_geno <- data.frame(genoW[genoW[,1] %in% gwas_pheno$Plant, ])
+    gwas_k <- Kw %>% 
+      filter(rownames(.) %in% gwas_geno[,1]) %>% 
+      dplyr::select(all_of(gwas_geno[,1])) %>% 
+      rownames_to_column("GenoID") %>% 
+      dplyr::select(GenoID, everything())
+    
+    dim(gwas_geno); dim(gwas_pheno); dim(gwas_k); dim(map)
+    tmp <- capture.output({
+      scores <- GAPIT(Y = gwas_pheno,
+                      GD = gwas_geno,
+                      GM = map,
+                      KI = gwas_k,
+                      CV = NULL,
+                      PCA.total = 2,
+                      model = "Blink",
+                      file.output = F)
+    })
+    rm(tmp)
+    gc()
+    setwd(here())
+    
+    results <- scores[["GWAS"]] %>% 
+      arrange(P.value)
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
     
     if (nrow(hits_bonferroni) == 0) {
@@ -372,7 +353,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
       data.frame() %>% 
       mutate(ID = genoW[,1])
     
-    Xwtrain <- model.matrix(~ Rep + Leaf, data = ptrain) %>%
+    Xwtrain <- model.matrix(~ 1, data = ptrain) %>%
       data.frame() %>% 
       mutate(ID = ptrain$Plant) %>% 
       left_join(sSNPs_data, by = "ID") %>% 
@@ -415,16 +396,17 @@ eval_S3 <- function(strategy, phenotype, trait) {
   predictions <- predict(strategy$model3)
   predictions_I <- predict(strategy$model3_I)
   
-  mix_test <- phenotype$Strain %in% strategy$sMix
-  wheat_test <- phenotype$Plant %in% strategy$wtest
-  
-  all_test <- mix_test & wheat_test
-  
-  ptest <- phenotype[all_test,]
-  ptestTrait <- ptest[[trait]]
-  
-  cor <- cor(predictions[all_test], ptestTrait)
-  cor_I <- cor(predictions_I[all_test], ptestTrait)
+  total_results <- data.frame(Plant = phenotype$Plant, 
+                              Strain = phenotype$Strain, 
+                              Observed = phenotype[[trait]], 
+                              Predicted = predictions, 
+                              Predicted_I = predictions_I)
+  test_results <- total_results %>% 
+    filter(Plant %in% strategy$wtest, 
+          Strain %in% strategy$sMix)
+
+  cor <- cor(test_results$Observed, test_results$Predicted)
+  cor_I <- cor(test_results$Observed, test_results$Predicted)
   
   accuracy <- cor/sqrt(strategy$H_list[[1]])
   accuracy_I <- cor_I/sqrt(strategy$H_list[[2]])

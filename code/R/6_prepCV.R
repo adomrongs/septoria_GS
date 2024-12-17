@@ -1,5 +1,6 @@
 library(tidyverse)
 library(rrBLUP)
+source("code/R/function_septoria_GS.R")
 
 # what do we need for the cross validation that we dont have yet
 # - GRM mixes
@@ -33,14 +34,22 @@ k_mixes <- A.mat(M_mix)
 I_mixes <- diag(nrow(k_mixes))
 rownames(k_mixes) <- colnames(k_mixes) <- rownames(I_mixes) <- colnames(I_mixes)<- c("mix1", "mix2", "mix3", "mix4")
 
-# verify that the phenotype that the phenotype is the correct too
+# adjuist phenotype to stract blues for Plant:Strain
 phenotype <- read_csv("data/modified_data/clean_phenotype_no_outliers.csv")
-phenotype <- phenotype %>% 
-  filter(Strain %in% c("mix1", "mix2", "mix3", "mix4"))
+phenotype <- phenotype %>%
+  mutate(PS = factor(paste(Plant,  Strain, sep = ":")))
+formula_blues <- " ~ -1 + PS + Set + Rep + Leaf"
+blues_PS <- extract_blues_df_adapted(phenotype,
+                                     c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
+                                     formula_blues,
+                                     "PS")
+adjusted_phenotype <- blues_PS %>% 
+  separate(col = PS, into = c("Plant", "Strain"), sep = ":") %>% 
+  filter(!Strain %in% c("check1", "check2", "MOCK"))
 
 # adjust k_wheat for GS
 load("data/modified_data/2_wheat.Rdata")
-intersect_lines <- intersect(genotype_wheat[,1], unique(phenotype$Plant))
+intersect_lines <- intersect(genotype_wheat[,1], unique(adjusted_phenotype$Plant))
 genotype_wheat <- genotype_wheat[genotype_wheat[,1] %in% intersect_lines, ]
 
 rownames(k_wheat) <- k_wheat[,1]
@@ -58,5 +67,5 @@ rownames(I_wheat) <- colnames(I_wheat) <- rownames(k_wheat)
 dim(k_mixes); dim(I_mixes); dim(k_wheat); dim(I_wheat)
 
 #we have everything we need for the CV
-save(k_mixes, I_mixes, k_wheat, I_wheat, phenotype, map_wheat, genotype_wheat,
+save(k_mixes, I_mixes, k_wheat, I_wheat, adjusted_phenotype, map_wheat, genotype_wheat,
      file = "data/modified_data/4_CV_data.Rdata")

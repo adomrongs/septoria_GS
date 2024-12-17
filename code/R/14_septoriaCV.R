@@ -13,7 +13,7 @@ test <- sample(rownames(kinship), ceiling(0.2 * nrow(kinship)))
 for(j in seq_along(traits)){
   trait <- traits[[j]]
   dir <- paste0("data/modified_data/cv_septoria/", trait)
-  dir.create(dir)
+  dir.create(dir, recursive = T)
   
   message("Processing trait: ", trait, ", iteration: ", i)
   
