@@ -17,6 +17,7 @@ map <- map_wheat
 wtest <- sample(rownames(Kw), ceiling(0.2 * nrow(Kw)))
 wModel <- TRUE
 sMix <- unique(adjusted_phenotype$Strain)[1]
+formula <- "~ -1 + Plant + Strain"
 
 runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE){
   #===============================================
@@ -41,12 +42,13 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     bonferroni <- 0.05/nrow(map)
     # prepare train data
     gwas_geno <- data.frame(genoW[genoW[,1] %in% wtrain, ]) # subset genotype
-    gwas_pheno <- pheno[pheno$Plant %in% gwas_geno[,1], c("Plant", trait)] # subset pheno
     gwas_k <- Kw %>% 
       filter(rownames(.) %in% gwas_geno[,1]) %>% 
       dplyr::select(all_of(gwas_geno[,1])) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
+      rename(GenoID = Plant)
     
     dim(gwas_geno); dim(gwas_pheno); dim(map); dim(gwas_k)
     # run GWAS
@@ -170,9 +172,7 @@ eval_S1 <- function(strategy, phenotype, trait) {
 }
 
 runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel = FALSE) {
-#===============================================
-  # Run predictions with/withouth markers
-  # ==============================================
+
   ptrain <- phenotype
   ptrain[ptrain$Strain %in% sMix, trait] <- NA
   
@@ -182,8 +182,8 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
     gwas_geno <- genoW
-    gwas_pheno <- phenotype %>% 
-      dplyr::select(Plant, trait)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
+      rename(GenoID = Plant)
     gwas_k <- data.frame(Kw) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
@@ -307,11 +307,9 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   } 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
-    gwas_pheno <- phenotype %>% 
-      filter(Plant %in% wtrain, 
-             Strain %in% sMix) %>% 
-      dplyr::select(Plant, trait)
-    gwas_geno <- data.frame(genoW[genoW[,1] %in% gwas_pheno$Plant, ])
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
+      rename(GenoID = Plant)
+    gwas_geno <- data.frame(genoW[genoW[,1] %in% gwas_pheno$GenoID, ])
     gwas_k <- Kw %>% 
       filter(rownames(.) %in% gwas_geno[,1]) %>% 
       dplyr::select(all_of(gwas_geno[,1])) %>% 

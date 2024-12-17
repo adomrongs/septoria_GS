@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=20
 #SBATCH --time=20:00:00
 #SBATCH --mem=50G
-#SBATCH --array=1-10
+#SBATCH --array=1-30
 
 module load R
 srun Rscript code/R/7_runCV_all.R
