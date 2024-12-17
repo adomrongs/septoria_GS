@@ -10,5 +10,5 @@
 #SBATCH --mem=30G
 #SBATCH --array=1-30
 
-module load R
+module load R/4.2.0-foss-2021b
 srun Rscript code/R/14_septoriaCV.R
