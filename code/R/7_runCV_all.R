@@ -35,21 +35,21 @@ for (wheatKey in names(Kw_list)) {
     ST1Models <- runS1(trait = "PLACL",
                        Kw = Kw_list[[wheatKey]],
                        Kmix = Ks_list[[mixKey]],
-                       pheno = phenotype,
+                       pheno = adjusted_phenotype,
                        genoW = genotype_wheat,
                        map = map_wheat,
                        wtest = wheat_test,
                        formula = formula)
     
     scenarioResults$Scenario1 <- eval_S1(strategy = ST1Models,
-                                         phenotype = phenotype,
+                                         phenotype = adjusted_phenotype,
                                          trait = "PLACL")
     
     # Run Scenario 1 with weighting (wModel = TRUE)
     weightedModel <- runS1(trait = "PLACL",
                            Kw = Kw_list[[wheatKey]],
                            Kmix = Ks_list[[mixKey]],
-                           pheno = phenotype,
+                           pheno = adjusted_phenotype,
                            genoW = genotype_wheat,
                            map = map_wheat,
                            wtest = wheat_test,
@@ -57,54 +57,54 @@ for (wheatKey in names(Kw_list)) {
                            formula = formula)
     
     scenarioResults$Scenario1w <- eval_S1(strategy = weightedModel,
-                                          phenotype = phenotype,
+                                          phenotype = adjusted_phenotype,
                                           trait = "PLACL")
     
-    for (mix in unique(phenotype$Strain)) {
+    for (mix in unique(adjusted_phenotype$Strain)) {
       ST2strategy <- runS2(trait = "PLACL",
                            Kw = Kw_list[[wheatKey]],
                            Kmix = Ks_list[[mixKey]],
-                           phenotype = phenotype,
+                           phenotype = adjusted_phenotype,
                            genoW = genotype_wheat,
                            map = map_wheat,
                            sMix = mix, 
                            formula = formula)
       scenarioResults[[paste("Scenario2", mix)]] <- eval_S2(strategy = ST2strategy,
-                                                            phenotype = phenotype,
+                                                            phenotype = adjusted_phenotype,
                                                             trait = "PLACL")
       
       weightedModel2 <- runS2(trait = "PLACL",
                               Kw = Kw_list[[wheatKey]],
                               Kmix = Ks_list[[mixKey]],
-                              phenotype = phenotype,
+                              phenotype = adjusted_phenotype,
                               genoW = genotype_wheat,
                               map = map_wheat,
                               sMix = mix,
                               wModel = TRUE,
                               formula = formula)
       scenarioResults[[paste("Scenario2w", mix)]] <- eval_S2(strategy = weightedModel2,
-                                                             phenotype = phenotype,
+                                                             phenotype = adjusted_phenotype,
                                                              trait = "PLACL")
     }
     
-    for (mix in unique(phenotype$Strain)) {
+    for (mix in unique(adjusted_phenotype$Strain)) {
       ST3Models <- run_S3(trait = "PLACL",
                           Kw = Kw_list[[wheatKey]],
                           Kmix = Ks_list[[mixKey]],
-                          phenotype = phenotype, 
+                          phenotype = adjusted_phenotype, 
                           sMix = mix,
                           genoW = genotype_wheat,
                           map = map_wheat,
                           wtest = wheat_test, 
                           formula = formula)
       scenarioResults[[paste("Scenario3", mix)]] <- eval_S3(strategy = ST3Models,
-                                                            phenotype = phenotype,
+                                                            phenotype = adjusted_phenotype,
                                                             trait = "PLACL")
       
       weightedModel3 <- run_S3(trait = "PLACL",
                                Kw = Kw_list[[wheatKey]],
                                Kmix = Ks_list[[mixKey]],
-                               phenotype = phenotype, 
+                               phenotype = adjusted_phenotype, 
                                sMix = mix,
                                genoW = genotype_wheat,
                                map = map_wheat,
@@ -112,7 +112,7 @@ for (wheatKey in names(Kw_list)) {
                                wModel = TRUE,
                                formula = formula)
       scenarioResults[[paste("Scenario3w", mix)]] <- eval_S3(strategy = weightedModel3,
-                                                             phenotype = phenotype,
+                                                             phenotype = adjusted_phenotype,
                                                              trait = "PLACL")
     }
     
@@ -122,5 +122,5 @@ for (wheatKey in names(Kw_list)) {
 }
 
 # Save allResults and wtest_lines for this iteration in a separate file
-dir.create("data/modified_data/cv/all2", recursive = T)
-save(allResults, wtest_lines, file = paste0("data/modified_data/cv/all2/iter_", iter, ".Rdata"))
+dir.create("data/modified_data/cv", recursive = T)
+save(allResults, wtest_lines, file = paste0("data/modified_data/cv/iter_", iter, ".Rdata"))
