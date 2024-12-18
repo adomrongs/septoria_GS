@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=cv
-#SBATCH --output=cv_%j.log
-#SBATCH --error=cv_%j.err
+#SBATCH --job-name=cv2
+#SBATCH --output=cv2_%j.log
+#SBATCH --error=cv2_%j.err
 #SBATCH --partition=medium
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
