@@ -31,6 +31,7 @@ for (wheatKey in names(Kw_list)) {
     # Create a list to store results for this iteration
     scenarioResults <- list()
     
+    message("Running strategy 1")
     # Run Scenario 1
     ST1Models <- runS1(trait = "PLACL",
                        Kw = Kw_list[[wheatKey]],
@@ -40,11 +41,13 @@ for (wheatKey in names(Kw_list)) {
                        map = map_wheat,
                        wtest = wheat_test,
                        formula = formula)
-    
+    message("Strategy 1 completed")
+    message("Running evaluation 1")
     scenarioResults$Scenario1 <- eval_S1(strategy = ST1Models,
                                          phenotype = adjusted_phenotype,
                                          trait = "PLACL")
-    
+    message("Evaluation 1 completed")
+    message("Running strategy 1 weighted")
     # Run Scenario 1 with weighting (wModel = TRUE)
     weightedModel <- runS1(trait = "PLACL",
                            Kw = Kw_list[[wheatKey]],
@@ -55,10 +58,12 @@ for (wheatKey in names(Kw_list)) {
                            wtest = wheat_test,
                            wModel = TRUE,
                            formula = formula)
-    
+    message("Strategy 1 weighted completed")
+    message("Running evaluation 1 weighted")
     scenarioResults$Scenario1w <- eval_S1(strategy = weightedModel,
                                           phenotype = adjusted_phenotype,
                                           trait = "PLACL")
+    message("Evaluation 1 weighted completed")
     
     for (mix in unique(adjusted_phenotype$Strain)) {
       ST2strategy <- runS2(trait = "PLACL",

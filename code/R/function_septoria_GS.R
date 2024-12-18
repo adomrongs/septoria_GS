@@ -1439,3 +1439,53 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
   
   return(p)
 }
+
+plotCMManhattan <- function(df, name, color, dir) {
+  setwd(dir)
+  CMplot(df,
+         plot.type = "m",
+         multraits = FALSE,
+         col = color,
+         threshold = 0.05/nrow(df),
+         threshold.lty = c(1, 2), 
+         threshold.lwd = c(1, 1),
+         threshold.col = c("black", "grey"),
+         amplify = TRUE,
+         bin.size = 1e6,
+         chr.den.col = NULL,
+         signal.col = NULL,
+         signal.cex = 1,
+         file = "jpg",
+         file.name = name,
+         dpi = 300,
+         file.output = TRUE,
+         verbose = FALSE,
+         points.alpha = 250,
+         legend.ncol = 2,
+         legend.pos = "middle",
+         main = name)
+  setwd(here())
+}
+
+plotCMqq <- function(df, name, color, dir){
+  setwd(dir)
+  CMplot(df,
+         main= name,
+         plot.type="q",
+         col = color,
+         box= T,
+         file="jpg",
+         file.name= name,
+         dpi=300,
+         conf.int=TRUE,
+         conf.int.col=NULL,
+         threshold.col="red",
+         threshold.lty=2,
+         amplify = TRUE,
+         signal.pch=13, 
+         file.output=T,
+         verbose=TRUE,
+         width=5,
+         height=5)
+  setwd(here())
+}

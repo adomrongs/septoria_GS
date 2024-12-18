@@ -9,6 +9,7 @@ library(biomaRt)
 library(ggdist)
 library(CMplot)
 library(here)
+source("code/R/function_septoria_GS.R")
 
 #==============================================================================
 # Find GENES related to HITS from the GWAS
@@ -124,6 +125,46 @@ plotGO_class <- results_df %>%
   group_by(traits_clean) %>%
   mutate(percentage = count / sum(count) * 100)
 
+colors <- c(
+  "BP" = "#795548FF", # Azul oscuro eléctrico
+  "CC" = "#F4A261FF", # Naranja pastel
+  "MF" = "#2A9D8FFF"  # Verde azulado suave
+)
+
+ggplot(plotGO_class, aes(x = traits_clean, y = percentage, fill = GO_class)) +
+  geom_bar(stat = "identity", position = "fill", width = 0.6) +  # Adjust bars to sum to 100%
+  scale_y_continuous(labels = scales::percent_format()) +  # Show percentages on the Y-axis
+  geom_text(
+    aes(label = count),  # Column that contains the counts
+    position = position_fill(vjust = 0.5),  # Position the labels in the center of each segment
+    color = "black",  # Color of the text
+    size = 7  # Text size
+  ) +
+  labs(
+    title = "Gene Ontology (GO) categories",
+    x = NULL,
+    y = "Percentage",
+    fill = "GO_class"  # This will be used for the fill legend title
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.major.x = element_blank(),  # Elimina las líneas mayores del eje X
+    panel.grid.minor.x = element_blank(),  # Elimina las líneas menores del eje X
+    panel.grid.major.y = element_line(color = "gray", size = 0.5),  # Mantiene las líneas menores del eje Y
+    plot.title = element_blank(),  # Elimina el título del gráfico
+    axis.title.x = element_text(size = 18, face = "bold", vjust = -2, margin = margin(b = 40), hjust = 0.5),  # Centra el texto del título X y ajusta el margen
+    axis.title.y = element_text(size = 18, face = "bold", margin = margin(r = 20), hjust = 0.5),  # Centra el texto del título Y
+    axis.text.x = element_text(size = 18, hjust = 0.5, vjust = 0.5),  # Centra el texto de los ticks del eje X
+    axis.text.y = element_text(size = 18, hjust = 0.5),  # Centra el texto de los ticks del eje Y
+    legend.position = "top",  # Coloca la leyenda en la parte superior
+    legend.title = element_blank(),  # Elimina el título de la leyenda
+    legend.text = element_text(size = 22)  # Tamaño del texto de la leyenda
+  ) +
+  scale_fill_manual(
+    values = colors) +
+  guides(fill = guide_legend(title = NULL)) +
+  coord_flip()
+
 #==============================================================================
 # Final Tables
 #==============================================================================
@@ -159,7 +200,7 @@ gwas_table <- gwas_table %>%
   left_join(markers_names, by = c("SNP" = "ID")) %>% 
   dplyr::select(Trait, SNP = Name, Chr, Pos, P.value, MAF, Effect, Gene, Distance)
 
-write_csv(gwas_table, file = "outputs/gwas_wheat_table")
+write_csv(gwas_table, file = "outputs/postGWAS_wheat/gwas_wheat_table.csv")
 
 attr <- c("ensembl_gene_id", "description")
 triticum <- useEnsemblGenomes(biomart = "plants_mart", dataset = "taestivum_eg_gene")
@@ -177,6 +218,8 @@ genes_GO_table <- genes_GO_table %>%
   left_join(markers_names, by = c("SNP" = "ID")) %>% 
   dplyr::select(Trait, SNP = Name, Gene, Prot_name, Start, End, GO_code, GO_name, GO_class)
 
+write_csv(genes_GO_table, file = "outputs/postGWAS_wheat/genes_GO.csv")
+
 #==============================================================================
 # Plot Allelic Diff
 #==============================================================================
@@ -184,13 +227,13 @@ genes_GO_table <- genes_GO_table %>%
 load("data/modified_data/3_wheat_GWAS.Rdata")
 
 boxplot_list <- list()
-for(i in 1:nrow(marker_traits)){
-  marker <- marker_traits$SNP[i]
-  trait <- marker_traits$traits[i]
+for(i in 1:nrow(gwas_table)){
+  marker <- gwas_table$SNP[i]
+  trait <- gwas_table$Trait[i]
   print(paste0("working on marker: ", marker))
   
-  phenotype <- blues[[trait]]
-  genotype <- genotype_het[genotype_het[, "GenoID"] %in% phenotype[,1], ]
+  phenotype <- blues_wheat %>%  dplyr::select(GenoID, trait)
+  genotype <- genotype_wheat[genotype_wheat[, "GenoID"] %in% phenotype[,1], ]
   
   boxplot_list[[i]] <- plotAllelicdiff(phenotype = phenotype,
                                        genotype =  genotype,
@@ -198,3 +241,23 @@ for(i in 1:nrow(marker_traits)){
                                        trait = trait)
 }
 
+#==============================================================================
+# Plot Manhattan and QQplot
+#==============================================================================
+
+pvalues <- read_csv("outputs/GWAS_wheat/PC4/GAPIT.Association.GWAS_Results.BLINK.PLACL.csv")
+pvalues <- pvalues[,1:4]
+plotCMManhattan(
+  df = pvalues,
+  name = "PLACL",
+  color = "#DD5129FF",
+  dir = "outputs/postGWAS_wheat/"
+)
+
+# QQ plot
+plotCMqq(
+  df = pvalues,
+  name = "PLACL",
+  color = "#DD5129FF",
+  dir = "outputs/postGWAS_wheat/")
+ 
