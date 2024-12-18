@@ -47,8 +47,8 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       dplyr::select(all_of(gwas_geno[,1])) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     
     dim(gwas_geno); dim(gwas_pheno); dim(map); dim(gwas_k)
     # run GWAS
@@ -182,8 +182,8 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
     gwas_geno <- genoW
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     gwas_k <- data.frame(Kw) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
@@ -307,8 +307,8 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   } 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     gwas_geno <- data.frame(genoW[genoW[,1] %in% gwas_pheno$GenoID, ])
     gwas_k <- Kw %>% 
       filter(rownames(.) %in% gwas_geno[,1]) %>% 

@@ -470,8 +470,8 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       dplyr::select(all_of(gwas_geno[,1])) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     
     dim(gwas_geno); dim(gwas_pheno); dim(map); dim(gwas_k)
     # run GWAS
@@ -605,8 +605,8 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
     gwas_geno <- genoW
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     gwas_k <- data.frame(Kw) %>% 
       rownames_to_column("GenoID") %>% 
       dplyr::select(GenoID, everything())
@@ -730,8 +730,8 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
   } 
   if (wModel) {
     bonferroni <- 0.05/nrow(map)
-    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant") %>% 
-      rename(GenoID = Plant)
+    gwas_pheno <- extract_blues_df_adapted(ptrain, trait, formula, "Plant")
+    colnames(gwas_pheno) <- c("GenoID", trait)
     gwas_geno <- data.frame(genoW[genoW[,1] %in% gwas_pheno$GenoID, ])
     gwas_k <- Kw %>% 
       filter(rownames(.) %in% gwas_geno[,1]) %>% 
@@ -841,7 +841,7 @@ eval_S3 <- function(strategy, phenotype, trait) {
   )
   
   return(list(CorrelationResults = correlationResults))
-} 
+}
 
 scenario1 <- function(allResults) {
   # Initialize lists to store data
@@ -1246,4 +1246,56 @@ correlation_dfs <- function(ref_df, ref_col, df) {
   result <- data.frame(Model = names(correlations), Correlation = correlations)
   rownames(result) <- NULL
   return(result)
+}
+
+content2table = function(r){
+  a = strsplit(httr::content(r, encoding = 'UTF-8'), '\n')[[1]]
+  b = data.frame(do.call('rbind',sapply(a, strsplit, split = '\t')))
+  rownames(b) = NULL
+  colnames(b) = b[1,]
+  b = b[-1,]
+  for (i in 1:nrow(b)){
+    if (b[i,1] == b[i,2]){b[i,2] = NA}
+  }
+  return(b)
+}
+
+GOwide2long <- function(b){
+  output = list()
+  for (i in 1:nrow(b)){
+    c = str_match(strsplit(b[i,2], '; ')[[1]], '(.+) (.+)')
+    ########
+    if(length(c[,2]) > 0){
+      GO_name = c[,2]
+    } else {
+      GO_name = NA
+    }
+    
+    if(length(c[,3]) > 0){
+      GO_code = c[,3]
+    } else {
+      GO_code = NA
+    }
+    ########
+    # output[[i]] = data.frame(Entry = unname(b[i,1]),
+    #                          Prot_name = b[i,3], 
+    #                          GO_name = c[,2], GO_code = c[,3])
+    output[[i]] = data.frame(Entry = unname(b[i,1]),
+                             Prot_name = b[i,3], 
+                             Prot_existence = b[i,4],
+                             GO_name = GO_name, GO_code = GO_code)
+  }
+  output = do.call('rbind', output)
+  return(output)
+}
+
+grepEffect <- function(marker, trait, model, parent_directory){
+  file <- paste0(parent_directory, "/GAPIT.Association.GWAS_Results.", model,".", trait,".csv")
+  pvalues <- read_csv(file)
+  effect <- pvalues %>% 
+    filter(SNP == marker) %>% 
+    pull(Effect)
+  
+  tmp_df <- data.frame(SNP = marker, Effect = effect, Trait = trait)
+  return(tmp_df)
 }
