@@ -822,6 +822,7 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
 eval_S3 <- function(strategy, phenotype, trait) {
   predictions <- predict(strategy$model3)
   predictions_I <- predict(strategy$model3_I)
+}
 
 scenario1 <- function(allResults) {
   # Initialize lists to store data
