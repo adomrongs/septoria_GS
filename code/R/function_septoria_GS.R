@@ -1092,7 +1092,9 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   # ==============================================
   bonferroni <- 0.05/nrow(map)
   ptrain <- phenotype %>% filter(Isolate %in% train)
-  blues <- blues_all %>% filter(Isolate %in% train)
+  blues <- blues_all %>% 
+    filter(Isolate %in% train) %>% 
+    dplyr::select(Isolate, trait)
   gtrain <- genotype %>% filter(genotype[,1] %in% blues$Isolate)
   ktrain <- kinship %>%
     filter(rownames(.) %in% blues$Isolate) %>%
@@ -1100,6 +1102,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     rownames_to_column("Isolate") %>%
     dplyr::select(Isolate, everything())
   
+  message("Data Ready")
   dim(blues); dim(gtrain); dim(map); dim(ktrain)
   #===============================================
   # Run predictions with/withouth markers
@@ -1107,13 +1110,15 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   
   if (!wModel) {
     formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + Leaf + BRep"))
+    results <- data.frame()
+    message("Results created")
   } 
   if (wModel) {
     tmp <- capture.output({
       scores <- GAPIT(Y = blues,
                       GD = gtrain,
                       GM = map,
-                      KI = ktrain,
+                      KI = NULL,
                       CV = NULL,
                       PCA.total = 3,
                       model = "Blink",
@@ -1125,6 +1130,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     
     results <- scores[["GWAS"]] %>% 
       arrange(P.value)
+    message("Results created")
     hits_bonferroni <- results %>% filter(P.value <= bonferroni)
     
     if (nrow(hits_bonferroni) == 0) {
@@ -1146,7 +1152,8 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
-      paste0(trait, "~ Line + Year + Trial + Leaf + BRep ", paste(sSNPs, collapse = " + "))
+      paste0(trait, " ~ Line + Year + Trial + Leaf + BRep + ", 
+             paste0("`", sSNPs, "`", collapse = " + "))
     )
   }
   
@@ -1155,21 +1162,27 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
                 rcov = ~ units,
                 data = ptrain,
                 verbose = TRUE)
+  message("model correctly created")
+  
   H2 <- h2_sommer(model, n = 12)
+  message("hertability calculated")
   
   blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
     mutate(!!trait := model$U[[1]][[1]]) %>% 
     filter(Isolate %in% test) %>% 
     arrange(Isolate)
+  message("blups extracted")
   
   blues_test <- blues_all %>% 
     filter(Isolate %in% test) %>% 
     arrange(Isolate)
+  message("blues extracted")
   
   ability <- cor(blups_test[,trait], blues_test[,trait])
   accuracy <- ability/sqrt(H2)
+  message("results extracted")
   
-  results <- list(ability = ability, accuracy = accuracy)
+  results <- list(ability = ability, accuracy = accuracy, results = results)
   return(results)
   
 }

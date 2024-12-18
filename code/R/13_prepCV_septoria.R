@@ -11,7 +11,7 @@ phenotype <- cleaned_septoria_phenotype_1
 kinship <- k_septoria[,-1]
 colnames(kinship) <- rownames(kinship) <- k_septoria[,1]
 map <- map_septoria
-formula <- "~ Isolate + Line + Trial + Leaf + Year + BRep"
+formula <- "~ -1 + Isolate + Line + Trial + Leaf + Year + BRep"
 blues_all <- extract_blues_df_adapted(cleaned_septoria_phenotype_1,
                                       trait = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
                                       formula = formula, 
