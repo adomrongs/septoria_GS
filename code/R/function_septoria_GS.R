@@ -1299,3 +1299,143 @@ grepEffect <- function(marker, trait, model, parent_directory){
   tmp_df <- data.frame(SNP = marker, Effect = effect, Trait = trait)
   return(tmp_df)
 }
+
+plotAllelicdiff <- function(phenotype, genotype, marker, trait){
+  # Seleccionar la columna del marcador de genotipo
+  tmp_geno <- genotype %>% 
+    dplyr::select(GenoID, all_of(marker)) %>%
+    mutate(across(all_of(marker), round))
+  
+  tmp_pheno <- phenotype %>%
+    left_join(tmp_geno, by = "GenoID")
+  
+  clean_trait <- gsub("^BLINK.", "", trait)
+  
+  tmp_pheno <- tmp_pheno %>%
+    filter(.data[[marker]] %in% c(0, 1, 2)) %>%
+    mutate(SNP = marker) %>%
+    dplyr::select(GenoID, all_of(marker), SNP, clean_trait)
+  
+  
+  if(length(unique(tmp_pheno[[marker]])) == 2) {
+    # Realiza un t-test para los dos valores únicos
+    test_results <- t.test(
+      tmp_pheno[[trait]] ~ as.factor(tmp_pheno[[marker]]), 
+      data = tmp_pheno
+    )
+    p_value <- test_results$p.value
+    pvalue_df <- data.frame(level_1= names(table(tmp_geno[[marker]])[1]), 
+                            level_2 = names(table(tmp_geno[[marker]])[2]),
+                            pvalue = p_value) %>% 
+      mutate(significance = ifelse(pvalue < 0.05, "*", "NS")) %>% 
+      distinct()
+  } else if(length(unique(tmp_pheno[[marker]])) == 3) {
+    # Realiza una ANOVA para los tres valores
+    tmp_pheno[[marker]] <- as.factor(tmp_pheno[[marker]])
+    anova_formula <- as.formula(paste0("`", trait, "` ~ `", marker, "`"))
+    Anova <- aov(anova_formula, data = tmp_pheno)
+    tukey_results <- TukeyHSD(x = Anova)
+    p_value <- tukey_results[[marker]][, "p adj"]
+    pvalue_df <- data.frame(pvalue = p_value) %>% 
+      rownames_to_column("levels") %>% 
+      mutate(level_1 = sapply(str_split(levels, "-"), function(x) x[[1]]),
+             level_2 = sapply(str_split(levels, "-"), function(x) x[[2]])) %>% 
+      dplyr::select(level_1, level_2, pvalue) %>% 
+      mutate(significance = ifelse(pvalue < 0.05, "*", "NS"))
+  } else {
+    message("El marcador no tiene exactamente 2 o 3 valores únicos. No se realizó ningún análisis.")
+  }
+  
+  # Calcular los conteos y eliminar clases con menos de 2 valores
+  # valid_classes <- tmp_pheno %>%
+  #   group_by(!!sym(marker)) %>%
+  #   summarise(n = n(), .groups = 'drop') %>%
+  #   filter(n >= 2) %>%  # Mantener solo clases con al menos 2 valores
+  #   pull(!!sym(marker)) # Extraer los valores válidos del marcador
+  # 
+  # # Filtrar tmp_pheno para mantener solo clases válidas
+  # tmp_pheno <- tmp_pheno %>%
+  #   filter(.data[[marker]] %in% valid_classes)
+  
+  # Recalcular los conteos para las clases válidas
+  counts <- tmp_pheno %>%
+    group_by(!!sym(marker)) %>%
+    summarise(n = n(), .groups = 'drop') %>%
+    mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n))
+  
+  
+  
+  # Add a dataframe for significance annotations with larger spacing
+  annotation_df <- pvalue_df %>%
+    mutate(
+      x = as.numeric(factor(level_1, levels = levels(as.factor(tmp_pheno[[marker]])))),  # Ajusta las coordenadas x
+      xend = as.numeric(factor(level_2, levels = levels(as.factor(tmp_pheno[[marker]])))), # Ajusta las coordenadas xend
+      y_base = max(tmp_pheno[[clean_trait]], na.rm = TRUE) + 0.1 * diff(range(tmp_pheno[[clean_trait]])), # Base y-value
+      y_offset = seq(0, by = 0.1 * diff(range(tmp_pheno[[clean_trait]])), length.out = nrow(pvalue_df)), # Más espacio entre líneas
+      y = y_base + y_offset,  # Calcula el y final
+      label_y = y + 0.03 * diff(range(tmp_pheno[[clean_trait]])), # Etiqueta ligeramente por encima del segmento
+      label = significance
+    )
+  
+  markers_names <- read_delim("data/raw_data/90K.CSv2.Ann.info.txt", delim = "\t")
+  markers_names <- markers_names %>% dplyr::select(ID, Name) %>% 
+    filter(ID %in% marker)
+  colnames(tmp_pheno)[2] <- markers_names$Name
+  tmp_pheno$SNP <- markers_names$Name
+  marker <- markers_names$Name
+  # Create the plot
+  p <- ggplot(tmp_pheno, aes(x = as.factor(.data[[marker]]),    
+                             y = .data[[clean_trait]],
+                             fill = as.factor(.data[[marker]]))) +
+    
+    # Half violin plot
+    stat_halfeye(adjust = .5, width = .3, justification = -.7, .width = 0, point_colour = NA) +
+    
+    # Dot plot
+    stat_dots(side = "left",
+              justification = 1.5,
+              binwidth = NA,
+              dotsize = 0.8,
+              overflow = "compress",
+              scale = 0.4)  +
+    
+    # Boxplot
+    geom_boxplot(width = 0.2, outlier.shape = NA, color = "black", aes(fill = as.factor(.data[[marker]]))) +
+    
+    # Escala de colores
+    scale_fill_manual(values = c("#DD5129FF", "#0F7BA2FF", "#43B284FF")) +
+    scale_x_discrete(
+      labels = counts$label,
+      expand = c(0,0)) +# Ajusta los márgenes izquierdo (0.05) y derecho (0.1)
+    # Estilo de tema
+    theme_ipsum() + 
+    theme(
+      plot.margin = unit(c(1, 1, 1, 0), "lines"),
+      panel.grid = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "none",
+      plot.title = element_blank(),
+      strip.text = element_text(size = 13, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = "lightgray"),
+      axis.line = element_line(colour = "black"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.x = element_text(size = 18, face = "plain"),
+      axis.title.y = element_text(size = 18, face = "plain"),
+      axis.text.x = element_text(size = 18),
+      axis.text.y = element_text(size = 18)
+    )  +
+    labs(x = NULL, y = trait) +
+    facet_grid(. ~ SNP) +
+    
+    # Add significance annotations
+    geom_segment(data = annotation_df, aes(x = x, xend = xend, y = y, yend = y), inherit.aes = FALSE) +
+    geom_text(data = annotation_df, aes(x = (x + xend) / 2, y = label_y, label = label), inherit.aes = FALSE, size = 5) +
+    
+    # Adjust the plot range to include annotations
+    coord_cartesian(ylim = c(min(tmp_pheno[[clean_trait]], na.rm = TRUE), 
+                             max(annotation_df$label_y + 0.1 * diff(range(tmp_pheno[[clean_trait]])))),
+                    xlim = c(min = 0.3, max = ifelse(length(unique(tmp_pheno[[marker]])) == 3, 3.5, 2.5)))
+  
+  return(p)
+}

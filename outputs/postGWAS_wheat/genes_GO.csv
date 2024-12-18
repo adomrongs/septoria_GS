@@ -1,0 +1,11 @@
+Trait,SNP,Gene,Prot_name,Start,End,GO_code,GO_name,GO_class
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0016020,membrane,CC
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0006886,intracellular protein transport,BP
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0016192,vesicle-mediated transport,BP
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Alpha-soluble NSF attachment protein,285354787,285361760,GO:0016020,membrane,CC
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Alpha-soluble NSF attachment protein,285354787,285361760,GO:0006886,intracellular protein transport,BP
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Alpha-soluble NSF attachment protein,285354787,285361760,GO:0016192,vesicle-mediated transport,BP
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0031201,SNARE complex,CC
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0005483,soluble NSF attachment protein activity,MF
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0019905,syntaxin binding,MF
+PLACL,tplb0044i19_1180,TraesCS7B02G182700,Uncharacterized protein,285354787,285361760,GO:0035494,SNARE complex disassembly,BP

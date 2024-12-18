@@ -21,7 +21,7 @@ wtest_lines <- list()  # Initialize wtest_lines before using it
 # Select test lines for wheat
 wheat_test <- sample(rownames(k_wheat), ceiling(0.2 * nrow(k_wheat)))
 wtest_lines[[iter]] <- wheat_test
-formula <- "~ -1 + Plant + Strain + Rep + Leaf "
+formula <- "~ -1 + Plant + Strain"
 
 # Loop over wheat and mix kernels
 for (wheatKey in names(Kw_list)) {

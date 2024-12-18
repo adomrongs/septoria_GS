@@ -177,3 +177,24 @@ genes_GO_table <- genes_GO_table %>%
   left_join(markers_names, by = c("SNP" = "ID")) %>% 
   dplyr::select(Trait, SNP = Name, Gene, Prot_name, Start, End, GO_code, GO_name, GO_class)
 
+#==============================================================================
+# Plot Allelic Diff
+#==============================================================================
+
+load("data/modified_data/3_wheat_GWAS.Rdata")
+
+boxplot_list <- list()
+for(i in 1:nrow(marker_traits)){
+  marker <- marker_traits$SNP[i]
+  trait <- marker_traits$traits[i]
+  print(paste0("working on marker: ", marker))
+  
+  phenotype <- blues[[trait]]
+  genotype <- genotype_het[genotype_het[, "GenoID"] %in% phenotype[,1], ]
+  
+  boxplot_list[[i]] <- plotAllelicdiff(phenotype = phenotype,
+                                       genotype =  genotype,
+                                       marker = marker,
+                                       trait = trait)
+}
+
