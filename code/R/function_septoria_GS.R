@@ -822,6 +822,31 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
 eval_S3 <- function(strategy, phenotype, trait) {
   predictions <- predict(strategy$model3)
   predictions_I <- predict(strategy$model3_I)
+  
+  total_results <- data.frame(Plant = phenotype$Plant, 
+                              Strain = phenotype$Strain, 
+                              Observed = phenotype[[trait]], 
+                              Predicted = predictions, 
+                              Predicted_I = predictions_I)
+  test_results <- total_results %>% 
+    filter(Plant %in% strategy$wtest, 
+           Strain %in% strategy$sMix)
+  
+  cor <- cor(test_results$Observed, test_results$Predicted)
+  cor_I <- cor(test_results$Observed, test_results$Predicted)
+  
+  accuracy <- cor/sqrt(strategy$H_list[[1]])
+  accuracy_I <- cor_I/sqrt(strategy$H_list[[2]])
+  
+  correlationResults <- list(
+    cor = cor, 
+    corInteraction = cor_I,
+    accuracy = accuracy,
+    accuracy_I = accuracy_I,
+    hits = strategy$hits
+  )
+  
+  return(list(CorrelationResults = correlationResults))
 }
 
 scenario1 <- function(allResults) {
