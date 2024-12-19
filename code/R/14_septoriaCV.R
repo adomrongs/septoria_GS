@@ -26,7 +26,7 @@ for(j in seq_along(traits)){
   weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype, phenotype, kinship,
                           map_septoria, test, trait, blues_all, wModel = TRUE)
   
-  gmessage("Analysis Ready")
+  message("Analysis Ready")
 }
 
 results_lits <- list(normal_list, weighted_list)
