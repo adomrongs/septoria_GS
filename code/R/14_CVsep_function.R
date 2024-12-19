@@ -2,6 +2,7 @@ library(tidyverse)
 library(sommer)
 library(here)
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
+source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("code/R/function_septoria_GS.R")
 
 load("data/modified_data/6_CV_septoria.Rdata")
@@ -38,7 +39,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   message("Data Ready")
   dim(blues); dim(gtrain); dim(map); dim(ktrain)
   #===============================================
-  # Run predictions with/withouth markers
+  # Run predictions with/without markers
   # ==============================================
   
   if (!wModel) {
@@ -47,6 +48,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     message("Results created")
   } 
   if (wModel) {
+    message("Running GWAS")
     tmp <- capture.output({
       scores <- GAPIT(Y = blues,
                       GD = gtrain,
@@ -60,6 +62,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     rm(tmp)
     gc()
     setwd(here())
+    message("GWAS completed")
     
     results <- scores[["GWAS"]] %>% 
       arrange(P.value)

@@ -8,8 +8,8 @@ source("code/R/function_septoria_GS.R")
 
 s1 <- s2 <- s3 <- list()
 
-for( i in 1:10){
-  load(paste0("data/modified_data/cv/final/iter_", i, ".Rdata"))
+for( i in 1:30){
+  load(paste0("data/modified_data/cv/iter_", i, ".Rdata"))
   names(allResults) <- c("G/G", "G/I", "I/G", "I/I")
   s1[[i]] <- scenario1(allResults = allResults)
   s2[[i]] <- scenario2(allResults = allResults)

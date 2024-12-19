@@ -21,12 +21,12 @@ for(j in seq_along(traits)){
   message("Processing trait: ", trait, ", iteration: ", i)
   
   normal_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype, phenotype, kinship,
-                        map, test, trait, blues_all, wModel = FALSE)
+                        map_septoria, test, trait, blues_all, wModel = FALSE)
   
   weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype, phenotype, kinship,
-                          map, test, trait, blues_all, wModel = TRUE)
+                          map_septoria, test, trait, blues_all, wModel = TRUE)
   
-  message("Analysis Ready")
+  gmessage("Analysis Ready")
 }
 
 results_lits <- list(normal_list, weighted_list)
