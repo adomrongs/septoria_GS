@@ -17,10 +17,29 @@ for(i in seq_along(hits)){
   df_list[[i]] <- tmp_file |> 
     mutate(PCs = pcs[[i]], Leaf = leaf[[i]], Cultivar = cultivar[[i]])
 }
+df_hits <- do.call(rbind, df_list) |> 
+  mutate(traits = gsub("BLINK.", "", traits)) |> 
+  dplyr::select(-1) |> 
+  relocate(Cultivar, Leaf, PCs) |> 
+  arrange(Cultivar, PCs, Chr, Pos)
 
+for (leaf in unique(df_hits$Leaf)) {
+  df_hits_leaf <- df_hits |> filter(Leaf == leaf)
+  output_file <- paste0("outputs/postGWAS_sep/cultivars_l", leaf, ".csv")
+  fileConn <- file(output_file, "w")
+  cultivars <- unique(df_hits_leaf$Cultivar)
+  for (cultivar in cultivars) {
+    subset_df <- df_hits_leaf[df_hits_leaf$Cultivar == cultivar, ]
+    write.table(subset_df, file = fileConn, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)
+    cat("\n", file = fileConn)
+  }
+  close(fileConn)
+}
 
-df_hits <- do.call(rbind, df_list)
-snps <- df_hits |> 
+df_hits_l2 <- df_hits |> 
+  filter(Leaf ==2)
+
+snps <- df_hits_l2 |> 
   mutate(Trait = gsub("^BLINK.", "", traits),
          Chrom = as.numeric(str_extract(SNP, "(?<=X)(\\d+)(?=_)"))) |> 
   arrange(Trait, Chrom) |> 
@@ -32,7 +51,7 @@ final_hits <- snps |>
   filter(n() == 1) |> 
   ungroup() 
 
-dim(final_hits) # we will be looking for candidate genes affected by these 28 snps
+dim(final_hits) # we will be looking for candidate genes affected by these 18 snps
 # it would be correct to select the hits that are being detected twice beacuse this would mean that 
 # we would be paying attention just to those ones that affect multiple traits
 
@@ -46,6 +65,7 @@ markers <- as.numeric(map(strsplit(final_hits$SNP, "_"), \(x) x[[2]]))
 out_dir <- 'outputs/FASTA_sep'
 
 candidate_genes <- find_genes(mart, attributes, filters, distances, chr, traits, out_dir)
+write_csv(candidate_genes, 'outputs/postGWAS_sep/genes_l2.csv')
 
 # summary abolut genes and hits
 # Number of hits and genes per trait
@@ -69,6 +89,7 @@ table3 <- candidate_genes |>
   group_by(chr) |>
   summarise(Hits = n_distinct(marker), Genes = n_distinct(gene)) |> 
   arrange(desc(Hits), desc(Genes))
+
 
 
 

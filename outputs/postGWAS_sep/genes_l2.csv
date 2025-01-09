@@ -1,0 +1,38 @@
+trait,marker,distance,gene,start,end_position,information,accesion
+PLACL,X1_238483,500,Mycgr3G106743,237862,238780,Putative uncharacterized protein ,F9WXF1
+PLACL,X1_238483,1000,Mycgr3G88622,239195,240148,Putative uncharacterized protein ,F9WXF2
+PLACL,X1_238483,2000,Mycgr3G88620,236211,236654,Putative uncharacterized protein ,F9WXF0
+log_pycnidiaPerCm2Leaf,X9_440024,500,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44
+log_pycnidiaPerCm2Leaf,X9_440024,2000,Mycgr3G75341,436586,438709,Putative uncharacterized protein ,F9XJ43
+log_pycnidiaPerCm2Lesion,X1_2743930,1000,Mycgr3G102416,2740953,2743202,Putative uncharacterized protein ,F9WZ75
+log_pycnidiaPerCm2Lesion,X1_2743930,1000,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76
+pycnidiaPerCm2Leaf,X1_1144460,500,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72
+pycnidiaPerCm2Leaf,X1_1144460,1000,Mycgr3G65205,1141640,1143464,Putative uncharacterized protein ,F9WW71
+pycnidiaPerCm2Leaf,X1_3699969,500,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1
+pycnidiaPerCm2Leaf,X1_3699969,500,Mycgr3G107386,3700224,3702992,Putative uncharacterized protein ,F9X0B2
+pycnidiaPerCm2Leaf,X2_761923,1000,Mycgr3G67942,759626,761368,Putative uncharacterized protein ,F9X479
+pycnidiaPerCm2Leaf,X2_761923,2000,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480
+pycnidiaPerCm2Leaf,X8_2023297,500,Mycgr3G101090,2022890,2024549,Putative uncharacterized protein ,F9XH31
+pycnidiaPerCm2Leaf,X8_2023297,2000,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32
+pycnidiaPerCm2Lesion,X13_684814,500,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63
+pycnidiaPerCm2Lesion,X1_1146578,500,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72
+pycnidiaPerCm2Lesion,X1_1146578,500,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73
+pycnidiaPerCm2Lesion,X1_1810643,500,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6
+pycnidiaPerCm2Lesion,X1_1810643,2000,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7
+pycnidiaPerCm2Lesion,X1_1810643,2000,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5
+pycnidiaPerCm2Lesion,X1_326779,1000,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7
+pycnidiaPerCm2Lesion,X1_326779,2000,Mycgr3G64915,328405,329766,Putative uncharacterized protein ,F9WZH8
+pycnidiaPerCm2Lesion,X3_531163,500,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6
+pycnidiaPerCm2Lesion,X3_531163,1000,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5
+pycnidiaPerCm2Lesion,X4_2430124,500,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5
+pycnidiaPerCm2Lesion,X4_2430124,2000,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4
+pycnidiaPerCm2Lesion,X4_2430124,2000,Mycgr3G92832,2431895,2432434,Putative uncharacterized protein ,F9X8K6
+pycnidiaPerCm2Lesion,X8_190257,500,Mycgr3G46279,189870,190891,Putative uncharacterized protein ,F9XHV6
+pycnidiaPerCm2Lesion,X8_190257,1000,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7
+pycnidiaPerCm2Lesion,X8_190257,1000,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5
+pycnidiaPerCm2Lesion,X8_462144,1000,Mycgr3G94965,459463,461274,Putative uncharacterized protein ,F9XIE3
+pycnidiaPerCm2Lesion,X8_462144,1000,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4
+pycnidiaPerCm2Lesion,X8_462144,2000,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5
+pycnidiaPerCm2Lesion,X8_707320,2000,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1
+pycnidiaPerCm2Lesion,X9_1649963,500,Mycgr3G95893,1646958,1650238,Putative uncharacterized protein ,F9XJQ4
+pycnidiaPerCm2Lesion,X9_1649963,2000,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5

@@ -1671,9 +1671,10 @@ find_genes <- function(mart, attributes, filters, distances, chr, traits, out_di
     
     final_df <- final_df |> dplyr::select(-peptide) |> 
       arrange(trait, marker, distance)
-  }
-  
-  return(final_df)
+    return(final_df)
+  }else{
+    paste0("No genes were found")
+    }
 }
 
 
