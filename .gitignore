@@ -10,3 +10,7 @@
 # all raw data
 /data/raw_data
 /outputs/GWAS_wheat
+
+# ignore fasta files
+/outputs/FASTA_sep/*
+/outputs/GWAS_sep/*

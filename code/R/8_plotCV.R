@@ -54,3 +54,31 @@ for(i in seq_along(results)){
   }
 }
 
+hits_s1 <- hits_w(s1, "Strategy 1")
+hits_s2 <- hits_w(s2, "Strategy 2")
+hits_s3 <- hits_w(s3, "Strategy 3")
+
+hits_df <- bind_rows(hits_s1, hits_s2, hits_s3)
+hist_cv_wheat <- ggplot(hits_df) +
+  geom_histogram(aes(x = Hits)) +
+  theme(
+    plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
+    legend.title = element_blank(), 
+    legend.position = 'top',
+    panel.background = element_rect(fill = "white"),
+    panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+    plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+    strip.text = element_text(size = 10, color = "black", family = "Arial"),
+    strip.background = element_rect(fill = "lightgray", size = 0.5),
+    panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+    axis.title.y = element_text(size = 12, family = "Arial"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 10, family = "Arial"),
+    plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20)),
+    plot.margin = margin(2, 30, 2, 30)
+  )+
+  facet_grid(.~ Strategy) 
+
+png(paste0("outputs/plots/hist_cv_wheat.png"), width = 3000, height = 1500, res = 400)
+hist_cv_wheat
+dev.off()

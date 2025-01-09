@@ -852,7 +852,7 @@ eval_S3 <- function(strategy, phenotype, trait) {
 scenario1 <- function(allResults) {
   # Initialize lists to store data
   cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
-  
+  hits_list <- list()
   for (result_name in names(allResults)) {
     s1_models <- grep("Scenario1", names(allResults[[result_name]]), value = TRUE)
     
@@ -882,6 +882,14 @@ scenario1 <- function(allResults) {
                Model = ifelse(grepl("1w", model), "Weighted", "Normal"),
                Interaction = "+I")
       acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
+      
+      if(grepl("w", model)){
+        hits_df <- allResults[[result_name]][[model]][[5]] %>% 
+          filter(P.value < 0.05/nrow(allResults[[result_name]][[model]][[5]]))
+        hits_list[[result_name]][[model]] <- nrow(hits_df) 
+      }else{
+        hits_list[[result_name]][[model]] <- NA
+      }
     }
   }
   
@@ -912,12 +920,12 @@ scenario1 <- function(allResults) {
     dplyr::select(Info, Matrix, Mix, Cor)
   
   
-  return(list(ability = s1_df,  accuracy = acc_df))
+  return(list(ability = s1_df,  accuracy = acc_df, hits = hits_list))
 }
 
 scenario2 <- function(allResults){
   cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
-  
+  hits_list <- list()
   for (result_name in names(allResults)) {
     s2_models <- grep("Scenario2", names(allResults[[result_name]]), value = TRUE)
     for (model in s2_models) {
@@ -952,6 +960,15 @@ scenario2 <- function(allResults){
                Interaction = "+I")
       colnames(tmp_acc_I)[1] <- "Cor"
       acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
+      
+      if(grepl("w", model)){
+        results_df <- allResults[[result_name]][[model]][["CorrelationResults"]][[5]]
+        hits_df <- results_df %>% 
+          filter(P.value < 0.05/nrow(results_df))
+        hits_list[[result_name]][[model]] <- nrow(hits_df) 
+      }else{
+        hits_list[[result_name]][[model]] <- NA
+      }
     }
   }
   
@@ -970,12 +987,12 @@ scenario2 <- function(allResults){
     dplyr::select(Info, Matrix, Mix, Cor) %>% 
     mutate(across(c(Info, Mix, Matrix), as.factor))
   
-  return(list(ability = s2_df,  accuracy = acc_df))
+  return(list(ability = s2_df,  accuracy = acc_df, hits = hits_list))
 }
 
 scenario3 <- function(allResults){
   cor_strain_list <- cor_strain_I_list <- acc_strain_list <- acc_strain_I_list <- list()
-  
+  hits_list <- list()
   for (result_name in names(allResults)) {
     s3_models <- grep("Scenario3", names(allResults[[result_name]]), value = TRUE)
     for (model in s3_models) {
@@ -1010,9 +1027,17 @@ scenario3 <- function(allResults){
                Interaction = "+I")
       colnames(tmp_acc_I)[1] <- "Cor"
       acc_strain_I_list[[paste(result_name, model, "I", sep = "_")]] <- tmp_acc_I
+      
+      if(grepl("w", model)){
+        results_df <- allResults[[result_name]][[model]][["CorrelationResults"]][[5]]
+        hits_df <- results_df %>% 
+          filter(P.value < 0.05/nrow(results_df))
+        hits_list[[result_name]][[model]] <- nrow(hits_df) 
+      }else{
+        hits_list[[result_name]][[model]] <- NA
     }
   }
-  
+  }
   cor_strain <- bind_rows(cor_strain_list)
   cor_strain_I <- bind_rows(cor_strain_I_list)
   acc_strain <- bind_rows(acc_strain_list)
@@ -1028,7 +1053,7 @@ scenario3 <- function(allResults){
     dplyr::select(Info, Matrix, Mix, Cor) %>% 
     mutate(across(c(Info, Mix, Matrix), as.factor))
   
-  return(list(ability = s3_df,  accuracy = acc_df))
+  return(list(ability = s3_df,  accuracy = acc_df, hits = hits_list))
 }
 
 combine_elements <- function(data_list, element_name) {
@@ -1130,7 +1155,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   message("Data Ready")
   dim(blues); dim(gtrain); dim(map); dim(ktrain)
   #===============================================
-  # Run predictions with/withouth markers
+  # Run predictions with/without markers
   # ==============================================
   
   if (!wModel) {
@@ -1139,6 +1164,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     message("Results created")
   } 
   if (wModel) {
+    message("Running GWAS")
     tmp <- capture.output({
       scores <- GAPIT(Y = blues,
                       GD = gtrain,
@@ -1152,6 +1178,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
     rm(tmp)
     gc()
     setwd(here())
+    message("GWAS completed")
     
     results <- scores[["GWAS"]] %>% 
       arrange(P.value)
@@ -1508,3 +1535,145 @@ plotCMqq <- function(df, name, color, dir){
          height=5)
   setwd(here())
 }
+
+extract_predictions <- function(list, model, trait){
+  ability <- list[[model]][[1]][[trait]][[1]]
+  accuracy <- list[[model]][[1]][[trait]][[2]]
+  
+  results_tmp_df <- data.frame(Trait = trait, Model = model,
+                               Ability = ability, Accuracy = accuracy)
+  return(results_tmp_df)  # Explicitly return the data frame
+}
+
+prepare_traits <- function(data_list, trait) {
+  data_list %>%
+    map_dfr(~ {
+      # Extraer los dos data frames de cada iteración usando el trait proporcionado
+      normal_df <- .x$normal[[trait]] %>%
+        mutate(Model = "normal")  # Agregar columna 'Model' para el modelo normal
+      
+      weighted_df <- .x$weighted[[trait]] %>%
+        mutate(Model = "weighted")  # Agregar columna 'Model' para el modelo weighted
+      
+      # Combinar los data frames de esta iteración
+      combined_df <- bind_rows(normal_df, weighted_df)
+      
+      # Convertir 'Model' a factor
+      combined_df$Model <- factor(combined_df$Model, levels = c("normal", "weighted"))
+      
+      # Eliminar rownames
+      rownames(combined_df) <- NULL
+      
+      # Aplicar la función 'prepare_dfs' al data frame combinado
+      new_combined_df <- combined_df %>% 
+        mutate(plot = ifelse(Model == "normal", "left", "right"), 
+               position = ifelse(plot == "left", 0.2, -0.2))
+      
+      colnames(new_combined_df) <- c("Trait", "Model", "Ability", "Accuracy", "Plot_col", "Position")
+      
+      return(new_combined_df)
+    })
+}
+
+extract_hits_cv_sep <- function(list, train, bonferroni){
+  results_df <- list[[2]][[1]][[trait]][[3]]
+  hits_df <- results_df %>% 
+    filter(P.value < bonferroni)
+  hits <- nrow(hits_df)
+  
+  return(hits)
+}
+
+hits_df <- function(list, trait){
+  tmp_list <- map_dbl(hits_list, ~ .x[[trait]])
+  df <- data.frame(Hits = unname(tmp_list),
+                   Trait = trait)
+  return(df)
+}
+
+hits_w <- function(lista_principal, strategy) {
+  list <- lista_principal %>%
+    purrr::map(~ .x[[3]] %>%                     # Acceder al tercer subelemento
+                 purrr::map(~ .x[grepl("w", names(.x))]) %>% # Filtrar nombres que contienen "w"
+                 purrr::compact() %>%                       # Eliminar elementos NULL o vacíos
+                 purrr::flatten()) %>%                      # Aplanar cada elemento
+    purrr::flatten() %>%                         # Aplanar todos los elementos
+    unlist() %>%                                 # Convertir a un vector
+    unname()                                     # Eliminar nombres del vector
+  
+  df <- data.frame(Hits = list, Strategy = strategy)
+  return(df)
+}
+
+find_genes <- function(mart, attributes, filters, distances, chr, traits, out_dir){
+  df <- data.frame()
+  
+  required_attributes <- c("peptide", "ensembl_gene_id", "description")
+  if (!all(required_attributes %in% attributes)) {
+    attributes <- unique(c(attributes, required_attributes))
+  }
+  
+  for (i in seq_along(markers)) {
+    for (j in seq_along(distances)) {
+      start <- markers[[i]] - distances[[j]]
+      end <- markers[[i]] + distances[[j]]
+      values <- list(chr = chr[[i]], start = start, end = end)
+      
+      temp <- getBM(attributes = attributes,
+                    filters = filters,
+                    values = values,
+                    mart = mart)
+      
+      if (nrow(temp) > 0) {
+        Marker_distance <- paste0(markers[[i]], "±", distances[[j]])
+        temp$marker_distance <- Marker_distance
+        temp$chromosome <- chr[[i]]
+        temp$trait <- traits[[i]]
+        
+        df <- rbind(df, temp)
+      }
+    }
+  }
+  
+  if (nrow(df) > 0) {
+    final_df <- df %>%
+      separate(
+        col = marker_distance, 
+        into = c("marker", "distance"), 
+        sep = "±", 
+        convert = TRUE  # Automatically convert to numeric if possible
+      ) %>%
+      group_by(ensembl_gene_id) %>%
+      slice_min(order_by = distance, n = 1) %>%
+      ungroup() |> 
+      arrange(distance) %>%
+      mutate(
+        information = str_extract(description, "^[^\\[]+"),  # Extract everything before the first '['
+        tmp = str_extract(description, "(?<=\\[)[^\\]]+"),  # Extract text between the first '[' and ']'
+        accesion = str_extract(description, "(?<=Acc:)[^\\]]+") , # Extract text after 'Acc:' and before ']'
+        marker = paste0("X", chromosome, "_", marker)
+      ) %>%
+      dplyr::select(trait, marker, distance, gene = ensembl_gene_id, 
+                    start = start_position, end_position, information, accesion, peptide)
+    
+    genes <- unique(final_df$gene)
+    dir.create(out_dir, showWarnings = FALSE)
+    for (gene in genes) {
+      seq <- final_df |> 
+        filter(gene == gene) |> 
+        dplyr::select(peptide)
+      
+      write.fasta(sequences = seq,
+                  names = gene,
+                  file.out = paste0(out_dir, "/", gene, ".faa"),
+                  open = "w")
+    }
+    
+    final_df <- final_df |> dplyr::select(-peptide) |> 
+      arrange(trait, marker, distance)
+  }
+  
+  return(final_df)
+}
+
+

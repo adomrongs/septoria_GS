@@ -2,7 +2,6 @@ library(tidyverse)
 library(sommer)
 library(here)
 source("http://zzlab.net/GAPIT/gapit_functions.txt")
-source("http://zzlab.net/GAPIT/gapit_functions.txt")
 source("code/R/function_septoria_GS.R")
 
 load("data/modified_data/6_CV_septoria.Rdata")
