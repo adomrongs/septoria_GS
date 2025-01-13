@@ -29,5 +29,5 @@ for(j in seq_along(traits)){
   message("Analysis Ready")
 }
 
-results_lits <- list(normal_list, weighted_list)
+results_lits <- list(normal_list, weighted_list, test)
 save(results_lits, file = paste0(dir, "iter_", i, ".Rdata"))

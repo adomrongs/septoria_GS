@@ -124,7 +124,8 @@ septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22_EcijaSecSim_L2"
 
 cleaned_septoria_phenotype_1 <- septoria_phenotype %>% 
-  filter(Isolate %in% genotype_all[,1])
+  filter(Isolate %in% genotype_all[,1]) |> 
+  filter(PLACL < 101)
 
 cleaned_septoria_phenotype_2 <- cleaned_septoria_phenotype_1 %>% 
   filter(Leaf == 2) %>% 
