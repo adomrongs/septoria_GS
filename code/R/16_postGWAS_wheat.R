@@ -113,7 +113,7 @@ results_df <- hits %>%
   left_join(results, by = "SNP") %>% 
   left_join(GO_final, by = "Gene") %>% 
   dplyr::select(traits_clean, SNP, Chr.x, Pos.x, P.value,
-                Gene, Prot_name, GO_code, GO_name, GO_class) %>% 
+                Gene, Entry, Prot_name, GO_code, GO_name, GO_class) %>% 
   group_by(SNP, traits_clean) %>% 
   distinct()
 
@@ -212,11 +212,12 @@ description <- getBM(attributes = attr,
 genes_GO_table <- results %>% 
   left_join(GO_final, by = "Gene") %>% 
   left_join(description, by = c("Gene" = "ensembl_gene_id")) %>% 
-  dplyr::select(Trait = traits, SNP, Gene, Prot_name, Start, End, GO_code, GO_name, GO_class) %>% 
+  dplyr::select(Trait = traits, SNP, Gene, Entry, Prot_name, Start, End, GO_code, GO_name, GO_class) %>% 
   distinct()
+
 genes_GO_table <- genes_GO_table %>% 
   left_join(markers_names, by = c("SNP" = "ID")) %>% 
-  dplyr::select(Trait, SNP = Name, Gene, Prot_name, Start, End, GO_code, GO_name, GO_class)
+  dplyr::select(Trait, SNP = Name, Gene, Protein = Entry, Name = Prot_name, Start, End, GO_code, GO_name, GO_class)
 
 write_csv(genes_GO_table, file = "outputs/postGWAS_wheat/genes_GO.csv")
 

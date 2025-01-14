@@ -12,5 +12,10 @@
 /outputs/GWAS_wheat
 
 # ignore fasta files
-/outputs/FASTA_sep/*
+/outputs/postGWAS_sep/FASTA_sep/*
+/outputs/postGWAS_sep/FASTA_all/*
 /outputs/GWAS_sep/*
+/outputs/pca_accuracy
+
+
+/outputs/paper/*

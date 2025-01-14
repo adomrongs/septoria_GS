@@ -1536,12 +1536,12 @@ plotCMqq <- function(df, name, color, dir){
   setwd(here())
 }
 
-extract_predictions <- function(list, model, trait){
+extract_predictions <- function(list, model, trait, iter){
   ability <- list[[model]][[1]][[trait]][[1]]
   accuracy <- list[[model]][[1]][[trait]][[2]]
   
   results_tmp_df <- data.frame(Trait = trait, Model = model,
-                               Ability = ability, Accuracy = accuracy)
+                               Ability = ability, Accuracy = accuracy, Iter = iter)
   return(results_tmp_df)  # Explicitly return the data frame
 }
 
@@ -1554,24 +1554,15 @@ prepare_traits <- function(data_list, trait) {
       
       weighted_df <- .x$weighted[[trait]] %>%
         mutate(Model = "weighted")  # Agregar columna 'Model' para el modelo weighted
-      
       # Combinar los data frames de esta iteración
       combined_df <- bind_rows(normal_df, weighted_df)
-      
       # Convertir 'Model' a factor
       combined_df$Model <- factor(combined_df$Model, levels = c("normal", "weighted"))
-      
       # Eliminar rownames
       rownames(combined_df) <- NULL
+      colnames(combined_df) <- c("Trait", "Model", "Ability", "Accuracy", "Iter")
       
-      # Aplicar la función 'prepare_dfs' al data frame combinado
-      new_combined_df <- combined_df %>% 
-        mutate(plot = ifelse(Model == "normal", "left", "right"), 
-               position = ifelse(plot == "left", 0.2, -0.2))
-      
-      colnames(new_combined_df) <- c("Trait", "Model", "Ability", "Accuracy", "Plot_col", "Position")
-      
-      return(new_combined_df)
+      return(combined_df)
     })
 }
 
@@ -1605,10 +1596,33 @@ hits_w <- function(lista_principal, strategy) {
   return(df)
 }
 
-find_genes <- function(mart, attributes, filters, distances, chr, traits, out_dir){
+calculate_distance <- function(snp_name, start, end) {
+  # Extract numeric position from snp_name
+  position <- as.numeric(map(snp_name, \(x) str_extract(x, "_(.*)", group = T)))
+  
+  # Calculate distances to start and end
+  distance2start <- map2_dbl(position, start, ~ (.x - .y))
+  distance2end <- map2_dbl(position, end, ~ (.x - .y))
+  
+  # Find the minimum distance between start and end (using pmin directly)
+  distance_list <- list()
+  for(i in seq_along(snp_name)){
+    d2start <- distance2start[[i]]
+    d2end <- distance2end[[i]]
+    
+    if(abs(d2start) < abs(d2end)){
+      distance_list[[i]] <- d2start
+    }else{
+      distance_list[[i]] <- d2end
+    }
+  }
+  return(distance_list)
+}
+
+find_genes <- function(mart, attributes, filters, distances, chr, traits, out_dir, markers){
   df <- data.frame()
   
-  required_attributes <- c("peptide", "ensembl_gene_id", "description")
+  required_attributes <- c("peptide", "ensembl_gene_id", "description", "go_id", "name_1006")
   if (!all(required_attributes %in% attributes)) {
     attributes <- unique(c(attributes, required_attributes))
   }
@@ -1654,7 +1668,7 @@ find_genes <- function(mart, attributes, filters, distances, chr, traits, out_di
         marker = paste0("X", chromosome, "_", marker)
       ) %>%
       dplyr::select(trait, marker, distance, gene = ensembl_gene_id, 
-                    start = start_position, end_position, information, accesion, peptide)
+                    start = start_position, end_position, information, accesion, peptide, go_id, name_1006)
     
     genes <- unique(final_df$gene)
     dir.create(out_dir, showWarnings = FALSE)
@@ -1669,12 +1683,52 @@ find_genes <- function(mart, attributes, filters, distances, chr, traits, out_di
                   open = "w")
     }
     
-    final_df <- final_df |> dplyr::select(-peptide) |> 
-      arrange(trait, marker, distance)
+    final_df <- final_df |> 
+      dplyr::select(-c(peptide, distance)) |>  # Remove the 'peptide' column
+      arrange(trait, marker) |>  # Arrange by trait, marker, and distance
+      dplyr::rename(
+        GO_id = go_id,  # Rename 'go_id' to 'GO_id'
+        Go_name = name_1006  # Rename 'name_1006' to 'Go_name'
+      ) |> 
+      separate_rows(GO_id, Go_name, sep = ";") |>  # Separate GO_id and Go_name by ';' into multiple rows
+      mutate(
+        across(c(start, end_position), as.numeric)  # Ensure that 'start' and 'end_position' are numeric
+      ) |> 
+      rowwise() |>  # Ensure row-wise operations for calculate_distance
+      mutate(
+        Distance = unlist(calculate_distance(marker, start, end_position))  # Calculate Distance
+      ) |> 
+      ungroup()
+    
     return(final_df)
   }else{
     paste0("No genes were found")
     }
+}
+
+function_ld_plots <- function(dir){
+  
+  runPLINK <- function(PLINKoptions = "") system(paste("~/Desktop/GenomicSoftware/plink", PLINKoptions))
+  tmp_plink_file <- file.path(dir, basename(dir))
+  runPLINK(paste("--bfile ",tmp_plink_file," --recode --tab --out", tmp_plink_file))
+  runPLINK(paste("--file", tmp_plink_file, "--r2 --matrix --out", tmp_plink_file))
+  
+  ld_mat <- as.matrix(read.table(paste0(dir,"/",basename(dir), ".ld")))
+  bim <-  read.table(paste0(dir,"/", basename(dir), ".bim"))
+  bim[,4] <- as.numeric(bim[,4])
+  colnames(ld_mat) <- rownames(ld_mat) <- bim[,4]
+  
+  heatmap <- LDheatmap(ld_mat, 
+                       genetic.distances = bim[,4], distances = "physical",
+                       LDmeasure = "r", title = basename(dir), add.map = TRUE, add.key = TRUE,
+                       geneMapLocation = 0.15, geneMapLabelX = NULL, geneMapLabelY = NULL,
+                       SNP.name = NULL, 
+                       color = c("#f80000", "#f83e3e", "#f87c7c", "#f8baba", "#EEE9E9", "#f8f8f8"), 
+                       newpage = FALSE,
+                       name = "ldheatmap", 
+                       vp.name = NULL, pop = FALSE, flip = TRUE, text = FALSE)
+  
+  return(heatmap)
 }
 
 

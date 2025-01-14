@@ -82,3 +82,28 @@ hist_cv_wheat <- ggplot(hits_df) +
 png(paste0("outputs/plots/hist_cv_wheat.png"), width = 3000, height = 1500, res = 400)
 hist_cv_wheat
 dev.off()
+
+
+accuracy_table <- do.call(rbind, accuracy_list) |> 
+  mutate(Strategy = c(rep("S1", 1920), rep("S2", 1920), rep("S3", 1920))) |> 
+  group_by(Strategy, Info, Matrix, Mix) |> 
+  summarize(
+    Mean = mean(Cor, na.rm = TRUE),  # Calcular la media de 'Accuracy'
+    sd = sd(Cor, na.rm = TRUE)       # Calcular la desviación estándar de 'Accuracy'
+  ) |> 
+  mutate(
+    Mean_sd = paste0(round(Mean, 2), " ± ", round(sd, 2))  # Crear la columna 'Mean_sd' con el formato deseado
+  ) |> 
+  dplyr::select(-c(Mean, sd)) |> 
+  pivot_wider(names_from = Mix, values_from = Mean_sd) |> 
+  filter(Strategy == "S1")
+
+accuracy_table2 <- do.call(rbind, accuracy_list) |> 
+  mutate(Strategy = c(rep("S1", 1920), rep("S2", 1920), rep("S3", 1920))) |>
+  filter(Strategy == "S1") |> 
+  group_by(Strategy, Info, Matrix, Mix) |> 
+  summarize(
+    Max = max(Cor, na.rm = TRUE), 
+    Min = min(Cor, na.rm = TRUE)
+  )
+         
