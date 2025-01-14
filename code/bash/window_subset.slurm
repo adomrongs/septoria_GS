@@ -1,4 +1,14 @@
 #!/bin/bash
+#SBATCH --job-name=subset
+#SBATCH --output=subset_%j.log
+#SBATCH --error=subset_%j.err
+#SBATCH --partition=medium
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --time=05:00:00
+#SBATCH --mem=40G
+
 
 module load BCFtools/1.15.1-GCC-11.3.0
 module load VCFtools/0.1.16-GCC-10.2.0
