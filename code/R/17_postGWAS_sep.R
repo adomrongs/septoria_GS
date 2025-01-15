@@ -3,6 +3,9 @@ library(biomaRt)
 library(seqinr)
 library(CMplot)
 library(here)
+library(LDheatmap)
+library(janitor)
+library(GO.db)
 source('code/R/function_septoria_GS.R')
 
 load("data/modified_data/1_septoria.Rdata")
@@ -119,16 +122,38 @@ candidate_genes_all <- find_genes(mart = mart,
 gwas_sep_table_all <- df_hits |> 
   filter(Cultivar == "All", 
          Leaf == 2) |> 
-  dplyr::select(-c(Cultivar, Leaf)) |> 
+  dplyr::select(-c(Cultivar, Leaf, PCs)) |> 
   relocate(Trait = traits) |> 
   mutate(MAF = round(2* MAF, 2))
 
 genes_sep_table_all <- candidate_genes_all |> 
   dplyr::select(Trait = trait, Marker = marker, Distance, Gene = gene, 
-                Protein = accesion, GO_id, GO_name = Go_name)
+                Protein = accesion, GO_id, GO_name = Go_name) |> 
+  group_by(Marker, Distance, Gene, Protein, GO_id, GO_name) |> 
+  summarise(Traits = paste(unique(Trait), collapse = " and "), .groups = "drop") |> 
+  relocate(Traits)
+
+genes_sep <- genes_sep_table_all |> 
+  genes_sep_table_all |> 
+  mutate(
+    Traits = ifelse(duplicated(Traits), NA, Traits),
+    Marker = ifelse(duplicated(Marker), NA, Marker),
+    Distance = ifelse(duplicated(Distance), NA, Distance),
+    Gene = ifelse(duplicated(Gene), NA, Gene),
+    Protein = ifelse(duplicated(Protein), NA, Protein)
+  ) |> 
+  remove_empty(which = "rows")
+
+go_ids_sep <- genes_sep_table_all |> 
+  dplyr::select(c(Gene, Protein, GO_id, GO_name)) |> 
+  mutate(GO_class = Ontology(GO_id),
+         Gene = ifelse(duplicated(Gene), NA, Gene),
+         Protein = ifelse(duplicated(Protein), NA, Protein)
+  ) 
 
 write_csv(gwas_sep_table_all, file = 'outputs/postGWAS_sep/gwas_sep_table_all.csv')
-write_csv(genes_sep_table_all, file = 'outputs/postGWAS_sep/genes_sep_table_all.csv')
+  write_csv(genes_sep, file = 'outputs/postGWAS_sep/genes_sep_all.csv')
+write_csv(go_ids_sep, file = 'outputs/postGWAS_sep/go_ids_sep_all.csv')
 
 # plot manhattan and qqplot
 leaf <- read_csv('outputs/GWAS_sep/GAPIT.Association.GWAS_Results.BLINK.pycnidiaPerCm2Leaf.csv') # file corresponding to all cultivars leaf2
@@ -171,41 +196,11 @@ plotCMqq(lesion[,1:4], "Lesion", '#43B284FF', 'outputs/postGWAS_sep/')
 
 snps <- colnames(genotype_septoria)[-1]
 snps_df <- data.frame(SNPs = snps, 
-                      Chromosome = str_extract(snps, 'X([0-9])_', group = T),
-                      Position = str_extract(snps, '_(.*)', group = T))
-upper_limit <- 45020 + 2000
-lower_limit <- 45020 - 2000
-region_snps <- snps_df |> 
-  filter(Chromosome == 9, 
-         Position < upper_limit & Position > lower_limit) |> 
-  mutate(Position = as.numeric(Position))
+                      Chromosome = as.numeric(str_extract(snps, 'X([0-9])_', group = T)),
+                      Position = as.numeric(str_extract(snps, '_(.*)', group = T)))
 
-subset_snps <- genotype_septoria[, colnames(genotype_septoria) %in% region_snps$SNPs]
-cor_matrix <- cor(subset_snps, use = "pairwise.complete.obs")
+plotLD(gwas_table = gwas_sep_table_all, genotype = genotype_septoria[, -1], df_info = snps_df)
 
-heatmap <- LDheatmap::LDheatmap(gdat = cor_matrix, 
-                     genetic.distances = region_snps$Position,
-                     distances = 'physical',
-                     LDmeasure = 'r',
-                     add.map = TRUE,
-                     add.key = TRUE,
-                     geneMapLocation = 0.15,
-                     geneMapLabelX = NULL, 
-                     geneMapLabelY = NULL,
-                     SNP.name = NULL, 
-                     color = c("#f80000", "#f83e3e", "#f87c7c", "#f8baba", "#EEE9E9", "#f8f8f8"), 
-                     newpage = FALSE,
-                     name = "ldheatmap", 
-                     vp.name = NULL,
-                     pop = FALSE,
-                     flip = TRUE,
-                     text = FALSE)
-
-png(paste0(''), width = 3000, height = 3000, res = 400)
-
-
- 
-  
 
 
 

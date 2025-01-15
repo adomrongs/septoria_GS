@@ -117,7 +117,8 @@ septoria_phenotype <- raw_septoria_phenotype %>%
     across(all_of(factor_cols), as.factor)
   ) %>% 
   dplyr::select(Isolate, Line = varieties, Trial = REP, Leaf = leave_id, Year, BRep,
-                PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion)
+                PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion) |> 
+  mutate(across(Isolate:BRep, as.factor))
 
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_Conil_Fer"]<-"22_ConilFer_L1"
 septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSha_L1"]<-"22_EcijaSecSah_L1"
@@ -125,11 +126,14 @@ septoria_phenotype$Isolate[septoria_phenotype$Isolate=="22_EcijaSecSim_L1"]<-"22
 
 cleaned_septoria_phenotype_1 <- septoria_phenotype %>% 
   filter(Isolate %in% genotype_all[,1]) |> 
-  filter(PLACL < 101)
+  filter(PLACL < 101) |> 
+  droplevels()
 
 cleaned_septoria_phenotype_2 <- cleaned_septoria_phenotype_1 %>% 
   filter(Leaf == 2) %>% 
-  dplyr::select(-Leaf)
+  dplyr::select(-Leaf) |> 
+  droplevels()
+
 cleaned_septoria_phenotype_2 <- remove_outliers(cleaned_septoria_phenotype_2,
                                                cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 

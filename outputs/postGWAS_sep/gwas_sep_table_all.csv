@@ -1,6 +1,6 @@
-Trait,PCs,SNP,Chr,Pos,P.value,MAF
-pycnidiaPerCm2Leaf,2,X1_3699969,1,3699969,4.881871e-11,0.74
-pycnidiaPerCm2Leaf,2,X2_761923,2,761923,4.039407e-8,0.1
-pycnidiaPerCm2Leaf,2,X8_2023297,8,2023297,6.858752e-8,0.26
-pycnidiaPerCm2Leaf,2,X9_45020,9,45020,1.94219e-13,0.1
-pycnidiaPerCm2Lesion,2,X9_45020,9,45020,1.13762e-7,0.1
+Trait,SNP,Chr,Pos,P.value,MAF
+pycnidiaPerCm2Leaf,X1_3699969,1,3699969,4.881871e-11,0.74
+pycnidiaPerCm2Leaf,X2_761923,2,761923,4.039407e-8,0.1
+pycnidiaPerCm2Leaf,X8_2023297,8,2023297,6.858752e-8,0.26
+pycnidiaPerCm2Leaf,X9_45020,9,45020,1.94219e-13,0.1
+pycnidiaPerCm2Lesion,X9_45020,9,45020,1.13762e-7,0.1

@@ -1,0 +1,54 @@
+Gene,Protein,GO_id,GO_name,GO_class
+Mycgr3G107386,F9X0B2,,,NA
+Mycgr3G107385,F9X0B1,GO:0000900,mRNA regulatory element binding translation repressor activity,MF
+NA,NA,GO:0000932,P-body,CC
+NA,NA,GO:0003723,RNA binding,MF
+NA,NA,GO:0003729,mRNA binding,MF
+NA,NA,GO:0003730,mRNA 3'-UTR binding,MF
+NA,NA,GO:0004540,RNA nuclease activity,MF
+NA,NA,GO:0005634,nucleus,CC
+NA,NA,GO:0005737,cytoplasm,CC
+NA,NA,GO:0005933,cellular bud,CC
+NA,NA,GO:0005935,cellular bud neck,CC
+NA,NA,GO:0008298,intracellular mRNA localization,BP
+NA,NA,GO:0010494,cytoplasmic stress granule,CC
+NA,NA,GO:0017148,negative regulation of translation,BP
+NA,NA,GO:0048027,mRNA 5'-UTR binding,MF
+NA,NA,GO:0060237,regulation of fungal-type cell wall organization,BP
+NA,NA,GO:1903450,regulation of G1 to G0 transition,BP
+Mycgr3G37599,F9X480,GO:0005783,endoplasmic reticulum,CC
+NA,NA,GO:0005789,endoplasmic reticulum membrane,CC
+NA,NA,GO:0006629,lipid metabolic process,BP
+NA,NA,GO:0006666,3-keto-sphinganine metabolic process,BP
+NA,NA,GO:0030148,sphingolipid biosynthetic process,BP
+NA,NA,GO:0044255,cellular lipid metabolic process,BP
+NA,NA,GO:0047560,3-dehydrosphinganine reductase activity,MF
+NA,NA,GO:0055114,obsolete oxidation-reduction process,NA
+Mycgr3G67942,F9X479,,,NA
+Mycgr3G30347,F9XH32,GO:0009083,branched-chain amino acid catabolic process,BP
+NA,NA,GO:0016491,oxidoreductase activity,MF
+NA,NA,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",MF
+NA,NA,GO:0050661,NADP binding,MF
+NA,NA,GO:0051287,NAD binding,MF
+Mycgr3G101090,F9XH31,GO:0016298,lipase activity,MF
+NA,NA,GO:0016787,hydrolase activity,MF
+Mycgr3G47177,F9XJR5,GO:0000324,fungal-type vacuole,CC
+NA,NA,GO:0005247,voltage-gated chloride channel activity,MF
+NA,NA,GO:0005769,early endosome,CC
+NA,NA,GO:0005783,endoplasmic reticulum,CC
+NA,NA,GO:0005794,Golgi apparatus,CC
+NA,NA,GO:0006811,monoatomic ion transport,BP
+NA,NA,GO:0006821,chloride transport,BP
+NA,NA,GO:0006878,intracellular copper ion homeostasis,BP
+NA,NA,GO:0006879,intracellular iron ion homeostasis,BP
+NA,NA,GO:0016020,membrane,CC
+NA,NA,GO:0016021,GO_0016021,NA
+NA,NA,GO:0043227,membrane-bounded organelle,CC
+NA,NA,GO:0055085,transmembrane transport,BP
+NA,NA,GO:1902476,chloride transmembrane transport,BP
+Mycgr3G30712,F9XJR4,GO:0005634,nucleus,CC
+NA,NA,GO:0006261,DNA-templated DNA replication,BP
+NA,NA,GO:0008622,epsilon DNA polymerase complex,CC
+NA,NA,GO:0008623,CHRAC,CC
+NA,NA,GO:0031507,heterochromatin formation,BP
+NA,NA,GO:0046982,protein heterodimerization activity,MF

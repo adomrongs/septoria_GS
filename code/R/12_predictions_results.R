@@ -61,6 +61,6 @@ pheno1_model2 <- unlist(map(cor_traits, \(x) x[2,2]))
 prediction_df <- data.frame(Traits =  c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
                             Correlation = pheno1_model2)
 
-save(prediction_df, file = 'outputs/plots/prediction.csv')
+write_csv(prediction_df, file = 'outputs/plots/prediction.csv')
 
 
