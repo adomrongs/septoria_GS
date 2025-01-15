@@ -1159,7 +1159,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   # ==============================================
   
   if (!wModel) {
-    formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + Leaf + BRep"))
+    formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + BRep"))
     results <- data.frame()
     message("Results created")
   } 
@@ -1204,7 +1204,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
-      paste0(trait, " ~ Line + Year + Trial + Leaf + BRep + ", 
+      paste0(trait, " ~ Line + Year + Trial + BRep + ", 
              paste0("`", sSNPs, "`", collapse = " + "))
     )
   }
@@ -1216,7 +1216,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
                 verbose = TRUE)
   message("model correctly created")
   
-  H2 <- h2_sommer(model, n = 96) # 4 cultivars x 2 TRep x 6 BRep x 2 leaves 
+  H2 <- h2_sommer(model, n = 48) # 4 cultivars x 2 TRep x 6 BRep 
   message("hertability calculated")
   
   blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
@@ -1753,19 +1753,18 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
   # Run GWAS on train set
   # ==============================================
   bonferroni <- 0.05/nrow(map)
-  ptrain <- phenotype %>% filter(Isolate %in% train)
-  blues <- blues_all %>% 
+  blues_train <- blues_all %>% 
     filter(Isolate %in% train) %>% 
     dplyr::select(Isolate, trait)
-  gtrain <- genotype %>% filter(genotype[,1] %in% blues$Isolate)
-  ktrain <- kinship %>%
-    filter(rownames(.) %in% blues$Isolate) %>%
-    dplyr::select(all_of(blues$Isolate)) %>%
-    rownames_to_column("Isolate") %>%
+  gtrain <- genotype %>% filter(genotype[,1] %in% blues_train$Isolate)
+  ktrain <- kinship[rownames(kinship) %in% blues_train$Isolate, 
+                  rownames(kinship) %in% blues_train$Isolate]
+  ktrain <- data.frame(ktrain) |> 
+    rownames_to_column("Isolate") |> 
     dplyr::select(Isolate, everything())
   
   message("Data Ready")
-  dim(blues); dim(gtrain); dim(map); dim(ktrain)
+  dim(blues_train); dim(gtrain); dim(map); dim(ktrain)
   #===============================================
   # Run predictions with/without markers
   # ==============================================
@@ -1778,7 +1777,7 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
   if (wModel) {
     message("Running GWAS")
     tmp <- capture.output({
-      scores <- GAPIT(Y = blues,
+      scores <- GAPIT(Y = blues_train,
                       GD = gtrain,
                       GM = map,
                       KI = NULL,
@@ -1812,7 +1811,7 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
     sSNPs_data <- gtrain[, sSNPs, drop = FALSE] %>%
       mutate(Isolate = gtrain[,1])
     
-    ptrain <- ptrain %>% 
+    blues_train <- blues_train %>% 
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
@@ -1828,7 +1827,7 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
                 verbose = TRUE)
   message("model correctly created")
   
-  H2 <- h2_sommer(model, n = 12)
+  H2 <- h2_sommer(model, n = 48)
   message("hertability calculated")
   
   blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
