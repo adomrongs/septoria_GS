@@ -13,8 +13,8 @@ genotype <- genotype_septoria[genotype_septoria[,1] %in% unique(phenotype$Isolat
 k_inter <- k_septoria
 rownames(k_inter) <- k_inter[,1]
 k_inter <- k_inter[,-1]
-rownames(k_inter) <- colnames(k_inter)
-kinship <- k_septoria[rownames(k_inter) %in% unique(phenotype$Isolate), 
+colnames(k_inter) <- rownames(k_inter) 
+kinship <- k_inter[rownames(k_inter) %in% unique(phenotype$Isolate), 
                       colnames(k_inter) %in% unique(phenotype$Isolate)]
 map <- map_septoria
 
