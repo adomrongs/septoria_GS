@@ -6,15 +6,22 @@ source("code/R/function_septoria_GS.R")
 load("data/modified_data/5_predictions.Rdata")
 load("data/modified_data/1_septoria.Rdata")
 
-genotype <- genotype_septoria
 phenotype <- cleaned_septoria_phenotype_1 |> 
   filter(Leaf == 2) |> 
   droplevels()
-kinship <- k_septoria[,-1]
-colnames(kinship) <- rownames(kinship) <- k_septoria[,1]
+genotype <- genotype_septoria[genotype_septoria[,1] %in% unique(phenotype$Isolate), ]
+k_inter <- k_septoria
+rownames(k_inter) <- k_inter[,1]
+k_inter <- k_inter[,-1]
+rownames(k_inter) <- colnames(k_inter)
+kinship <- k_septoria[rownames(k_inter) %in% unique(phenotype$Isolate), 
+                      colnames(k_inter) %in% unique(phenotype$Isolate)]
 map <- map_septoria
+
+dim(kinship); dim(phenotype); dim(genotype); dim(map_septoria)
+
 formula <- "~ -1 + Isolate + Line + Trial + Year + BRep"
-blues_all <- extract_blues_df_adapted(cleaned_septoria_phenotype_1,
+blues_all <- extract_blues_df_adapted(phenotype,
                                       trait = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
                                       formula = formula, 
                                       colname = "Isolate")

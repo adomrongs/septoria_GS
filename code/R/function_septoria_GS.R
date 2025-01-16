@@ -1808,10 +1808,10 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
     if (nrow(hits_bonferroni) == 1) {
       sSNPs <- results$SNP[2]
     }
-    sSNPs_data <- gtrain[, sSNPs, drop = FALSE] %>%
-      mutate(Isolate = gtrain[,1])
+    sSNPs_data <- genotype[, sSNPs, drop = FALSE] %>%
+      mutate(Isolate = genotype[,1])
     
-    blues_train <- blues_train %>% 
+    blues_all <- blues_all %>% 
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
@@ -1823,7 +1823,7 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
   model <- mmer(formula_blups,
                 random = ~ vsr(Isolate, Gu = as.matrix(kinship)),
                 rcov = ~ units,
-                data = ptrain,
+                data = blues_all,
                 verbose = TRUE)
   message("model correctly created")
   
