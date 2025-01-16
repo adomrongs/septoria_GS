@@ -42,7 +42,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
   # ==============================================
   
   if (!wModel) {
-    formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + Leaf + BRep"))
+    formula_blups <- as.formula(paste(trait, "~ Line + Year + Trial + BRep"))
     results <- data.frame()
     message("Results created")
   } 
@@ -87,7 +87,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
-      paste0(trait, " ~ Line + Year + Trial + Leaf + BRep + ", 
+      paste0(trait, " ~ Line + Year + Trial + BRep + ", 
              paste0("`", sSNPs, "`", collapse = " + "))
     )
   }

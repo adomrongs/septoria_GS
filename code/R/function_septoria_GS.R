@@ -1216,7 +1216,7 @@ cv_septoria <- function(genotype, phenotype, kinship, map, test, trait, blues_al
                 verbose = TRUE)
   message("model correctly created")
   
-  H2 <- h2_sommer(model, n = 48) # 4 cultivars x 2 TRep x 6 BRep 
+  H2 <- h2_sommer(model, n = 12)
   message("hertability calculated")
   
   blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
@@ -1755,16 +1755,12 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
   bonferroni <- 0.05/nrow(map)
   blues_train <- blues_all %>% 
     filter(Isolate %in% train) %>% 
-    dplyr::select(Isolate, trait)
+    dplyr::select(Isolate, trait) |> 
+    droplevels()
   gtrain <- genotype %>% filter(genotype[,1] %in% blues_train$Isolate)
-  ktrain <- kinship[rownames(kinship) %in% blues_train$Isolate, 
-                  rownames(kinship) %in% blues_train$Isolate]
-  ktrain <- data.frame(ktrain) |> 
-    rownames_to_column("Isolate") |> 
-    dplyr::select(Isolate, everything())
   
   message("Data Ready")
-  dim(blues_train); dim(gtrain); dim(map); dim(ktrain)
+  dim(blues_train); dim(gtrain); dim(map)
   #===============================================
   # Run predictions with/without markers
   # ==============================================
@@ -1808,10 +1804,10 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
     if (nrow(hits_bonferroni) == 1) {
       sSNPs <- results$SNP[2]
     }
-    sSNPs_data <- genotype[, sSNPs, drop = FALSE] %>%
-      mutate(Isolate = genotype[,1])
+    sSNPs_data <- gtrain[, sSNPs, drop = FALSE] %>%
+      mutate(Isolate = gtrain[,1])
     
-    blues_all <- blues_all %>% 
+    blues_train <- blues_train %>% 
       left_join(sSNPs_data)
     
     formula_blups <- as.formula(
@@ -1823,7 +1819,7 @@ cv_septoria2 <- function(genotype, blues_all, kinship, map, test, trait,  wModel
   model <- mmer(formula_blups,
                 random = ~ vsr(Isolate, Gu = as.matrix(kinship)),
                 rcov = ~ units,
-                data = blues_all,
+                data = blues_train,
                 verbose = TRUE)
   message("model correctly created")
   
