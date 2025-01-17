@@ -56,10 +56,21 @@ cor_pycnidiaPerCm2Lesion <- correlation_dfs(blues_test, "pycnidiaPerCm2Lesion", 
 
 # based on the AIC comparison, wqe will select the model 2 (including BRep) and the phenotype1 (inclusing all leaves)
 cor_traits <- list(cor_PLACL, cor_pycnidiaPerCm2Leaf, cor_pycnidiaPerCm2Lesion)
-pheno1_model2 <- unlist(map(cor_traits, \(x) x[2,2]))
+traits <- list("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion")
 
-prediction_df <- data.frame(Traits =  c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"),
-                            Correlation = pheno1_model2)
+cor_traits <- map2(cor_traits, traits, \(x, y) { 
+  colnames(x)[2] <- y
+  return(x)  # Return modified dataframe
+})
+
+prediction_df <- bind_cols(cor_traits) |> 
+  dplyr::select(1,2,4,6) |> 
+  rename(Model = Model...1) |> 
+  mutate(
+    Phenotype = c('Leaves_2_3', 'Leaves_2_3', 'Leaf2', 'Leaf2'),
+    Model = c("-", "+BRep", "-", "+BRep")
+  ) |> 
+  relocate(Phenotype, Model)
 
 write_csv(prediction_df, file = 'outputs/plots/prediction.csv')
 
