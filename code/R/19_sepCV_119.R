@@ -20,7 +20,7 @@ for(j in seq_along(traits)){
   
   message("Processing trait: ", trait, ", iteration: ", i)
   
-  normal_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype = genotype_all_clean,
+  normal_list[[paste0("iter_", i)]][[trait]] <- cv_septoria2(genotype = genotype_all_clean,
                                                             phenotype = phenotypes_combined,
                                                             kinship = k_all_clean,
                                                             map = map_septoria,
@@ -29,7 +29,7 @@ for(j in seq_along(traits)){
                                                             blues_all = blues_combined,
                                                             wModel = FALSE)
   
-  weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype = genotype_all_clean,
+  weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria2(genotype = genotype_all_clean,
                                                               phenotype = phenotypes_combined,
                                                               kinship = k_all_clean,
                                                               map = map_septoria,
