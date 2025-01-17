@@ -20,21 +20,23 @@ for(j in seq_along(traits)){
   
   message("Processing trait: ", trait, ", iteration: ", i)
   
-  normal_list[[paste0("iter_", i)]][[trait]] <- cv_septoria2(genotype = genotype_all_clean,
-                                                             blues_all = blues_combined_clean,
-                                                             kinship = k_all_clean,
-                                                             map = map_septoria,
-                                                             test = test,
-                                                             trait = trait,
-                                                             wModel = FALSE)
+  normal_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype = genotype_all_clean,
+                                                            phenotype = phenotypes_combined,
+                                                            kinship = k_all_clean,
+                                                            map = map_septoria,
+                                                            test = test,
+                                                            trait = trait,
+                                                            blues_all = blues_combined,
+                                                            wModel = FALSE)
   
-  weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria2(genotype = genotype_all_clean,
-                                                               blues_all = blues_combined_clean,
-                                                               kinship = k_all_clean,
-                                                               map = map_septoria,
-                                                               test = test,
-                                                               trait = trait
-                                                               , wModel = TRUE)
+  weighted_list[[paste0("iter_", i)]][[trait]] <- cv_septoria(genotype = genotype_all_clean,
+                                                              phenotype = phenotypes_combined,
+                                                              kinship = k_all_clean,
+                                                              map = map_septoria,
+                                                              test = test,
+                                                              trait = trait,
+                                                              blues_all = blues_combined,
+                                                              wModel = TRUE)
   
   message("Analysis Ready")
 }
