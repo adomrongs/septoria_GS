@@ -9,6 +9,7 @@
 
 # all raw data
 /data/raw_data
+/data/modified_data/septoria_ale_clean_ann.vcf.gz
 /outputs/GWAS_wheat
 
 # ignore fasta files

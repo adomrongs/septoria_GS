@@ -137,6 +137,8 @@ cleaned_septoria_phenotype_2 <- cleaned_septoria_phenotype_1 %>%
 cleaned_septoria_phenotype_2 <- remove_outliers(cleaned_septoria_phenotype_2,
                                                cols = c("PLACL", "pycnidiaPerCm2Leaf", "pycnidiaPerCm2Lesion"))
 
+write_csv(cleaned_septoria_phenotype_1, file = 'data/modified_data/gh1_clean_pheno.csv')
+
 
 #==============================================================================
 # Prepare test phenotype 

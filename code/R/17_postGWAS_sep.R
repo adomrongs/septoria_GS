@@ -6,6 +6,11 @@ library(here)
 library(LDheatmap)
 library(janitor)
 library(GO.db)
+library(paletteer)
+library(hrbrthemes)
+library(ggdist)
+library(gridExtra)
+library(scales)
 source('code/R/function_septoria_GS.R')
 
 load("data/modified_data/1_septoria.Rdata")
@@ -133,8 +138,7 @@ genes_sep_table_all <- candidate_genes_all |>
   summarise(Traits = paste(unique(Trait), collapse = " and "), .groups = "drop") |> 
   relocate(Traits)
 
-genes_sep <- genes_sep_table_all |> 
-  genes_sep_table_all |> 
+genes_sep <- genes_sep_table_all |>
   mutate(
     Traits = ifelse(duplicated(Traits), NA, Traits),
     Marker = ifelse(duplicated(Marker), NA, Marker),
@@ -152,8 +156,9 @@ go_ids_sep <- genes_sep_table_all |>
   ) 
 
 write_csv(gwas_sep_table_all, file = 'outputs/postGWAS_sep/gwas_sep_table_all.csv')
-  write_csv(genes_sep, file = 'outputs/postGWAS_sep/genes_sep_all.csv')
+write_csv(genes_sep, file = 'outputs/postGWAS_sep/genes_sep_all.csv')
 write_csv(go_ids_sep, file = 'outputs/postGWAS_sep/go_ids_sep_all.csv')
+
 
 # plot manhattan and qqplot
 leaf <- read_csv('outputs/GWAS_sep/GAPIT.Association.GWAS_Results.BLINK.pycnidiaPerCm2Leaf.csv') # file corresponding to all cultivars leaf2
@@ -193,7 +198,6 @@ plotCMqq(leaf[,1:4], "Leaf", '#0F7BA2FF', 'outputs/postGWAS_sep/')
 plotCMqq(lesion[,1:4], "Lesion", '#43B284FF', 'outputs/postGWAS_sep/')
 
 # plot LDheatmap
-
 snps <- colnames(genotype_septoria)[-1]
 snps_df <- data.frame(SNPs = snps, 
                       Chromosome = as.numeric(str_extract(snps, 'X([0-9])_', group = T)),
@@ -202,5 +206,111 @@ snps_df <- data.frame(SNPs = snps,
 plotLD(gwas_table = gwas_sep_table_all, genotype = genotype_septoria[, -1], df_info = snps_df)
 
 
+# plot boxplot of allelic diffferences
+load("data/modified_data/GWASdataBefGapit.RData")
 
+blups_sep <- BLUPS |> dplyr::select(1:4)
+names_conversion <- data.frame(geno = genotype_septoria[,1], 
+                               lower_case = tolower(genotype_septoria[,1])) |> 
+  left_join(blups_sep, by = c("lower_case" = "Isolate")) |> 
+  na.omit() |> 
+  dplyr::select(-c(PLACL:pycnidiaPerCm2Lesion))
+
+blups_sep_ready <- blups_sep |> 
+  left_join(names_conversion, by = c("Isolate" = "lower_case")) |> 
+  dplyr::select(Isolate = geno, PLACL:pycnidiaPerCm2Lesion)
+genotype_sep_ready <- genotype_septoria[genotype_septoria[,1] %in% blups_sep_ready$Isolate, ]
+
+
+boxplot_list <- list()
+for(i in 1:nrow(gwas_sep_table_all)){
+  marker <- gwas_sep_table_all$SNP[i]
+  trait <- gwas_sep_table_all$Trait[i]
+  print(paste0("working on marker: ", marker))
+  
+  phenotype <- blups_sep_ready %>%  dplyr::select(Isolate, trait)
+  genotype <- genotype_sep_ready[genotype_sep_ready[, "Isolate"] %in% phenotype[,1], ]
+  
+  boxplot_list[[i]] <- plot_allelic_diff_sep(phenotype = phenotype,
+                                       genotype =  genotype,
+                                       marker = marker,
+                                       trait = trait)
+}
+
+png(paste0("outputs/postGWAS_sep/boxplot_sep.png"), width = 3000, height = 4000, res = 400)
+grid.arrange(grobs = boxplot_list)
+dev.off()
+
+# marker density plot
+setwd("outputs/postGWAS_sep/")
+CMplot(pvalues[,1:4],
+       bin.breaks= seq(0, 650, 100),
+       plot.type="d",
+       bin.size=1e4,
+       chr.den.col=c("#43B284FF", "#FAB255FF", "#DD5129FF"),
+       file="jpg",
+       file.name="",
+       dpi=300,
+       main="Marker_density",
+       file.output=T,
+       verbose=F,
+       width=9,
+       height=6)
+setwd(here())
+
+
+# blast results
+
+genes <- c('Mycgr3G107386',
+           'Mycgr3G67942',
+           'Mycgr3G47177',
+           'Mycgr3G37599',
+           'Mycgr3G30712',
+           'Mycgr3G30347',
+           'Mycgr3G107385',
+           'Mycgr3G101090')
+protein <- c('hypoothetical protein', 
+             'related to sialidase',
+             'voltage gated chloride channel like protein',
+             'short-chain dehydrogenase like protein',
+             'DNA polymerase epsilon subunit C',
+             'putative 6-phosphogluconate dehydrogenase, NADP-binding, 6-phosphogluconate dehydrogenase',
+             'cell wall biogenesis protein phosphatase Ssd1',
+             'alpha/beta-Hydrolase like protein'
+)
+species <- c('Zymoseptoria brevis',
+             'Ramularia collo-cygni',
+             'Zymoseptoria brevis', 
+             'Zymoseptoria brevis',
+             'Pseudocercospora fuligena',
+             'Septoria linicola',
+             'Zymoseptoria brevis',
+             'Zymoseptoria brevis'
+)
+percentage_identity <- c('95.85',
+                         '71.23',
+                         '97.66',
+                         '52.84',
+                         '84.21',
+                         '65.62',
+                         '99.06',
+                         '95.50')
+accesion <- c('KJY01215.1',
+              'XP_023622909.1',
+              'KJY02505.1',
+              'KJX93753.1',
+              'KAF7196700.1',
+              'KAI5364816.1',
+              'KJY01214.1',
+              'KJY02094.1')
+
+blast_df <- data.frame(zt_genes = genes,
+                       protein = protein,
+                       species = species, 
+                       accesion = accesion
+)
+
+new_names <- c('Z.tritici genes', 'Protein', 'Species', 'Accesion')
+names(blast_df) <- new_names
+write_csv(blast_df, file = 'outputs/postGWAS_sep/blast_table.csv')
 

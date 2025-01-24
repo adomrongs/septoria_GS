@@ -68,6 +68,13 @@ pca_df <- pca_df %>%
   filter(Isolate %in% genotype_septoria$Isolate) %>%  # Ensure Isolate column exists in genotype_septoria
   distinct()
 
+new_info <- info_strains |> 
+  mutate(Isolate = gsub("\\.", "_", Isolate)) |> 
+  left_join(pca_df) |> 
+  dplyr::select(-c(color, shape)) 
+
+write_csv(new_info, file = 'data/modified_data/info_strain_complete.csv')
+
 # create pca and screeplot 
 PCA_plot_sep <- plotPCA(genotype = genotype_septoria,
                         regions = pca_df$Region,
