@@ -59,7 +59,6 @@ names_correct <- data.frame(table(places)) |>
   dplyr::slice(-c(6,7))
 
 # extract coordinates for Locations
-register_google(key = "AIzaSyAzgfUiQxWBoW-6z7glD6OjoEl6tIhfwJA")
 geo_data <- geocode(names_correct$Localidad, output = "more")
 geo_data[9, ] <- geocode("21890 Manzanilla, Huelva", output = "more")
 geo_data[4, ] <- geocode("Cordoba, Spain", output = "more")
@@ -359,3 +358,48 @@ table <- read_csv('outputs/postGWAS_sep/gwas_sep_table_all.csv') |>
   dplyr::rename('Putative impact' = 'putative_impact')
 
 write_csv(table, file = 'outputs/postGWAS_sep/gwas_sep_table_all.csv')
+
+#===============================================================================
+# Additiional genomic info
+#===============================================================================
+info_extra <- read_tsv('~/Downloads/sequence_report.tsv') 
+
+table_impact <- snps_df |> 
+  group_by(putative_impact) |> 
+  summarise(n_new = sum(n)) |> 
+  mutate(percentage = (n_new/sum(n_new))*100)
+
+map_info <- map_septoria |> 
+  group_by(Chromosome) |> 
+  summarize(Markers = n())
+impact_df <- snps_df |> 
+  pivot_wider(names_from = putative_impact, values_from = n) |> 
+  dplyr::rename(Chromosome = CHROM)
+genomic_info  <- info_extra |> 
+  dplyr::select(Chromosome = `Chromosome name`, Length = 'Seq length') |> 
+  left_join(map_info) |> 
+  mutate(Density = Length/Markers) |> 
+  left_join(impact_df) |> 
+  mutate(
+    HIGH = paste0(HIGH, " (", round((HIGH / Markers) * 100, 2), "%)"),
+    LOW = paste0(LOW, " (", round((LOW / Markers) * 100, 2), "%)"),
+    MODERATE = paste0(MODERATE, " (", round((MODERATE / Markers) * 100, 2), "%)"),
+    MODIFIER = paste0(MODIFIER, " (", round((MODIFIER / Markers) * 100, 2), "%)"),
+    Density = round(Density, 2)
+  ) |> 
+  dplyr::slice(1:13) |> 
+  dplyr::select(Chromosome, Length, Markers, Density, High = HIGH, Low = LOW, Moderate = MODERATE, Modifier = MODIFIER)
+  
+write_csv(genomic_info, file = 'outputs/postGWAS_sep/genomic_info_table.csv')
+
+# overall density 
+bases <- info_extra |> 
+  dplyr::select(length = 'Seq length') |> 
+  mutate(length = as.numeric(length)) |>
+  dplyr::slice(1:13) |> 
+  pull(length) |> 
+  sum()
+density <- bases/(dim(genotype_septoria)[2]-1)
+
+
+
