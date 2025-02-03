@@ -90,6 +90,56 @@ plot_cv_sep <- ggplot(plot_df) +
     plot.margin = margin(2, 30, 2, 30)
   )
 
+plot_cv_sep_ability <- ggplot(plot_df) +
+  # Boxplot with color by combination of Trait and Model
+  geom_boxplot(aes(x = Trait, y = Ability, fill = interaction(Trait, Model)),  
+               width = 0.5) +
+  geom_jitter(aes(x = Trait, y = Ability, fill = interaction(Trait, Model)),
+              size = 2, alpha = 0.9, 
+              color = "black",   # Black border
+              stroke = 0.5,      # Border width
+              position = position_jitterdodge(jitter.width = 0.4, dodge.width = 0.5),
+              shape = 21)  +   # Jitter y dodge juntos + 
+  ggdist::stat_slab(data = plot_df[plot_df$Model == "weighted",] ,
+                    aes(x = Trait, y = Ability, fill = interaction(Trait, Model),
+                        side = "right"),
+                    alpha = 0.6,
+                    width = 0.4,
+                    position = position_nudge(x = 0.1)) +
+  ggdist::stat_slab(data = plot_df[plot_df$Model == "normal",] ,
+                    aes(x = Trait, y = Ability, fill = interaction(Trait, Model),
+                        side = "left"),
+                    alpha = 0.6,
+                    width = 0.4,
+                    position = position_nudge(x = -0.1)) +
+  scale_fill_manual(values = colors, 
+                    breaks = c("PLACL.normal", "PLACL.weighted", "pycnidiaPerCm2Leaf.normal",
+                               "pycnidiaPerCm2Leaf.weighted", "pycnidiaPerCm2Lesion.normal", "pycnidiaPerCm2Lesion.weighted")) +
+  scale_x_discrete(expand = c(0.2, 0.2)) + 
+  labs(
+    x = NULL, 
+    y = "Ability"
+  ) +
+  scale_y_continuous(breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 0.2)) +
+  # Estilo y temas
+  theme(
+    plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
+    legend.title = element_blank(), 
+    legend.position = 'top',
+    panel.background = element_rect(fill = "white"),
+    panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+    plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+    strip.text = element_text(size = 10, color = "black", family = "Arial"),
+    strip.background = element_rect(fill = "lightgray", size = 0.5),
+    panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+    axis.title.y = element_text(size = 12, family = "Arial"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 10, family = "Arial"),
+    plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20)),
+    plot.margin = margin(2, 30, 2, 30)
+  )
+
+
 png(paste0("outputs/plots/cv_sep_accurac.png"), width = 3000, height = 3000, res = 400)
 plot_cv_sep
 dev.off()

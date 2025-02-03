@@ -1,181 +1,181 @@
-trait,marker,gene,start,end_position,information,accesion,GO_id,Go_name,Distance
-PLACL,X1_238483,Mycgr3G106743,237862,238780,Putative uncharacterized protein ,F9WXF1,GO:0016021,GO_0016021,-297
-PLACL,X1_238483,Mycgr3G106743,237862,238780,Putative uncharacterized protein ,F9WXF1,GO:0016020,membrane,-297
-PLACL,X1_238483,Mycgr3G88622,239195,240148,Putative uncharacterized protein ,F9WXF2,,,-712
-PLACL,X1_238483,Mycgr3G88620,236211,236654,Putative uncharacterized protein ,F9WXF0,,,1829
-log_pycnidiaPerCm2Leaf,X9_440024,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0016021,GO_0016021,414
-log_pycnidiaPerCm2Leaf,X9_440024,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0022857,transmembrane transporter activity,414
-log_pycnidiaPerCm2Leaf,X9_440024,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0016020,membrane,414
-log_pycnidiaPerCm2Leaf,X9_440024,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0055085,transmembrane transport,414
-log_pycnidiaPerCm2Leaf,X9_440024,Mycgr3G75341,436586,438709,Putative uncharacterized protein ,F9XJ43,GO:0003824,catalytic activity,1315
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G102416,2740953,2743202,Putative uncharacterized protein ,F9WZ75,GO:0046872,metal ion binding,728
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0052689,carboxylic ester hydrolase activity,-857
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0046294,formaldehyde catabolic process,-857
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0018738,S-formylglutathione hydrolase activity,-857
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0005829,cytosol,-857
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0005737,cytoplasm,-857
-log_pycnidiaPerCm2Lesion,X1_2743930,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0016788,"hydrolase activity, acting on ester bonds",-857
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0006635,fatty acid beta-oxidation,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005524,ATP binding,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015910,long-chain fatty acid import into peroxisome,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015916,fatty-acyl-CoA transport,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042758,long-chain fatty acid catabolic process,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042760,very long-chain fatty acid catabolic process,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005324,long-chain fatty acid transmembrane transporter activity,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042626,ATPase-coupled transmembrane transporter activity,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016887,ATP hydrolysis activity,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005779,obsolete integral component of peroxisomal membrane,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016020,membrane,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0140359,ABC-type transporter activity,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0055085,transmembrane transport,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0007031,peroxisome organization,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005778,peroxisomal membrane,700
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G65205,1141640,1143464,Putative uncharacterized protein ,F9WW71,GO:0016620,"oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor",996
-pycnidiaPerCm2Leaf,X1_1144460,Mycgr3G65205,1141640,1143464,Putative uncharacterized protein ,F9WW71,GO:0016491,oxidoreductase activity,996
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003723,RNA binding,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0004540,RNA nuclease activity,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0000900,mRNA regulatory element binding translation repressor activity,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003729,mRNA binding,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003730,mRNA 3'-UTR binding,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0048027,mRNA 5'-UTR binding,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0008298,intracellular mRNA localization,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0017148,negative regulation of translation,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0060237,regulation of fungal-type cell wall organization,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:1903450,regulation of G1 to G0 transition,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0000932,P-body,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005634,nucleus,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005737,cytoplasm,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005933,cellular bud,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005935,cellular bud neck,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0010494,cytoplasmic stress granule,298
-pycnidiaPerCm2Leaf,X1_3699969,Mycgr3G107386,3700224,3702992,Putative uncharacterized protein ,F9X0B2,,,-255
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G67942,759626,761368,Putative uncharacterized protein ,F9X479,,,555
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0055114,obsolete oxidation-reduction process,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0006629,lipid metabolic process,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0005783,endoplasmic reticulum,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0044255,cellular lipid metabolic process,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0047560,3-dehydrosphinganine reductase activity,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0006666,3-keto-sphinganine metabolic process,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0030148,sphingolipid biosynthetic process,-1212
-pycnidiaPerCm2Leaf,X2_761923,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0005789,endoplasmic reticulum membrane,-1212
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G101090,2022890,2024549,Putative uncharacterized protein ,F9XH31,GO:0016787,hydrolase activity,407
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G101090,2022890,2024549,Putative uncharacterized protein ,F9XH31,GO:0016298,lipase activity,407
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0016491,oxidoreductase activity,-1667
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0051287,NAD binding,-1667
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0050661,NADP binding,-1667
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0009083,branched-chain amino acid catabolic process,-1667
-pycnidiaPerCm2Leaf,X8_2023297,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",-1667
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016491,oxidoreductase activity,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0008168,methyltransferase activity,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0032259,methylation,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016746,acyltransferase activity,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0031177,phosphopantetheine binding,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016740,transferase activity,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0044550,secondary metabolite biosynthetic process,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0030639,polyketide biosynthetic process,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0004312,fatty acid synthase activity,-2593
-pycnidiaPerCm2Lesion,X13_684814,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0006633,fatty acid biosynthetic process,-2593
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0006635,fatty acid beta-oxidation,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005524,ATP binding,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015910,long-chain fatty acid import into peroxisome,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015916,fatty-acyl-CoA transport,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042758,long-chain fatty acid catabolic process,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042760,very long-chain fatty acid catabolic process,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005324,long-chain fatty acid transmembrane transporter activity,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042626,ATPase-coupled transmembrane transporter activity,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016887,ATP hydrolysis activity,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005779,obsolete integral component of peroxisomal membrane,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016020,membrane,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0140359,ABC-type transporter activity,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0055085,transmembrane transport,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0007031,peroxisome organization,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005778,peroxisomal membrane,103
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016021,GO_0016021,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016491,oxidoreductase activity,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006811,monoatomic ion transport,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016020,membrane,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0005886,plasma membrane,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0000293,ferric-chelate reductase activity,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006826,iron ion transport,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006879,intracellular iron ion homeostasis,-486
-pycnidiaPerCm2Lesion,X1_1146578,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0015677,copper ion import,-486
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0042744,hydrogen peroxide catabolic process,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0098869,cellular oxidant detoxification,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0004096,catalase activity,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0006979,response to oxidative stress,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0020037,heme binding,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0046872,metal ion binding,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0004601,peroxidase activity,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0005829,cytosol,-1187
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0006915,apoptotic process,-1787
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0070682,proteasome regulatory particle assembly,-1787
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005515,protein binding,-1787
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005737,cytoplasm,-1787
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005634,nucleus,-1787
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016021,GO_0016021,1587
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0055114,obsolete oxidation-reduction process,1587
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016020,membrane,1587
-pycnidiaPerCm2Lesion,X1_1810643,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",1587
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0005524,ATP binding,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0004672,protein kinase activity,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0006468,protein phosphorylation,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0016301,kinase activity,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0005737,cytoplasm,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0007165,signal transduction,940
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G64915,328405,329766,Putative uncharacterized protein ,F9WZH8,GO:0016705,"oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen",-1626
-pycnidiaPerCm2Lesion,X1_326779,Mycgr3G64915,328405,329766,Putative uncharacterized protein ,F9WZH8,GO:0004497,monooxygenase activity,-1626
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0016620,"oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor",578
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0016491,oxidoreductase activity,578
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0004029,aldehyde dehydrogenase (NAD+) activity,578
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0016614,"oxidoreductase activity, acting on CH-OH group of donors",574
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0050660,flavin adenine dinucleotide binding,574
-pycnidiaPerCm2Lesion,X3_531163,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0016491,oxidoreductase activity,574
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0016021,GO_0016021,546
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0022857,transmembrane transporter activity,546
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0055085,transmembrane transport,546
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0016020,membrane,546
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0003955,NAD(P)H dehydrogenase (quinone) activity,1754
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0010181,FMN binding,1754
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0016491,oxidoreductase activity,1754
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0016020,membrane,1754
-pycnidiaPerCm2Lesion,X4_2430124,Mycgr3G92832,2431895,2432434,Putative uncharacterized protein ,F9X8K6,,,-1771
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46279,189870,190891,Putative uncharacterized protein ,F9XHV6,GO:0008081,phosphoric diester hydrolase activity,387
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46279,189870,190891,Putative uncharacterized protein ,F9XHV6,GO:0006629,lipid metabolic process,387
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0101030,tRNA-guanine transglycosylation,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0008479,tRNA-guanosine(34) queuine transglycosylase activity,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0005737,cytoplasm,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0046872,metal ion binding,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0006400,tRNA modification,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0016763,pentosyltransferase activity,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0008033,tRNA processing,-831
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016021,GO_0016021,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016020,membrane,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016740,transferase activity,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0006673,inositol phosphoceramide metabolic process,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0006688,glycosphingolipid biosynthetic process,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0000030,mannosyltransferase activity,985
-pycnidiaPerCm2Lesion,X8_190257,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0051999,mannosyl-inositol phosphorylceramide biosynthetic process,985
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94965,459463,461274,Putative uncharacterized protein ,F9XIE3,,,870
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0005794,Golgi apparatus,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0015031,protein transport,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0016020,membrane,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0007030,Golgi organization,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0006891,intra-Golgi vesicle-mediated transport,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0017119,Golgi transport complex,-622
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0005840,ribosome,-1843
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:1990904,ribonucleoprotein complex,-1843
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0003735,structural constituent of ribosome,-1843
-pycnidiaPerCm2Lesion,X8_462144,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0005762,mitochondrial large ribosomal subunit,-1843
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0043295,glutathione binding,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0005524,ATP binding,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0004363,glutathione synthase activity,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0006750,glutathione biosynthetic process,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0042803,protein homodimerization activity,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0016874,ligase activity,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0000287,magnesium ion binding,-1697
-pycnidiaPerCm2Lesion,X8_707320,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0046872,metal ion binding,-1697
-pycnidiaPerCm2Lesion,X9_1649963,Mycgr3G95893,1646958,1650238,Putative uncharacterized protein ,F9XJQ4,,,-275
-pycnidiaPerCm2Lesion,X9_1649963,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0016021,GO_0016021,-1623
-pycnidiaPerCm2Lesion,X9_1649963,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0022857,transmembrane transporter activity,-1623
-pycnidiaPerCm2Lesion,X9_1649963,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0055085,transmembrane transport,-1623
-pycnidiaPerCm2Lesion,X9_1649963,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0016020,membrane,-1623
+trait,marker,distance,gene,start,end_position,information,accesion,GO_id,Go_name,pos
+PLACL,X1_238483,0,Mycgr3G106743,237862,238780,Putative uncharacterized protein ,F9WXF1,GO:0016021,GO_0016021,238483
+PLACL,X1_238483,0,Mycgr3G106743,237862,238780,Putative uncharacterized protein ,F9WXF1,GO:0016020,membrane,238483
+PLACL,X1_238483,712,Mycgr3G88622,239195,240148,Putative uncharacterized protein ,F9WXF2,,,238483
+PLACL,X1_238483,-1829,Mycgr3G88620,236211,236654,Putative uncharacterized protein ,F9WXF0,,,238483
+log_pycnidiaPerCm2Leaf,X9_440024,0,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0016021,GO_0016021,440024
+log_pycnidiaPerCm2Leaf,X9_440024,0,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0022857,transmembrane transporter activity,440024
+log_pycnidiaPerCm2Leaf,X9_440024,0,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0016020,membrane,440024
+log_pycnidiaPerCm2Leaf,X9_440024,0,Mycgr3G95572,439610,441684,Putative uncharacterized protein ,F9XJ44,GO:0055085,transmembrane transport,440024
+log_pycnidiaPerCm2Leaf,X9_440024,-1315,Mycgr3G75341,436586,438709,Putative uncharacterized protein ,F9XJ43,GO:0003824,catalytic activity,440024
+log_pycnidiaPerCm2Lesion,X1_2743930,-728,Mycgr3G102416,2740953,2743202,Putative uncharacterized protein ,F9WZ75,GO:0046872,metal ion binding,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0052689,carboxylic ester hydrolase activity,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0046294,formaldehyde catabolic process,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0018738,S-formylglutathione hydrolase activity,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0005829,cytosol,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0005737,cytoplasm,2743930
+log_pycnidiaPerCm2Lesion,X1_2743930,857,Mycgr3G107202,2744787,2745948,Putative uncharacterized protein ,F9WZ76,GO:0016788,"hydrolase activity, acting on ester bonds",2743930
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0006635,fatty acid beta-oxidation,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005524,ATP binding,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015910,long-chain fatty acid import into peroxisome,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015916,fatty-acyl-CoA transport,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042758,long-chain fatty acid catabolic process,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042760,very long-chain fatty acid catabolic process,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005324,long-chain fatty acid transmembrane transporter activity,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042626,ATPase-coupled transmembrane transporter activity,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016887,ATP hydrolysis activity,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005779,obsolete integral component of peroxisomal membrane,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016020,membrane,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0140359,ABC-type transporter activity,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0055085,transmembrane transport,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0007031,peroxisome organization,1144460
+pycnidiaPerCm2Leaf,X1_1144460,0,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005778,peroxisomal membrane,1144460
+pycnidiaPerCm2Leaf,X1_1144460,-996,Mycgr3G65205,1141640,1143464,Putative uncharacterized protein ,F9WW71,GO:0016620,"oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor",1144460
+pycnidiaPerCm2Leaf,X1_1144460,-996,Mycgr3G65205,1141640,1143464,Putative uncharacterized protein ,F9WW71,GO:0016491,oxidoreductase activity,1144460
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003723,RNA binding,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0004540,RNA nuclease activity,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0000900,mRNA regulatory element binding translation repressor activity,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003729,mRNA binding,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0003730,mRNA 3'-UTR binding,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0048027,mRNA 5'-UTR binding,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0008298,intracellular mRNA localization,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0017148,negative regulation of translation,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0060237,regulation of fungal-type cell wall organization,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:1903450,regulation of G1 to G0 transition,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0000932,P-body,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005634,nucleus,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005737,cytoplasm,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005933,cellular bud,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0005935,cellular bud neck,3699969
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,3693802,3699671,Putative uncharacterized protein ,F9X0B1,GO:0010494,cytoplasmic stress granule,3699969
+pycnidiaPerCm2Leaf,X1_3699969,255,Mycgr3G107386,3700224,3702992,Putative uncharacterized protein ,F9X0B2,,,3699969
+pycnidiaPerCm2Leaf,X2_761923,-555,Mycgr3G67942,759626,761368,Putative uncharacterized protein ,F9X479,,,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0055114,obsolete oxidation-reduction process,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0006629,lipid metabolic process,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0005783,endoplasmic reticulum,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0044255,cellular lipid metabolic process,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0047560,3-dehydrosphinganine reductase activity,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0006666,3-keto-sphinganine metabolic process,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0030148,sphingolipid biosynthetic process,761923
+pycnidiaPerCm2Leaf,X2_761923,1212,Mycgr3G37599,763135,764072,Putative uncharacterized protein ,F9X480,GO:0005789,endoplasmic reticulum membrane,761923
+pycnidiaPerCm2Leaf,X8_2023297,0,Mycgr3G101090,2022890,2024549,Putative uncharacterized protein ,F9XH31,GO:0016787,hydrolase activity,2023297
+pycnidiaPerCm2Leaf,X8_2023297,0,Mycgr3G101090,2022890,2024549,Putative uncharacterized protein ,F9XH31,GO:0016298,lipase activity,2023297
+pycnidiaPerCm2Leaf,X8_2023297,1667,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0016491,oxidoreductase activity,2023297
+pycnidiaPerCm2Leaf,X8_2023297,1667,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0051287,NAD binding,2023297
+pycnidiaPerCm2Leaf,X8_2023297,1667,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0050661,NADP binding,2023297
+pycnidiaPerCm2Leaf,X8_2023297,1667,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0009083,branched-chain amino acid catabolic process,2023297
+pycnidiaPerCm2Leaf,X8_2023297,1667,Mycgr3G30347,2024964,2025734,Putative uncharacterized protein ,F9XH32,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",2023297
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016491,oxidoreductase activity,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0008168,methyltransferase activity,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0032259,methylation,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016746,acyltransferase activity,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0031177,phosphopantetheine binding,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0016740,transferase activity,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0044550,secondary metabolite biosynthetic process,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0030639,polyketide biosynthetic process,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0004312,fatty acid synthase activity,684814
+pycnidiaPerCm2Lesion,X13_684814,0,Mycgr3G51018,679175,687407,Polyketide synthase ,F9XQ63,GO:0006633,fatty acid biosynthetic process,684814
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0006635,fatty acid beta-oxidation,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005524,ATP binding,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015910,long-chain fatty acid import into peroxisome,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0015916,fatty-acyl-CoA transport,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042758,long-chain fatty acid catabolic process,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042760,very long-chain fatty acid catabolic process,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005324,long-chain fatty acid transmembrane transporter activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0042626,ATPase-coupled transmembrane transporter activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016887,ATP hydrolysis activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005779,obsolete integral component of peroxisomal membrane,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0016020,membrane,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0140359,ABC-type transporter activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0055085,transmembrane transport,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0007031,peroxisome organization,1146578
+pycnidiaPerCm2Lesion,X1_1146578,-103,Mycgr3G106868,1143760,1146475,Putative ABC transporter ,F9WW72,GO:0005778,peroxisomal membrane,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016021,GO_0016021,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016491,oxidoreductase activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006811,monoatomic ion transport,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0016020,membrane,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0005886,plasma membrane,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0000293,ferric-chelate reductase activity,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006826,iron ion transport,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0006879,intracellular iron ion homeostasis,1146578
+pycnidiaPerCm2Lesion,X1_1146578,486,Mycgr3G88868,1147064,1148506,Ferric reductase-like transmembrane component ,F9WW73,GO:0015677,copper ion import,1146578
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0042744,hydrogen peroxide catabolic process,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0098869,cellular oxidant detoxification,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0004096,catalase activity,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0006979,response to oxidative stress,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0020037,heme binding,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0046872,metal ion binding,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0004601,peroxidase activity,1810643
+pycnidiaPerCm2Lesion,X1_1810643,0,Mycgr3G98331,1809299,1811830,Putative uncharacterized protein ,F9WXR6,GO:0005829,cytosol,1810643
+pycnidiaPerCm2Lesion,X1_1810643,1787,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0006915,apoptotic process,1810643
+pycnidiaPerCm2Lesion,X1_1810643,1787,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0070682,proteasome regulatory particle assembly,1810643
+pycnidiaPerCm2Lesion,X1_1810643,1787,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005515,protein binding,1810643
+pycnidiaPerCm2Lesion,X1_1810643,1787,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005737,cytoplasm,1810643
+pycnidiaPerCm2Lesion,X1_1810643,1787,Mycgr3G65563,1812430,1813383,Putative uncharacterized protein ,F9WXR7,GO:0005634,nucleus,1810643
+pycnidiaPerCm2Lesion,X1_1810643,-1587,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016021,GO_0016021,1810643
+pycnidiaPerCm2Lesion,X1_1810643,-1587,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0055114,obsolete oxidation-reduction process,1810643
+pycnidiaPerCm2Lesion,X1_1810643,-1587,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016020,membrane,1810643
+pycnidiaPerCm2Lesion,X1_1810643,-1587,Mycgr3G89073,1807925,1809056,Putative uncharacterized protein ,F9WXR5,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",1810643
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0005524,ATP binding,326779
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0004672,protein kinase activity,326779
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0006468,protein phosphorylation,326779
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0016301,kinase activity,326779
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0005737,cytoplasm,326779
+pycnidiaPerCm2Lesion,X1_326779,-940,Mycgr3G88644,316103,325839,Ca2+/calmodulin-dependent protein kinase ,F9WZH7,GO:0007165,signal transduction,326779
+pycnidiaPerCm2Lesion,X1_326779,1626,Mycgr3G64915,328405,329766,Putative uncharacterized protein ,F9WZH8,GO:0016705,"oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen",326779
+pycnidiaPerCm2Lesion,X1_326779,1626,Mycgr3G64915,328405,329766,Putative uncharacterized protein ,F9WZH8,GO:0004497,monooxygenase activity,326779
+pycnidiaPerCm2Lesion,X3_531163,0,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0016620,"oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor",531163
+pycnidiaPerCm2Lesion,X3_531163,0,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0016491,oxidoreductase activity,531163
+pycnidiaPerCm2Lesion,X3_531163,0,Mycgr3G108445,530585,533786,Putative uncharacterized protein ,F9X6N6,GO:0004029,aldehyde dehydrogenase (NAD+) activity,531163
+pycnidiaPerCm2Lesion,X3_531163,-574,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0016614,"oxidoreductase activity, acting on CH-OH group of donors",531163
+pycnidiaPerCm2Lesion,X3_531163,-574,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0050660,flavin adenine dinucleotide binding,531163
+pycnidiaPerCm2Lesion,X3_531163,-574,Mycgr3G108444,527926,530589,Putative uncharacterized protein ,F9X6N5,GO:0016491,oxidoreductase activity,531163
+pycnidiaPerCm2Lesion,X4_2430124,0,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0016021,GO_0016021,2430124
+pycnidiaPerCm2Lesion,X4_2430124,0,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0022857,transmembrane transporter activity,2430124
+pycnidiaPerCm2Lesion,X4_2430124,0,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0055085,transmembrane transport,2430124
+pycnidiaPerCm2Lesion,X4_2430124,0,Mycgr3G41214,2429578,2431254,Putative uncharacterized protein ,F9X8K5,GO:0016020,membrane,2430124
+pycnidiaPerCm2Lesion,X4_2430124,-1754,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0003955,NAD(P)H dehydrogenase (quinone) activity,2430124
+pycnidiaPerCm2Lesion,X4_2430124,-1754,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0010181,FMN binding,2430124
+pycnidiaPerCm2Lesion,X4_2430124,-1754,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0016491,oxidoreductase activity,2430124
+pycnidiaPerCm2Lesion,X4_2430124,-1754,Mycgr3G104294,2427385,2428370,Putative uncharacterized protein ,F9X8K4,GO:0016020,membrane,2430124
+pycnidiaPerCm2Lesion,X4_2430124,1771,Mycgr3G92832,2431895,2432434,Putative uncharacterized protein ,F9X8K6,,,2430124
+pycnidiaPerCm2Lesion,X8_190257,0,Mycgr3G46279,189870,190891,Putative uncharacterized protein ,F9XHV6,GO:0008081,phosphoric diester hydrolase activity,190257
+pycnidiaPerCm2Lesion,X8_190257,0,Mycgr3G46279,189870,190891,Putative uncharacterized protein ,F9XHV6,GO:0006629,lipid metabolic process,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0101030,tRNA-guanine transglycosylation,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0008479,tRNA-guanosine(34) queuine transglycosylase activity,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0005737,cytoplasm,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0046872,metal ion binding,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0006400,tRNA modification,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0016763,pentosyltransferase activity,190257
+pycnidiaPerCm2Lesion,X8_190257,831,Mycgr3G46958,191088,192553,Putative uncharacterized protein ,F9XHV7,GO:0008033,tRNA processing,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016021,GO_0016021,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016020,membrane,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0016740,transferase activity,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0006673,inositol phosphoceramide metabolic process,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0006688,glycosphingolipid biosynthetic process,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0000030,mannosyltransferase activity,190257
+pycnidiaPerCm2Lesion,X8_190257,-985,Mycgr3G74362,188036,189272,SUR1-like protein ,F9XHV5,GO:0051999,mannosyl-inositol phosphorylceramide biosynthetic process,190257
+pycnidiaPerCm2Lesion,X8_462144,-870,Mycgr3G94965,459463,461274,Putative uncharacterized protein ,F9XIE3,,,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0005794,Golgi apparatus,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0015031,protein transport,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0016020,membrane,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0007030,Golgi organization,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0006891,intra-Golgi vesicle-mediated transport,462144
+pycnidiaPerCm2Lesion,X8_462144,622,Mycgr3G94966,462766,463614,Putative uncharacterized protein ,F9XIE4,GO:0017119,Golgi transport complex,462144
+pycnidiaPerCm2Lesion,X8_462144,1843,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0005840,ribosome,462144
+pycnidiaPerCm2Lesion,X8_462144,1843,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:1990904,ribonucleoprotein complex,462144
+pycnidiaPerCm2Lesion,X8_462144,1843,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0003735,structural constituent of ribosome,462144
+pycnidiaPerCm2Lesion,X8_462144,1843,Mycgr3G74460,463987,465017,Putative uncharacterized protein ,F9XIE5,GO:0005762,mitochondrial large ribosomal subunit,462144
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0043295,glutathione binding,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0005524,ATP binding,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0004363,glutathione synthase activity,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0006750,glutathione biosynthetic process,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0042803,protein homodimerization activity,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0016874,ligase activity,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0000287,magnesium ion binding,707320
+pycnidiaPerCm2Lesion,X8_707320,1697,Mycgr3G74536,709017,710837,Putative uncharacterized protein ,F9XGW1,GO:0046872,metal ion binding,707320
+pycnidiaPerCm2Lesion,X9_1649963,0,Mycgr3G95893,1646958,1650238,Putative uncharacterized protein ,F9XJQ4,,,1649963
+pycnidiaPerCm2Lesion,X9_1649963,1623,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0016021,GO_0016021,1649963
+pycnidiaPerCm2Lesion,X9_1649963,1623,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0022857,transmembrane transporter activity,1649963
+pycnidiaPerCm2Lesion,X9_1649963,1623,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0055085,transmembrane transport,1649963
+pycnidiaPerCm2Lesion,X9_1649963,1623,Mycgr3G47943,1651586,1653231,Putative uncharacterized protein ,F9XJQ5,GO:0016020,membrane,1649963

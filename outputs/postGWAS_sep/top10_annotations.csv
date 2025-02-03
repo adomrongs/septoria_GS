@@ -1,0 +1,11 @@
+P.impact,Annotation,Observations
+modifier,upstream_gene_variant,265330 (39.87%)
+low,synonymous_variant,238670 (35.87%)
+moderate,missense_variant,79744 (11.98%)
+modifier,downstream_gene_variant,35083 (5.27%)
+modifier,intergenic_region,17894 (2.69%)
+modifier,5_prime_UTR_variant,7995 (1.2%)
+modifier,3_prime_UTR_variant,7960 (1.2%)
+low,splice_region_variant&intron_variant,6028 (0.91%)
+modifier,intron_variant,2070 (0.31%)
+low,splice_region_variant&synonymous_variant,1142 (0.17%)

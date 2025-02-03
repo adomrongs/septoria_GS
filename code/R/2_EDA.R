@@ -102,9 +102,9 @@ dev.off()
 
 
 # finally lets plot an histogram of the total values
-traits <- c("PLACL" = "#0F7BA2FF",
-             "pycnidiaPerCm2Leaf" = "#43B284FF",
-             "pycnidiaPerCm2Lesion" = "#FAB255FF")
+traits <- c("PLACL" = "#DD5129FF",
+            "pycnidiaPerCm2Leaf" = "#0F7BA2FF",
+            "pycnidiaPerCm2Lesion" = "#43B284FF")
 
 hist <- plotHist(phenotype, columns = numeric_cols, color = traits)
 png(paste0("outputs/plots/hist_traits.png"), width = 5000, height = 2000, res = 400)

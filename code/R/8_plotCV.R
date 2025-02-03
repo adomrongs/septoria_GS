@@ -50,7 +50,12 @@ for(i in seq_along(results)){
     strategy <- list[[j]]
     subheader <- subheaders[[j]]
     name <- paste0(stat_name, "_", names[[j]])
-    results2plot(strategy, name, colors, stat_name, j, subheader)
+    results2plot(df = strategy,
+                 name = name,
+                 colors = colors,
+                 stat = stat_name,
+                 strategy = j,
+                 subheader = subheader)
   }
 }
 
@@ -106,4 +111,56 @@ accuracy_table2 <- do.call(rbind, accuracy_list) |>
     Max = max(Cor, na.rm = TRUE), 
     Min = min(Cor, na.rm = TRUE)
   )
-         
+
+
+h2_strategy <- function(ability, accuracy){
+  tmp_df <- cbind(ability, accuracy)[, c(1:4, 8)]  # Evitas dplyr::select()
+  colnames(tmp_df) <- c('Info', 'Matrix', 'Mix', 'Ability', 'Accuracy')
+  
+  df <- tmp_df |> 
+    dplyr::mutate(h2 = sqrt(Ability / Accuracy))
+  
+  return(df)
+}
+
+h2_plots <- map2(ability_list, accuracy_list, \(x,y)  h2_strategy(x,y))
+
+map(h2_plots, \(df) {
+  ggplot(df) +
+    geom_boxplot(aes(x = Mix, y = h2, fill = Matrix)) +
+    facet_grid(. ~ Info)
+})
+
+
+pheno <- readxl::read_xlsx('data/raw_data/Output_reps_unidas_12cm_mock_checks.xlsx')  
+
+pheno |> 
+  mutate(across(Set:Rep, as.factor)) |> 
+  group_by(Plant) |> 
+  summarize(
+    nSet = n_distinct(Set),      # Cuenta valores únicos en la columna Set
+    nStrain = n_distinct(Strain),# Cuenta valores únicos en la columna Strain
+    nBrep = n_distinct(Leaf),    # Cuenta valores únicos en la columna Leaf
+    nRep = n_distinct(Rep),
+    n = n()                      # Cuenta el número total de observaciones por grupo
+  )
+
+pheno |> 
+  mutate(across(Set:Rep, as.factor)) |> 
+  group_by(Strain) |> 
+  summarize(
+    nSet = n_distinct(Set),      # Cuenta valores únicos en la columna Set
+    nPlant = n_distinct(Plant),# Cuenta valores únicos en la columna Strain
+    nBrep = n_distinct(Leaf),    # Cuenta valores únicos en la columna Leaf
+    nRep = n_distinct(Rep),
+    n = n()                      # Cuenta el número total de observaciones por grupo
+  )
+  
+
+
+
+
+
+
+
+

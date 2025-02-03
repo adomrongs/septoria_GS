@@ -1,9 +1,9 @@
-Z.tritici genes,Protein,Species,Accesion
-Mycgr3G107386,hypoothetical protein,Zymoseptoria brevis,KJY01215.1
-Mycgr3G67942,related to sialidase,Ramularia collo-cygni,XP_023622909.1
-Mycgr3G47177,voltage gated chloride channel like protein,Zymoseptoria brevis,KJY02505.1
-Mycgr3G37599,short-chain dehydrogenase like protein,Zymoseptoria brevis,KJX93753.1
-Mycgr3G30712,DNA polymerase epsilon subunit C,Pseudocercospora fuligena,KAF7196700.1
-Mycgr3G30347,"putative 6-phosphogluconate dehydrogenase, NADP-binding, 6-phosphogluconate dehydrogenase",Septoria linicola,KAI5364816.1
-Mycgr3G107385,cell wall biogenesis protein phosphatase Ssd1,Zymoseptoria brevis,KJY01214.1
-Mycgr3G101090,alpha/beta-Hydrolase like protein,Zymoseptoria brevis,KJY02094.1
+Z.tritici genes,Protein,Species,%Identity,Accesion
+Mycgr3G107386,hypoothetical protein,Zymoseptoria brevis,95.85,KJY01215.1
+Mycgr3G67942,related to sialidase,Ramularia collo-cygni,71.23,XP_023622909.1
+Mycgr3G47177,voltage gated chloride channel like protein,Zymoseptoria brevis,97.66,KJY02505.1
+Mycgr3G37599,short-chain dehydrogenase like protein,Zymoseptoria brevis,52.84,KJX93753.1
+Mycgr3G30712,DNA polymerase epsilon subunit C,Pseudocercospora fuligena,84.21,KAF7196700.1
+Mycgr3G30347,"putative 6-phosphogluconate dehydrogenase, NADP-binding, 6-phosphogluconate dehydrogenase",Septoria linicola,65.62,KAI5364816.1
+Mycgr3G107385,cell wall biogenesis protein phosphatase Ssd1,Zymoseptoria brevis,99.06,KJY01214.1
+Mycgr3G101090,alpha/beta-Hydrolase like protein,Zymoseptoria brevis,95.50,KJY02094.1

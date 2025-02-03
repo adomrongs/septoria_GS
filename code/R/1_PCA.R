@@ -122,16 +122,16 @@ pca_df_mixes <- pca_df %>%
   mutate(Mix = replace(Mix, is.na(Mix), "Not selected")) %>% 
   distinct()
 
-colors_mixes <- c("mix1" = "#DD5129FF",
-            "mix2" = "#0F7BA2FF",
-            "mix3" = "#43B284FF",
-            "mix4" = "#FAB255FF",
+colors_mixes <- c("mix1" = "#43B284FF",
+            "mix2" = "#DD5129FF",
+            "mix3" = "#0F7BA2FF",
+            "mix4" = "#DD5129FF",
             "Not selected" = "grey")
 
 shapes_mixes <- c("mix1" = 16,
             "mix2" = 16,
             "mix3" = 16,
-            "mix4" = 16,
+            "mix4" = 17,
             "Not selected" = 16)
 
 PCA_plot_mixes <- plotPCA(genotype = genotype_septoria,

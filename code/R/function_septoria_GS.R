@@ -1076,7 +1076,13 @@ Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' r
   
   
   p <- ggplot(results, aes(x = Mix, y = Cor, fill = Matrix)) +
-    geom_boxplot(width = 0.6) +
+    geom_boxplot(width = 0.6, outlier.shape = NA, fatten = NULL) +  
+    stat_summary(fun = mean, 
+                 geom = "crossbar", 
+                 width = 0.55,  # Same width as the boxplot
+                 color = "black", 
+                 size = 0.4, 
+                 position = position_dodge(width = 0.6)) +
     scale_fill_manual(values = colors) + 
     scale_y_continuous(breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 0.1)) +
     labs(
@@ -1107,7 +1113,11 @@ Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' r
 }
 
 results2plot <- function(df, name, colors, stat, strategy, subheader){
-  plot <- plotCV(df, colors, stat, strategy, subheader)
+  plot <- plotCV(results = df,
+                 colors = colors,
+                 stat = stat,
+                 strategy = strategy,
+                 subheader = subheader)
   # Guardar el gráfico
   png(paste0("outputs/plots/", name, ".png"), width = 6000, height = 3000, res = 400)
   print(plot)
@@ -1120,12 +1130,12 @@ computeH2 <- function(model, interaction = NULL){
   varE <- model$varE
   
   if(is.null(interaction)){
-    Hw <- varGw/(varGw + (varE/16))
-    Hm <- varGm/(varGm + (varE/800))
+    Hw <- varGw/(varGw + varGm + (varE/12))
+    Hm <- varGm/(varGm + varGw + (varE/600))
   }else{
     varGE <- model$ETA[[4]]$varU
-    Hw <- varGw/(varGw + (varE/16) + (varGE/800))
-    Hm <- varGm/(varGm + (varE/800) + (varGE/800))
+    Hw <- varGw/(varGw + varGm + (varE/12) + (varGE/4))
+    Hm <- varGm/(varGm + varGw + (varE/600) + (varGE/200))
   }
   
   H2 <- (Hw + Hm)/2
@@ -1684,22 +1694,22 @@ find_genes <- function(mart, attributes, filters, distances, chr, traits, out_di
                   open = "w")
     }
     
+    
     final_df <- final_df |> 
-      dplyr::select(-c(peptide, distance)) |>  # Remove the 'peptide' column
+      mutate(pos = as.numeric(gsub(".*_", "", marker)),
+             across(c(pos, start, end_position), as.numeric), 
+             distance = case_when(
+        pos < start ~ start - pos,
+        pos > end_position ~ end_position - pos,
+        pos >= start & pos <= end_position ~ 0
+      )) |> 
+      dplyr::select(-c(peptide)) |>  # Remove the 'peptide' column
       arrange(trait, marker) |>  # Arrange by trait, marker, and distance
       dplyr::rename(
         GO_id = go_id,  # Rename 'go_id' to 'GO_id'
         Go_name = name_1006  # Rename 'name_1006' to 'Go_name'
       ) |> 
-      separate_rows(GO_id, Go_name, sep = ";") |>  # Separate GO_id and Go_name by ';' into multiple rows
-      mutate(
-        across(c(start, end_position), as.numeric)  # Ensure that 'start' and 'end_position' are numeric
-      ) |> 
-      rowwise() |>  # Ensure row-wise operations for calculate_distance
-      mutate(
-        Distance = unlist(calculate_distance(marker, start, end_position))  # Calculate Distance
-      ) |> 
-      ungroup()
+      separate_rows(GO_id, Go_name, sep = ";") 
     
     return(final_df)
   }else{
@@ -1743,6 +1753,10 @@ plotLD <- function(gwas_table, genotype, df_info){
   }
   
   message("LDheatmap printed")
+  dimensions <- unlist(map(matrices, \(x) dim(x)[[2]]))
+  names(dimensions) <- hits
+  
+  return(dimensions)
 }
 
 cv_septoria2 <- function(genotype, phenotype, kinship, map, test, trait, blues_all,  wModel = FALSE){

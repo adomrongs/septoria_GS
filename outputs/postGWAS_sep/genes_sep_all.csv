@@ -1,9 +1,54 @@
-Traits,Marker,Distance,Gene,Protein
-pycnidiaPerCm2Leaf,X1_3699969,-255,Mycgr3G107386,F9X0B2
-NA,NA,298,Mycgr3G107385,F9X0B1
-NA,X2_761923,-1212,Mycgr3G37599,F9X480
-NA,NA,555,Mycgr3G67942,F9X479
-NA,X8_2023297,-1667,Mycgr3G30347,F9XH32
-NA,NA,407,Mycgr3G101090,F9XH31
-pycnidiaPerCm2Leaf and pycnidiaPerCm2Lesion,X9_45020,518,Mycgr3G47177,F9XJR5
-NA,NA,824,Mycgr3G30712,F9XJR4
+Traits,Marker,Distance,Gene,Protein,GO_id,GO_name
+pycnidiaPerCm2Leaf,X1_3699969,-298,Mycgr3G107385,F9X0B1,GO:0000900,mRNA regulatory element binding translation repressor activity
+NA,NA,NA,NA,NA,GO:0000932,P-body
+NA,NA,NA,NA,NA,GO:0003723,RNA binding
+NA,NA,NA,NA,NA,GO:0003729,mRNA binding
+NA,NA,NA,NA,NA,GO:0003730,mRNA 3'-UTR binding
+NA,NA,NA,NA,NA,GO:0004540,RNA nuclease activity
+NA,NA,NA,NA,NA,GO:0005634,nucleus
+NA,NA,NA,NA,NA,GO:0005737,cytoplasm
+NA,NA,NA,NA,NA,GO:0005933,cellular bud
+NA,NA,NA,NA,NA,GO:0005935,cellular bud neck
+NA,NA,NA,NA,NA,GO:0008298,intracellular mRNA localization
+NA,NA,NA,NA,NA,GO:0010494,cytoplasmic stress granule
+NA,NA,NA,NA,NA,GO:0017148,negative regulation of translation
+NA,NA,NA,NA,NA,GO:0048027,mRNA 5'-UTR binding
+NA,NA,NA,NA,NA,GO:0060237,regulation of fungal-type cell wall organization
+NA,NA,NA,NA,NA,GO:1903450,regulation of G1 to G0 transition
+NA,NA,255,Mycgr3G107386,F9X0B2,,
+NA,X2_761923,-555,Mycgr3G67942,F9X479,,
+NA,NA,1212,Mycgr3G37599,F9X480,GO:0005783,endoplasmic reticulum
+NA,NA,NA,NA,NA,GO:0005789,endoplasmic reticulum membrane
+NA,NA,NA,NA,NA,GO:0006629,lipid metabolic process
+NA,NA,NA,NA,NA,GO:0006666,3-keto-sphinganine metabolic process
+NA,NA,NA,NA,NA,GO:0030148,sphingolipid biosynthetic process
+NA,NA,NA,NA,NA,GO:0044255,cellular lipid metabolic process
+NA,NA,NA,NA,NA,GO:0047560,3-dehydrosphinganine reductase activity
+NA,NA,NA,NA,NA,GO:0055114,obsolete oxidation-reduction process
+NA,X8_2023297,0,Mycgr3G101090,F9XH31,GO:0016298,lipase activity
+NA,NA,NA,NA,NA,GO:0016787,hydrolase activity
+NA,NA,1667,Mycgr3G30347,F9XH32,GO:0009083,branched-chain amino acid catabolic process
+NA,NA,NA,NA,NA,GO:0016491,oxidoreductase activity
+NA,NA,NA,NA,NA,GO:0016616,"oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor"
+NA,NA,NA,NA,NA,GO:0050661,NADP binding
+NA,NA,NA,NA,NA,GO:0051287,NAD binding
+pycnidiaPerCm2Leaf and pycnidiaPerCm2Lesion,X9_45020,-824,Mycgr3G30712,F9XJR4,GO:0005634,nucleus
+NA,NA,NA,NA,NA,GO:0006261,DNA-templated DNA replication
+NA,NA,NA,NA,NA,GO:0008622,epsilon DNA polymerase complex
+NA,NA,NA,NA,NA,GO:0008623,CHRAC
+NA,NA,NA,NA,NA,GO:0031507,heterochromatin formation
+NA,NA,NA,NA,NA,GO:0046982,protein heterodimerization activity
+NA,NA,NA,Mycgr3G47177,F9XJR5,GO:0000324,fungal-type vacuole
+NA,NA,NA,NA,NA,GO:0005247,voltage-gated chloride channel activity
+NA,NA,NA,NA,NA,GO:0005769,early endosome
+NA,NA,NA,NA,NA,GO:0005783,endoplasmic reticulum
+NA,NA,NA,NA,NA,GO:0005794,Golgi apparatus
+NA,NA,NA,NA,NA,GO:0006811,monoatomic ion transport
+NA,NA,NA,NA,NA,GO:0006821,chloride transport
+NA,NA,NA,NA,NA,GO:0006878,intracellular copper ion homeostasis
+NA,NA,NA,NA,NA,GO:0006879,intracellular iron ion homeostasis
+NA,NA,NA,NA,NA,GO:0016020,membrane
+NA,NA,NA,NA,NA,GO:0016021,GO_0016021
+NA,NA,NA,NA,NA,GO:0043227,membrane-bounded organelle
+NA,NA,NA,NA,NA,GO:0055085,transmembrane transport
+NA,NA,NA,NA,NA,GO:1902476,chloride transmembrane transport

@@ -94,6 +94,9 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
       left_join(sSNPs_data, by = "ID") %>% 
       dplyr::select(-ID) %>% 
       as.matrix()
+    
+    gs_geno <- genoW[, !colnames(genoW) %in% sSNPs]
+    Kw <- A.mat(gs_geno[,-1])
   }
   
   K12_wheat <- Zwtrain %*% as.matrix(Kw) %*% t(Zwtrain)
@@ -166,7 +169,8 @@ eval_S1 <- function(strategy, phenotype, trait) {
     cor_withinStrain_I = cor_withinStrain_I,
     hits <- strategy$hits,
     accuracy = accuracy_withinStrain,
-    accuracy_I = accuracy_withinStrain_I
+    accuracy_I = accuracy_withinStrain_I,
+    H2 = strategy$H_list
   )
   
   return(cor_results)
@@ -231,6 +235,9 @@ runS2 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wModel 
       left_join(sSNPs_data, by = "ID") %>% 
       dplyr::select(-ID) %>% 
       as.matrix()
+    
+    gs_geno <- genoW[, !colnames(genoW) %in% sSNPs]
+    Kw <- A.mat(gs_geno[,-1])
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
@@ -287,7 +294,8 @@ eval_S2 <- function(strategy, phenotype, trait) {
     corInteraction = cor_I,
     accuracy = accuracy,
     accuracy_I = accuracy_I,
-    hits = strategy$hits
+    hits = strategy$hits,
+    H2 = strategy$H_list
   )
   
   return(list(CorrelationResults = correlationResults))
@@ -362,6 +370,9 @@ run_S3 <- function(trait, Kw, Kmix, phenotype, genoW, map, sMix, formula, wtest,
       left_join(sSNPs_data, by = "ID") %>% 
       dplyr::select(-ID) %>% 
       as.matrix()
+    
+    gs_geno <- genoW[, !colnames(genoW) %in% sSNPs]
+    Kw <- A.mat(gs_geno[,-1])
   }
   
   Zwtrain <- model.matrix(~0 + Plant, data = ptrain)
@@ -421,7 +432,8 @@ eval_S3 <- function(strategy, phenotype, trait) {
     corInteraction = cor_I,
     accuracy = accuracy,
     accuracy_I = accuracy_I,
-    hits = strategy$hits
+    hits = strategy$hits,
+    H2 = strategy$H_list
   )
   
   return(list(CorrelationResults = correlationResults))

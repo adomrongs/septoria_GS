@@ -8,6 +8,7 @@ library(ggiraph)
 library(vcfR)
 library(ggside)
 library(scales)
+library(ggpattern)
 source("code/R/function_septoria_GS.R")
 
 load('data/modified_data/1_septoria.Rdata')
@@ -89,8 +90,8 @@ gh1_pheno |>
 counts <- gh1_pheno |>
   dplyr::select(Isolate, Region) |> 
   distinct() |> 
-  count(Region) |> 
-  collapse(Isolate, n)
+  dplyr::count(Region) |> 
+  dplyr::collapse(Isolate, n)
 # count for map too 
 count2 <- final_df |> 
   group_by(Localidad, lon, lat, Region) |> 
@@ -157,8 +158,54 @@ plot_regions <- ggplot(gh1_pheno) +
   ) +
   scale_x_discrete(labels = paste0(counts$Region," (n = ", counts$n, ")"))
 
+gh1_pheno |> 
+  group_by(Line, Region) |> 
+  summarize(mean = mean(PLACL))
+
+gh1_pheno |> 
+  group_by(Line) |> 
+  summarize(mean = mean(PLACL))
+
+boxplot_line_region <- ggplot(gh1_pheno) +
+  geom_boxplot(aes(x = Line, y = PLACL, fill = Region), 
+               width = 0.4,
+               size = 0.5) + # Hace el patrón más visible
+  scale_fill_manual(values = colors) +  
+  stat_summary(aes(x = Line, y = PLACL), 
+               fun = "mean", 
+               geom = "crossbar", 
+               width = 0.4, 
+               color = "black",
+               linetype = "dashed", 
+               size = 0.3) +  # Línea discontinua más fina
+  stat_summary(aes(x = Line, y = PLACL), 
+               fun = "mean", 
+               geom = "point", 
+               color = "black", 
+               size = 3) +  # Punto en el centro de la crossbar
+  geom_text(aes(x = Line, y = PLACL, label = round(..y.., 2)), 
+            stat = "summary", 
+            fun = "mean", 
+            vjust = -0.7, 
+            size = 5, 
+            color = "black") +  # Etiquetas de la media
+  theme(
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major = element_line(colour = "lightgrey", linewidth = 0.4),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 16, margin = margin(t = 10)),  
+    axis.text.y = element_text(size = 13), 
+    axis.title.y = element_text(size = 16)
+  )
+
+
+
 png(paste0("outputs/plots/boxplot_regions.png"), width = 5000, height = 1500, res = 400)
 plot_regions
+dev.off()
+
+png(paste0("outputs/plots/boxplot_line_regions.png"), width = 5000, height = 2000, res = 400)
+boxplot_line_region
 dev.off()
 
 #===============================================================================
@@ -310,23 +357,36 @@ vcf <- read.vcfR('data/modified_data/septoria_ale_clean_ann.vcf.gz')
 fixed <- data.frame(vcf@fix)
 fix_df <- fixed |> 
   mutate(snp = paste0('X', CHROM, '_', POS),
-         putative_impact = map_chr(strsplit(INFO, "\\|"), \(x) x[[3]])) |> 
+         putative_impact = map_chr(strsplit(INFO, "\\|"), \(x) x[[3]]), 
+         annotation = map_chr(strsplit(INFO, "\\|"), \(x) x[[2]])) |> 
   filter(snp %in% colnames(genotype_septoria)) |> 
-  dplyr::select(snp, CHROM, putative_impact)
+  dplyr::select(snp, CHROM, putative_impact, annotation)
+
+annotations_df <- fix_df |> 
+  group_by(putative_impact, annotation) |> 
+  summarize(n = n(), .groups = "drop") |>  # Elimina el agrupamiento posterior al resumen
+  mutate(percentage = (n / sum(n) * 100),
+         Total = paste0(n, " (", round(percentage, 2), "%)"),  # Redondea el porcentaje para mayor claridad
+         putative_impact = tolower(putative_impact)) |>  # Calcula el porcentaje sobre el total del grupo completo
+  arrange(desc(n)) |> 
+  dplyr::select(P.impact = putative_impact, Annotation = annotation, Observations = Total) |> 
+  slice_head(n = 10) 
+
+write_csv(annotations_df, file = 'outputs/postGWAS_sep/top10_annotations.csv')
 
 snps_df <- fix_df |> 
   group_by(CHROM, putative_impact) |> 
   summarise(n = n()) |> 
   mutate(CHROM = as.numeric(CHROM)) |> 
-  arrange(CHROM)
+  arrange(CHROM) 
 
-colors2 <- c("HIGH" = "#9A348EFF", 
-             "LOW" = "#1E88E5FF",  
-             "MODERATE" = "#FFC107FF",
-             "MODIFIER" = "#2E7D32FF")
+colors2 <- c("HIGH" = "#D48FAFFF",  
+             "LOW" = "#805D24FF",  
+             "MODERATE" = "#A2B86CFF",
+             "MODIFIER" = "#1F497DFF") 
 
 snps_plot <- ggplot(snps_df) +
-  geom_col(aes(x = factor(CHROM), y = n, fill = putative_impact), position = "stack", alpha = 0.8) +
+  geom_col(aes(x = factor(CHROM), y = n, fill = putative_impact), position = "stack", alpha = 1) +
   scale_y_continuous(labels = label_number(scale = 1e-3, suffix = "K")) +  # Expresa en miles con "K"
   labs(x = "Chromosome", y = "Count (Thousands)", fill = "Putative Impact") +
   theme_minimal() +
@@ -344,18 +404,32 @@ snps_plot <- ggplot(snps_df) +
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 16)
   ) +
-  scale_fill_manual(values = colors2) +
-  guides(fill = guide_legend(ncol = 4)) 
+  scale_fill_manual(values = colors2, labels = c('High', 'Low', 'Moderate', 'Modifier')) +
+  guides(fill = guide_legend(ncol = 4))
 snps_plot
 
-png(paste0("outputs/plots/snps_plot.png"), width = 3000, height = 2000, res = 400)
+png(paste0("outputs/plots/snps_plot.png"), width = 4000, height = 2000, res = 400)
 snps_plot
 dev.off()
 
 # add marker putative impact to gwas table
 table <- read_csv('outputs/postGWAS_sep/gwas_sep_table_all.csv') |> 
   left_join(fix_df, by = c("SNP" = 'snp')) |> 
-  dplyr::rename('Putative impact' = 'putative_impact')
+  mutate(P.impact = tolower(putative_impact)) |> 
+  dplyr::select(Trait, SNP, Chr, Pos, P.value, Distance, Gene, P.impact, Annotation = annotation) |> 
+  distinct()
+
+snp_sep <- read_csv('outputs/postGWAS_sep/gwas_sep_table_all.csv') |> 
+  pull(SNP) |> 
+  unique()
+
+load('data/modified_data/6_CV_septoria.Rdata')
+maf_df <- data.frame(colMeans(genotype_septoria[genotype_septoria[,1] %in% blues_all$Isolate, colnames(genotype_septoria) %in% snp_sep])) |> 
+  rownames_to_column('SNP')
+colnames(maf_df) <- c('SNP', 'MAF')
+table <- table |> 
+  left_join(maf_df) |> 
+  dplyr::select(Trait, SNP, Chr, Pos, MAF, P.value, P.impact, Annotation, Distance, Gene)
 
 write_csv(table, file = 'outputs/postGWAS_sep/gwas_sep_table_all.csv')
 
@@ -401,5 +475,20 @@ bases <- info_extra |>
   sum()
 density <- bases/(dim(genotype_septoria)[2]-1)
 
+
+#===============================================================================
+# Check which miz correspond to which region
+#===============================================================================
+
+mix1 <- c("22_EcijaSec83Ica_L2", "22_EcijaSecCris_L1", "22_EcijaRegTej_L1")
+mix2 <- c("22_CorKiko_L1", "22_CorCale_L1", "22_Cor3927_L1")
+mix3 <- c("22_ConilAmi_L1", "22_Conil3806_L1", "22_Jerez3927_L1")
+mix4 <- "22_CorVal_L1"
+
+mix_info_df <- data.frame(mix1 = mix1, mix2 = mix2, mix3 = mix3, mix4 = mix4) |> 
+  pivot_longer(cols = everything(), names_to = 'Mix', values_to = 'Isolate') |> 
+  left_join(info) |> 
+  dplyr::select(Mix, Isolate, Region) |>  
+  distinct(Mix, Region) 
 
 

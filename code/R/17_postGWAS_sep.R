@@ -129,10 +129,13 @@ gwas_sep_table_all <- df_hits |>
          Leaf == 2) |> 
   dplyr::select(-c(Cultivar, Leaf, PCs)) |> 
   relocate(Trait = traits) |> 
-  mutate(MAF = round(2* MAF, 2))
+  mutate(MAF = round(2* MAF, 2)) |> 
+  left_join(candidate_genes_all, by = c('SNP' = 'marker')) |> 
+  dplyr::select(Trait, SNP, Chr, Pos, P.value, MAF, Distance = distance, Gene = gene) |> 
+  distinct()
 
 genes_sep_table_all <- candidate_genes_all |> 
-  dplyr::select(Trait = trait, Marker = marker, Distance, Gene = gene, 
+  dplyr::select(Trait = trait, Marker = marker, Distance = distance, Gene = gene, 
                 Protein = accesion, GO_id, GO_name = Go_name) |> 
   group_by(Marker, Distance, Gene, Protein, GO_id, GO_name) |> 
   summarise(Traits = paste(unique(Trait), collapse = " and "), .groups = "drop") |> 
@@ -203,7 +206,7 @@ snps_df <- data.frame(SNPs = snps,
                       Chromosome = as.numeric(str_extract(snps, 'X([0-9])_', group = T)),
                       Position = as.numeric(str_extract(snps, '_(.*)', group = T)))
 
-plotLD(gwas_table = gwas_sep_table_all, genotype = genotype_septoria[, -1], df_info = snps_df)
+hits <- plotLD(gwas_table = gwas_sep_table_all, genotype = genotype_septoria[, -1], df_info = snps_df)
 
 
 # plot boxplot of allelic diffferences
@@ -306,11 +309,12 @@ accesion <- c('KJY01215.1',
 
 blast_df <- data.frame(zt_genes = genes,
                        protein = protein,
-                       species = species, 
+                       species = species,
+                       percentage_identity = percentage_identity,
                        accesion = accesion
 )
 
-new_names <- c('Z.tritici genes', 'Protein', 'Species', 'Accesion')
+new_names <- c('Z.tritici genes', 'Protein', 'Species', '%Identity', 'Accesion')
 names(blast_df) <- new_names
 write_csv(blast_df, file = 'outputs/postGWAS_sep/blast_table.csv')
 

@@ -261,4 +261,21 @@ plotCMqq(
   name = "PLACL",
   color = "#DD5129FF",
   dir = "outputs/postGWAS_wheat/")
+
+#==============================================================================
+# Histogram for BLUEs
+#==============================================================================
+
+
+traits <- c("PLACL" = "#DD5129FF",
+            "pycnidiaPerCm2Leaf" = "#0F7BA2FF",
+            "pycnidiaPerCm2Lesion" = "#43B284FF")
+
+hist <- plotHist(blues_wheat,
+                 columns = colnames(blues_wheat)[-1],
+                 color = traits)
+
+png(paste0("outputs/plots/hist_blues.png"), width = 5000, height = 2000, res = 400)
+grid.arrange(grobs = hist, ncol = 3)
+dev.off()
  
