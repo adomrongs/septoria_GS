@@ -338,8 +338,6 @@ dfs_cultivars <- bind_rows(tmp_dfs) |>
   mutate(traits = gsub('BLINK.', '', traits)) |> 
   filter(!grepl('log', traits))
 
-
-
 pvalues_dfs <- map(dirs, \(x) {
   cultivar <- basename(x)
   tmp_files <- list.files(x, full.names = TRUE)
@@ -387,7 +385,7 @@ CMplot(final_df,
        threshold.lty =1,
        threshold.lwd = 1,
        threshold.col=c("black"),
-       amplify=TRUE,
+       amplify=F,
        pch = shapes, 
        bin.size=1e6,
        signal.cex=1,
@@ -397,11 +395,51 @@ CMplot(final_df,
        file.output= T,
        verbose=TRUE,
        points.alpha=250,
-       legend.ncol=1,
+       legend.ncol=5,
        legend.pos="left")
 setwd(here())
 
+gwas_cultivars_table <- dfs_cultivars |> 
+  mutate(traits = case_when(
+    traits == "pycnidiaPerCm2Leaf" ~ "PCm2Leaf",
+    traits == "pycnidiaPerCm2Lesion" ~ "PCm2Lesion",
+    TRUE ~ traits  # Mantener el valor original si no coincide con ninguna condición
+  )) |> 
+  dplyr::relocate(Cultivar, Traits = traits)
 
+write_csv(gwas_cultivars_table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
 
+# See which strains has the significant snps 
+# identify all markers 
+snps <- unique(c(all_l2$SNP, dfs_cultivars$SNP))
+search_info <- function(df, marker) {
+  new_df <- df |> 
+    dplyr::select(marker, Isolate, Region) |> 
+    filter(!!sym(marker) == 1) |> 
+    mutate(Marker = marker) |> 
+    dplyr::select(-!!sym(marker))
+  return(new_df)
+}
+
+snps_df <- genotype_septoria[, colnames(genotype_septoria) %in% snps] |> 
+  mutate(Isolate = genotype_septoria[, 1]) |> 
+  left_join(info) |> 
+  dplyr::select(Isolate, Region, everything()) 
+
+search_results <- purrr::map_dfr(colnames(snps_df)[grepl("^X", colnames(snps_df))], 
+                                 ~ search_info(snps_df, .))
+
+isolates_per_variant <- search_results |> 
+  group_by(Isolate)  |> 
+  summarize(
+    Count = n(),                            # Contar cuántas veces aparece cada Isolate
+    Markers = toString(unique(Marker))       # Concatenar los nombres de los Markers para cada Isolate
+  ) |> 
+  arrange(desc(Count))
+
+region_per_variant <- search_results |> 
+  distinct(Isolate, Region) |>
+  group_by(Region) |> 
+  summarize(n = n())
 
 

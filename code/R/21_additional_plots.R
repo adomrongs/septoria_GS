@@ -158,37 +158,22 @@ plot_regions <- ggplot(gh1_pheno) +
   ) +
   scale_x_discrete(labels = paste0(counts$Region," (n = ", counts$n, ")"))
 
-gh1_pheno |> 
-  group_by(Line, Region) |> 
-  summarize(mean = mean(PLACL))
-
-gh1_pheno |> 
+mean_stats <- gh1_pheno |> 
   group_by(Line) |> 
-  summarize(mean = mean(PLACL))
+  summarize(mean_df = round(mean(PLACL), 2))
 
 boxplot_line_region <- ggplot(gh1_pheno) +
   geom_boxplot(aes(x = Line, y = PLACL, fill = Region), 
                width = 0.4,
-               size = 0.5) + # Hace el patrón más visible
-  scale_fill_manual(values = colors) +  
-  stat_summary(aes(x = Line, y = PLACL), 
-               fun = "mean", 
+               size = 0.5, fatten = NULL) + 
+  stat_summary(aes(x = Line, y = PLACL, fill = Region),
+               fun = mean, 
                geom = "crossbar", 
-               width = 0.4, 
-               color = "black",
-               linetype = "dashed", 
-               size = 0.3) +  # Línea discontinua más fina
-  stat_summary(aes(x = Line, y = PLACL), 
-               fun = "mean", 
-               geom = "point", 
+               width = 0.35,  # Same width as the boxplot
                color = "black", 
-               size = 3) +  # Punto en el centro de la crossbar
-  geom_text(aes(x = Line, y = PLACL, label = round(..y.., 2)), 
-            stat = "summary", 
-            fun = "mean", 
-            vjust = -0.7, 
-            size = 5, 
-            color = "black") +  # Etiquetas de la media
+               size = 0.4, 
+               position = position_dodge(width = 0.4)) +
+  scale_fill_manual(values = colors) +  
   theme(
     panel.background = element_rect(fill = "white"), 
     panel.grid.major = element_line(colour = "lightgrey", linewidth = 0.4),
@@ -196,8 +181,8 @@ boxplot_line_region <- ggplot(gh1_pheno) +
     axis.text.x = element_text(size = 16, margin = margin(t = 10)),  
     axis.text.y = element_text(size = 13), 
     axis.title.y = element_text(size = 16)
-  )
-
+  ) +
+  scale_x_discrete(labels = paste0(mean_stats$Line,"\n (μ = ", mean_stats$mean_df, ")"))
 
 
 png(paste0("outputs/plots/boxplot_regions.png"), width = 5000, height = 1500, res = 400)
