@@ -4,6 +4,7 @@ module load BCFtools/1.15.1-GCC-11.3.0
 module load VCFtools/0.1.16-GCC-10.2.0
 module load PLINK/1.9b_6.21-x86_64
 module load bzip2/1.0.8-GCCcore-12.2.0
+module load SAMtools/1.9-GCC-8.2.0-2.31.1
 
 if [ "$#" -lt 2 ]; then
     exit 1
