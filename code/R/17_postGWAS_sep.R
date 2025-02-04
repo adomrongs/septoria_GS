@@ -318,3 +318,90 @@ new_names <- c('Z.tritici genes', 'Protein', 'Species', '%Identity', 'Accesion')
 names(blast_df) <- new_names
 write_csv(blast_df, file = 'outputs/postGWAS_sep/blast_table.csv')
 
+
+#===============================================================================
+# Cultivar-sepecific hits 
+#===============================================================================
+
+hits <- read_csv('outputs/postGWAS_sep/gwas_sep_table_all.csv') |> 
+  distinct(SNP)
+
+dirs <- as.list(list.dirs('outputs/GWAS_sep', full.names = T, recursive = F))
+
+tmp_dfs <- map(dirs, \(x) {
+  tmp <- read_csv(paste0(x, '/GAPIT.Association.Filter_GWAS_results.csv')) |> 
+    mutate(Cultivar = basename(x)) |> 
+    dplyr::select(-1)
+})
+
+dfs_cultivars <- bind_rows(tmp_dfs) |> 
+  mutate(traits = gsub('BLINK.', '', traits)) |> 
+  filter(!grepl('log', traits))
+
+
+
+pvalues_dfs <- map(dirs, \(x) {
+  cultivar <- basename(x)
+  tmp_files <- list.files(x, full.names = TRUE)
+  tmp_files <- tmp_files[!grepl('Filter', tmp_files)]
+  tmp_dfs <- map(tmp_files, read_csv) |> 
+    bind_cols()
+  
+  # Seleccionar columnas según la cantidad de archivos
+  cols_to_select <- if (length(tmp_files) == 1) {
+    1:5
+  } else if (length(tmp_files) == 2) {
+    c(1:5, 12)
+  } else if (length(tmp_files) == 3) {
+    c(1:5, 12, 20)
+  } else {
+    1:5  
+  }
+  
+  traits <- map(tmp_files, \(x) gsub(paste0('outputs/GWAS_sep/', cultivar,'/GAPIT.Association.GWAS_Results.BLINK.'), '', x))
+  traits <- unlist(map(traits, \(x) gsub('.csv', '', x)))
+  def_traits <- paste0(cultivar, '_', traits)
+  tmp_dfs <- tmp_dfs |> 
+    dplyr::select(all_of(cols_to_select)) |> 
+    dplyr::select(-5)
+  
+  colnames(tmp_dfs) <- c('SNP', 'Chr', 'Pos', def_traits)
+  
+  return(tmp_dfs)
+})
+
+final_df <- pvalues_dfs |> 
+  purrr::reduce(left_join, by = c('SNP', 'Chr', 'Pos'))
+names(final_df) <- gsub('pycnidiaPerCm2Leaf', 'PCm2Leaf', names(final_df))
+names(final_df) <- gsub('pycnidiaPerCm2Lesion', 'PCm2Lesion', names(final_df))
+
+colors_trigo <- c("#8E6B3D", "#8E6B3D", "#D8B06A", "#D8B06A", "#D8B06A", "#5B4C44", "#5B4C44", "#9E5B40", "#9E5B40")
+shapes <- c(15,16,17,15,16,15,16,15,16)
+
+setwd("outputs/postGWAS_sep/")
+CMplot(final_df,
+       col = colors_trigo,
+       plot.type="m",
+       multraits=TRUE,
+       threshold= 0.05/nrow(final_df),
+       threshold.lty =1,
+       threshold.lwd = 1,
+       threshold.col=c("black"),
+       amplify=TRUE,
+       pch = shapes, 
+       bin.size=1e6,
+       signal.cex=1,
+       file="jpg",
+       file.name="cultivars",
+       dpi=300,
+       file.output= T,
+       verbose=TRUE,
+       points.alpha=250,
+       legend.ncol=1,
+       legend.pos="left")
+setwd(here())
+
+
+
+
+

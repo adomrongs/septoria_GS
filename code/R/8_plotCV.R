@@ -9,11 +9,13 @@ source("code/R/function_septoria_GS.R")
 s1 <- s2 <- s3 <- list()
 
 for( i in 1:30){
-  load(paste0("data/modified_data/cv/iter_", i, ".Rdata"))
-  names(allResults) <- c("G/G", "G/I", "I/G", "I/I")
-  s1[[i]] <- scenario1(allResults = allResults)
-  s2[[i]] <- scenario2(allResults = allResults)
-  s3[[i]] <- scenario3(allResults = allResults)
+  if(i != 4){
+    load(paste0("data/modified_data/cv/iter_", i, ".Rdata"))
+    names(allResults) <- c("G/G", "G/I", "I/G", "I/I")
+    s1[[i]] <- scenario1(allResults = allResults)
+    s2[[i]] <- scenario2(allResults = allResults)
+    s3[[i]] <- scenario3(allResults = allResults)
+  }
 }
 
 s1_ability <- combine_elements(s1, "ability")
@@ -88,79 +90,15 @@ png(paste0("outputs/plots/hist_cv_wheat.png"), width = 3000, height = 1500, res 
 hist_cv_wheat
 dev.off()
 
+# Plot Heritability
 
-accuracy_table <- do.call(rbind, accuracy_list) |> 
-  mutate(Strategy = c(rep("S1", 1920), rep("S2", 1920), rep("S3", 1920))) |> 
-  group_by(Strategy, Info, Matrix, Mix) |> 
-  summarize(
-    Mean = mean(Cor, na.rm = TRUE),  # Calcular la media de 'Accuracy'
-    sd = sd(Cor, na.rm = TRUE)       # Calcular la desviación estándar de 'Accuracy'
-  ) |> 
-  mutate(
-    Mean_sd = paste0(round(Mean, 2), " ± ", round(sd, 2))  # Crear la columna 'Mean_sd' con el formato deseado
-  ) |> 
-  dplyr::select(-c(Mean, sd)) |> 
-  pivot_wider(names_from = Mix, values_from = Mean_sd) |> 
-  filter(Strategy == "S1")
+datas <- as.list(list.files('data/modified_data/cv', full.names = T))
 
-accuracy_table2 <- do.call(rbind, accuracy_list) |> 
-  mutate(Strategy = c(rep("S1", 1920), rep("S2", 1920), rep("S3", 1920))) |>
-  filter(Strategy == "S1") |> 
-  group_by(Strategy, Info, Matrix, Mix) |> 
-  summarize(
-    Max = max(Cor, na.rm = TRUE), 
-    Min = min(Cor, na.rm = TRUE)
-  )
+processed_h2 <- map(datas, \(x) processH2_results(x))
+H2_processed_df <- bind_rows(processed_h2)
 
+H2_split_list <- split(H2_processed_df, H2_processed_df$Strategy) |> 
+  map(~ droplevels(.))
 
-h2_strategy <- function(ability, accuracy){
-  tmp_df <- cbind(ability, accuracy)[, c(1:4, 8)]  # Evitas dplyr::select()
-  colnames(tmp_df) <- c('Info', 'Matrix', 'Mix', 'Ability', 'Accuracy')
-  
-  df <- tmp_df |> 
-    dplyr::mutate(h2 = sqrt(Ability / Accuracy))
-  
-  return(df)
-}
-
-h2_plots <- map2(ability_list, accuracy_list, \(x,y)  h2_strategy(x,y))
-
-map(h2_plots, \(df) {
-  ggplot(df) +
-    geom_boxplot(aes(x = Mix, y = h2, fill = Matrix)) +
-    facet_grid(. ~ Info)
-})
-
-
-pheno <- readxl::read_xlsx('data/raw_data/Output_reps_unidas_12cm_mock_checks.xlsx')  
-
-pheno |> 
-  mutate(across(Set:Rep, as.factor)) |> 
-  group_by(Plant) |> 
-  summarize(
-    nSet = n_distinct(Set),      # Cuenta valores únicos en la columna Set
-    nStrain = n_distinct(Strain),# Cuenta valores únicos en la columna Strain
-    nBrep = n_distinct(Leaf),    # Cuenta valores únicos en la columna Leaf
-    nRep = n_distinct(Rep),
-    n = n()                      # Cuenta el número total de observaciones por grupo
-  )
-
-pheno |> 
-  mutate(across(Set:Rep, as.factor)) |> 
-  group_by(Strain) |> 
-  summarize(
-    nSet = n_distinct(Set),      # Cuenta valores únicos en la columna Set
-    nPlant = n_distinct(Plant),# Cuenta valores únicos en la columna Strain
-    nBrep = n_distinct(Leaf),    # Cuenta valores únicos en la columna Leaf
-    nRep = n_distinct(Rep),
-    n = n()                      # Cuenta el número total de observaciones por grupo
-  )
-  
-
-
-
-
-
-
-
-
+# Aplicar la función a la lista de dataframes
+map(H2_split_list, plotH2)

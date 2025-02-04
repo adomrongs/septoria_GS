@@ -1087,6 +1087,9 @@ plotCV <- function(results, colors, stat, strategy, subheader){
   subheader_main <- "The boxplots are colored based on the different Genomic Relationship Matrices employed in the calculations. These are described in the legend following the structure Wheat_GRM/Mixes_GRM.
 Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' represent the identity."
   
+  max_y <- round(min(max(results$Cor, na.rm = TRUE) + 0.1, 1), 1)
+  min_val <- round(min(results$Cor, na.rm = TRUE), 1)
+  min_y <- ifelse(min_val < 0, min_val - 0.1, 0)
   
   p <- ggplot(results, aes(x = Mix, y = Cor, fill = Matrix)) +
     geom_boxplot(width = 0.6, outlier.shape = NA, fatten = NULL) +  
@@ -1097,7 +1100,10 @@ Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' r
                  size = 0.4, 
                  position = position_dodge(width = 0.6)) +
     scale_fill_manual(values = colors) + 
-    scale_y_continuous(breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 0.1)) +
+    scale_y_continuous(
+      limits = c(min_y, max_y),
+      breaks = seq(min_y, max_y, by = 0.1)  # Ensures ticks every 0.1
+    ) + 
     labs(
       title = paste0("Strategy ", strategy),
       subtitle = subheader_main,
@@ -2086,3 +2092,119 @@ computeLD <- function(table, name){
   
   return(plot_df)
 }
+
+processH2_results <- function(path) {
+  load(path)
+  # Extraer el H2 de la lista
+  extractH2 <- function(list) {
+    names(list) <- c("G/G", "G/I", "I/G", "I/I")
+    
+    H2_list <- map(list, \(x) {
+      H2 <- map(x, \(y) {
+        if ("H2" %in% names(y)) {
+          tmph2 <- y[["H2"]]
+          return(tmph2)
+        } else {
+          tmph2 <- y[["CorrelationResults"]][["H2"]]
+          return(tmph2)
+        }
+      })
+    })
+    return(H2_list)
+  }
+  
+  # Procesar las filas del dataframe
+  process_rows <- function(df) {
+    Matrix <- unlist(map(str_split(rownames(df), '\\.'), \(x) x[[1]]))
+    Strategy <- gsub("Scenario", "Strategy", unlist(map(str_split(rownames(df), '\\.'), \(x) str_extract(x[2], '(Scenario[0-9]{1})', group = T))))
+    Approach <- unlist(map(str_split(rownames(df), '\\.'), \(x) ifelse(grepl('w', x[[2]]), 'Weighted', 'Normal')))
+    Mix <- unlist(map(str_split(rownames(df), '\\.'), \(x) str_extract(x[2], "mix\\d")))
+    
+    Interaction <- unlist(map(str_split(rownames(df), '\\.'), \(x) {
+      if (grepl('Scenario1', x[2])) {
+        return(gsub('w', '', gsub("Scenario1", '', x[2])))
+      } else {
+        return(str_extract(x[2], "mix\\d(\\d)", group = T))
+      }
+    }))
+    
+    df_final <- cbind(df, Strategy, Matrix, Approach, Mix, Interaction) %>%
+      mutate(
+        Interaction = ifelse(Interaction == 1, "", "+I"),
+        Approach = paste0(Approach, Interaction)
+      ) %>%
+      dplyr::select(Strategy, Approach, Matrix, Mix, H2) %>%
+      as_tibble()
+    
+    rownames(df_final) <- NULL  # Eliminar los rownames
+    return(df_final)
+  }
+  
+  # Expandir las filas con NA en Mix
+  expand_rows <- function(df) {
+    rows_with_na <- df %>% filter(is.na(Mix))
+    
+    expanded_rows <- rows_with_na %>%
+      uncount(4) %>%
+      mutate(Mix = rep(paste0("mix", 1:4), length.out = n()))
+    
+    df_no_na <- df %>% filter(!is.na(Mix))
+    final_df <- bind_rows(df_no_na, expanded_rows)
+    return(final_df)
+  }
+  
+  # Extraer H2
+  H2_extracted <- extractH2(allResults)
+  
+  # Crear dataframe de H2
+  H2_df <- data.frame(H2 = unlist(H2_extracted))
+  
+  # Procesar las filas
+  H2_df_final <- process_rows(H2_df)
+  
+  # Expandir las filas en cada dataframe de la lista
+  H2_df_final_expanded <- expand_rows(H2_df_final) |> 
+    mutate(across(Strategy:Mix, as.factor))
+  
+  return(H2_df_final_expanded)
+}
+
+plotH2 <- function(df) {
+  
+  max_y <- round(min(max(df$H2, na.rm = TRUE) + 0.1, 1), 1)
+  min_val <- round(min(df$H2, na.rm = TRUE), 1)
+  min_y <- ifelse(min_val < 0, min_val - 0.1, 0)
+  
+  plotH2 <- ggplot(df) +
+    geom_boxplot(aes(x = Mix, y = H2, fill = Matrix)) +
+    scale_fill_manual(values = colors) +
+    scale_y_continuous(
+      limits = c(min_y, max_y),
+      breaks = seq(min_y, max_y, by = 0.1)  # Ensures ticks every 0.1
+    ) +
+    theme(
+      plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
+      legend.title = element_blank(), 
+      legend.position = "top",
+      panel.background = element_rect(fill = "white"),
+      panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+      plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+      strip.text = element_text(size = 10, color = "black", family = "Arial"),
+      strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.y = element_text(size = 12, family = "Arial"),
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(size = 14, family = "Arial"),
+      plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20))
+    ) +
+    facet_grid(. ~ Approach)
+  
+  # Generar el nombre del archivo
+  name <- unique(df$Strategy)
+  
+  # Guardar el gráfico como PNG
+  png(paste0("outputs/plots/H2_", name, ".png"), width = 6000, height = 3000, res = 400)
+  print(plotH2) 
+  dev.off()
+}
+
