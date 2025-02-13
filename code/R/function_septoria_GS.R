@@ -1092,17 +1092,28 @@ Additionally, 'G' denotes the GRM calculated from the marker matrix, while 'I' r
   min_y <- ifelse(min_val < 0, min_val - 0.1, 0)
   
   p <- ggplot(results, aes(x = Mix, y = Cor, fill = Matrix)) +
-    geom_boxplot(width = 0.6, outlier.shape = NA, fatten = NULL) +  
-    stat_summary(fun = mean, 
-                 geom = "crossbar", 
-                 width = 0.55,  # Same width as the boxplot
-                 color = "black", 
-                 size = 0.4, 
-                 position = position_dodge(width = 0.6)) +
+    stat_summary(
+      fun.data = mean_sdl, 
+      fun.args = list(mult = 1), 
+      geom = "errorbar", 
+      width = 0.2, 
+      color = 'black', 
+      position = position_dodge(width = 0.7)
+    ) +
+    stat_summary(
+      fun = mean, 
+      geom = "point", 
+      shape = 23, 
+      size = 4, 
+      color = 'black', 
+      position = position_dodge(width = 0.7)
+    ) +
     scale_fill_manual(values = colors) + 
+    scale_color_manual(values = colors) + 
     scale_y_continuous(
       limits = c(min_y, max_y),
-      breaks = seq(min_y, max_y, by = 0.1)  # Ensures ticks every 0.1
+      breaks = seq(min_y, max_y, by = 0.1), 
+      labels = label_number(accuracy = 0.1)# Ensures ticks every 0.1
     ) + 
     labs(
       title = paste0("Strategy ", strategy),
@@ -1697,7 +1708,8 @@ find_genes <- function(mart, attributes, filters, distances, chr, traits, out_di
         marker = paste0("X", chromosome, "_", marker)
       ) %>%
       dplyr::select(trait, marker, distance, gene = ensembl_gene_id, 
-                    start = start_position, end_position, information, accesion, peptide, go_id, name_1006)
+                    start = start_position, end_position, 
+                    information, accesion, peptide, go_id, name_1006)
     
     genes <- unique(final_df$gene)
     dir.create(out_dir, showWarnings = FALSE)
@@ -2069,13 +2081,12 @@ computePCA <- function(genotype, regions = NULL, names = NULL, colors = NULL, sh
   return(pca_data)
 }
 
-computeLD <- function(table, name){
+computeLD <- function(table, name, n){
   tmp_df <- table |> 
     mutate(across(c(BP_A, BP_B), as.numeric),
            distance = BP_B - BP_A)
   
   HW.st <- c(C=0.1)
-  n <- nrow(tmp_df)
   distance <- tmp_df$distance
   LD.data <- tmp_df$R2
   HW.nonlinear <- nls(LD.data~((10+C*distance)/((2+C*distance)*(11+C*distance)))*(1+((3+C*distance)*(12+12*C*distance+(C*distance)^2))/(n*(2+C*distance)*(11+C*distance))),
@@ -2208,3 +2219,315 @@ plotH2 <- function(df) {
   dev.off()
 }
 
+plot_pheno_boxplot <- function(data, y_var, mean_stats, colors) {
+  
+  labels <- paste0(mean_stats$Line,"\n (μ = ", mean_stats[[paste0("mean_", y_var)]], ")")
+  ggplot(data) +
+    geom_boxplot(aes_string(x = "Line", y = y_var, fill = "Region"), 
+                 width = 0.4,
+                 size = 0.5, fatten = NULL, outliers = FALSE) + 
+    stat_summary(aes_string(x = "Line", y = y_var, fill = "Region"),
+                 fun = mean, 
+                 geom = "crossbar", 
+                 width = 0.35,  # Same width as the boxplot
+                 color = "black", 
+                 size = 0.4, 
+                 position = position_dodge(width = 0.4)) +
+    scale_fill_manual(values = colors) +  
+    theme(
+      panel.background = element_rect(fill = "white"), 
+      panel.grid.major = element_line(colour = "lightgrey", linewidth = 0.4),
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(size = 16, margin = margin(t = 10)),  
+      axis.text.y = element_text(size = 13), 
+      axis.title.y = element_text(size = 16)
+    ) +
+    scale_x_discrete(labels = labels)
+}
+
+process_plot <- function(i, gwas_table, blups_sep_ready, genotype_sep_ready, plot_allelic_diff_sep_2) {
+  cultivar <- gwas_table$Cultivar[i]
+  marker <- gwas_table$SNP[i]
+  trait <- gwas_table$Traits[i]
+  print(paste0("working on marker: ", marker))
+  
+  phenotype <- blups_sep_ready %>%  dplyr::select(Isolate, trait)
+  genotype <- genotype_sep_ready[genotype_sep_ready[, "Isolate"] %in% phenotype[,1], ]
+  
+  plot <- plot_allelic_diff_sep_2(phenotype = phenotype,
+                          genotype = genotype,
+                          marker = marker,
+                          trait = trait,
+                          cultivar = cultivar)
+}
+
+process_pvalues <- function(x) {
+  cultivar <- basename(x)
+  tmp_files <- list.files(x, full.names = TRUE)
+  tmp_files <- tmp_files[!grepl('Filter', tmp_files)]
+  
+  tmp_dfs <- map(tmp_files, read_csv) |> bind_cols()
+  
+  # Select columns based on the number of files
+  cols_to_select <- switch(as.character(length(tmp_files)),
+                           `1` = c(1:5, 8),
+                           `2` = c(1:5, 8, 12, 16),
+                           `3` = c(1:5, 8, 12, 16, 20, 24),
+                           1:5)  # Default case
+  
+  # Extract traits from file names
+  traits <- map(tmp_files, \(x) gsub(paste0('outputs/GWAS_sep/', cultivar, '/GAPIT.Association.GWAS_Results.BLINK.'), '', x))
+  traits <- unlist(map(traits, \(x) gsub('.csv', '', x)))
+  def_traits <- paste0(cultivar, '_', traits)
+  
+  # Select the required columns and rename
+  tmp_dfs <- tmp_dfs |> 
+    dplyr::select(all_of(cols_to_select))
+  
+  colnames(tmp_dfs)[1:3] <- c('SNP', 'Chr', 'Pos')
+  colnames(tmp_dfs)[grepl('P.value', colnames(tmp_dfs))] <- def_traits
+  colnames(tmp_dfs)[grepl('Effect', colnames(tmp_dfs))] <- paste0(def_traits, '_Effect')
+  
+  return(tmp_dfs)
+}
+
+
+fastqqplot <- function(x, final_df_plot, trait, dir){
+  tmp_df <- final_df_plot |> 
+    dplyr::select(c(1, 2, 3, x))  # Select SNP, Chr, Pos, and the current trait column
+  
+  
+  color <- switch(trait,
+                  "PCm2Leaf" = "#0F7BA2FF",
+                  "PCm2Lesion" = "#43B284FF",
+                  "PLACL" = "#DD5129FF",
+                  NULL)  # Default if trait doesn't match
+  
+  main <- names(final_df_plot)[x]
+  plotCMqq(tmp_df, main, color, dir)  # Assuming plotCMqq is a function to generate the plot
+}
+
+count_characters <- function(file_path) {
+  lines <- readLines(file_path)
+  filtered_lines <- lines[!grepl("^>", lines)]
+  concatenated_text <- paste(filtered_lines, collapse = "")
+  concatenated_text <- gsub("\\*", "", concatenated_text)
+  char_count <- nchar(concatenated_text)
+  return(char_count)
+}
+
+
+generate_pheno_boxplot <- function(genotype, phenotype, gwas_table, trait, colors) {
+  
+  # Filtrar GWAS para el rasgo de interés
+  tmp_table <- gwas_table |> 
+    distinct(Cultivar, SNP, Trait) |> 
+    filter(Trait == trait)
+  
+  # Extraer lista de marcadores y cultivares únicos
+  markers <- as.list(unique(tmp_table$SNP))
+  cultivars <- as.list(tmp_table$Cultivar)
+  
+  # Función interna para identificar aislamientos
+  identify_isolates <- function(genotype, phenotype, marker, cultivar) {
+    tmp_df <- genotype[, colnames(genotype) %in% c('Isolate', marker)]
+    tmp_pheno <- tmp_df |> 
+      left_join(phenotype) |> 
+      filter(Line == cultivar, Leaf == 2) |> 
+      dplyr::select(Line, Isolate, marker, trait) |> 
+      pivot_longer(cols = marker, names_to = 'Marker', values_to = 'Allele') |> 
+      dplyr::relocate(Line, Isolate, Marker, Allele) |> 
+      mutate(Allele = round(Allele, 0))
+    return(tmp_pheno)
+  }
+  
+  # Aplicar la función a cada combinación de marcador y cultivar
+  lists <- map2(markers, cultivars, \(x, y) identify_isolates(genotype, phenotype, x, y))
+  
+  # Combinar en un solo dataframe y preparar para graficar
+  pheno_boxplot <- bind_rows(lists) |> 
+    mutate(Fill = paste0(Line, '_', Allele)) |> 
+    arrange(Fill) |> 
+    mutate(Marker = factor(Marker, levels = unique(Marker[order(Fill)])),
+           Name = trait)
+  
+  # Generar el gráfico con ggplot2
+  plot <- ggplot(pheno_boxplot, aes(x = Marker, y = !!sym(trait), fill = Fill)) +
+    geom_boxplot(outliers = F, fatten = NULL, width = 0.9) + 
+    stat_summary(fun = mean, geom = "crossbar", width = 0.8, color = "black", size = 0.3,
+                 position = position_dodge(width = 0.9)) + 
+    scale_fill_manual(values = colors) + 
+    theme(
+      plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial",
+                                   margin = margin(t = 10, b = 10)),
+      legend.title = element_blank(), 
+      legend.position = 'none',
+      panel.background = element_rect(fill = "white"),
+      panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+      plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+      strip.text = element_text(size = 10, color = "black", family = "Arial"),
+      strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),
+      panel.border = element_rect(colour = "darkgrey", fill = NA, size = 0.5),
+      axis.title.y = element_text(size = 12, family = "Arial"),
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(size = 12, family = "Arial", angle = 90),
+      plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial",
+                                  margin = margin(t = 20, b = 20))
+    ) + 
+    labs(x= NULL, y = NULL) + 
+    facet_grid(.~ Name)
+  
+  return(plot)
+}
+
+pca_boxplot <- function(pca, genotype, colors, marker, trait, cultivar, phenotype){
+  tmp_geno <- genotype[, colnames(genotype) %in% c("Isolate", marker)]
+  
+  # Filtrar los aislados que tienen el valor 1 en el marcador
+  highlight_isolates <- tmp_geno |> 
+    filter(!!sym(marker) == 1) |>  # Usar sym(marker) para referenciar correctamente
+    pull(Isolate)  # Extraer la columna "Isolate" como vector
+  
+  tmp_pca <- pca |> 
+    mutate(Fill = ifelse(GenoID %in% highlight_isolates, Region, 'Non_selected'))
+  
+  tmp_pheno <- phenotype |> 
+    left_join(tmp_geno) |> 
+    dplyr::select(Isolate, marker, trait, Region)  |> 
+    mutate(Marker = marker)
+  mean_values <- tmp_pheno |> 
+    group_by(!!sym(marker)) |> 
+    summarize(mean = round(mean(!!sym(trait)), 2))
+  counts <- tmp_pheno |> 
+    distinct(!!sym(marker), Isolate) |> 
+    group_by(!!sym(marker)) |> 
+    summarise(n = n(), .groups = 'drop') %>%
+    mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n,  '\n (μ = ', mean_values$mean, ')'))
+  
+  count_per_region <- tmp_pheno |> 
+    filter(!!sym(marker) == 1) |> 
+    distinct(Isolate, Region) |> 
+    group_by(Region) |> 
+    summarize(n = n()) |> 
+    mutate(label = paste0('n = ', n),
+           position = -100 - 10 * (row_number() - 1))
+  
+  pca_plot <- ggplot(tmp_pca) + 
+    geom_point(aes(x = PC1, y = PC2, color = Fill)) + 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # Horizontal line
+    geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+    theme_minimal() +  # Clean theme
+    theme(
+      panel.grid = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "top",  # Move legend to the top
+      legend.title = element_blank(),  # Remove legend title
+      legend.key = element_blank(),  # Optional: remove key background
+      legend.text = element_text(size = 18),  # Increase text size of legend
+      plot.title = element_blank(),  # Remove title from the plot
+      axis.title.x = element_text(size = 18),  # Axis label sizes
+      axis.title.y = element_text(size = 18),
+      axis.text = element_text(size = 17),  # Axis text sizes
+      strip.text = element_text(size = 10, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = "lightgray"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      plot.margin = margin(t = 10, r = 40, b = 10, l = 10) # Panel border
+    ) +
+    scale_color_manual(values = colors)+
+    geom_text(data = count_per_region, 
+              aes(x = 125, y = position , label = paste(Region, "(", label, ")")),
+              size = 4, color = "black", hjust = 0.5, vjust = 0)
+  
+  boxplot <- ggplot(tmp_pheno) +
+    geom_boxplot(aes(x = factor(!!sym(marker)), y = !!sym(trait), fill = Region),
+                 outliers = F, fatten = NULL, width = 0.6)+
+    stat_summary(aes(x = factor(!!sym(marker)), y = !!sym(trait), fill = Region), 
+                 fun = mean, geom = "crossbar", width = 0.53, color = "black", size = 0.3, 
+                 position = position_dodge(width = 0.6)) +
+    labs(x = cultivar, y = trait) +
+    scale_x_discrete(
+      labels = counts$label) +
+    theme_ipsum() + 
+    theme(
+      panel.grid = element_blank(),
+      legend.position = "none",
+      plot.title = element_blank(),
+      strip.text = element_text(size = 13, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = 'lightgrey'),
+      axis.line = element_line(colour = "black"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.x = element_text(size = 18, face = "plain"),
+      axis.title.y = element_text(size = 18, face = "plain"),
+      axis.text.x = element_text(size = 18),
+      axis.text.y = element_text(size = 18)
+    ) +
+    facet_grid(. ~ Marker) +
+    scale_fill_manual(values = colors)
+  
+  combined <- pca_plot + boxplot
+  return(combined)
+}
+
+boxplot_cultivars <- function(genotype, colors, marker, trait, cultivar, phenotype){
+  tmp_geno <- genotype[, colnames(genotype) %in% c("Isolate", marker)]
+  
+  # Filtrar los aislados que tienen el valor 1 en el marcador
+  highlight_isolates <- tmp_geno |> 
+    filter(!!sym(marker) == 1) |>  # Usar sym(marker) para referenciar correctamente
+    pull(Isolate)  # Extraer la columna "Isolate" como vector
+  
+  tmp_pheno <- phenotype |> 
+    left_join(tmp_geno) |> 
+    dplyr::select(Isolate, marker, trait, Region)  |> 
+    mutate(Marker = marker)
+  mean_values <- tmp_pheno |> 
+    group_by(!!sym(marker)) |> 
+    summarize(mean = round(mean(!!sym(trait)), 2))
+  counts <- tmp_pheno |> 
+    distinct(!!sym(marker), Isolate) |> 
+    group_by(!!sym(marker)) |> 
+    summarise(n = n(), .groups = 'drop') %>%
+    mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n,  '\n (μ = ', mean_values$mean, ')'))
+  
+  values <- switch(trait,
+                   "pycnidiaPerCm2Leaf" = c("grey", "#0F7BA2FF"),
+                   "pycnidiaPerCm2Lesion" = c("grey", "#43B284FF"),
+                   "PLACL" = c("grey", "#DD5129FF"),
+                   NULL)  # Default if trait doesn't match
+  
+  color_strip <- switch(cultivar,
+                        "Athoris" = alpha("#8E6B3D", 0.7),  # Lighter by adjusting opacity
+                        "Don Ricardo" = alpha("#D8B06A", 0.7),
+                        "Sculptur" = alpha("#5B4C44", 0.7),
+                        "Svevo" = alpha("#9E5B40", 0.7),
+                        NULL)
+  
+  boxplot <- ggplot(tmp_pheno) +
+    geom_boxplot(aes(x = factor(!!sym(marker)), y = !!sym(trait), fill = factor(!!sym(marker))),
+                 outliers = F, fatten = NULL, width = 0.6) +
+    stat_summary(aes(x = factor(!!sym(marker)), y = !!sym(trait), fill = factor(!!sym(marker))), 
+                 fun = mean, geom = "crossbar", width = 0.6, color = "black", size = 0.3, 
+                 position = position_dodge(width = 0.6)) +
+    labs(x = cultivar, y = trait) +
+    scale_x_discrete(
+      labels = counts$label) +
+    theme_ipsum() + 
+    theme(
+      panel.grid = element_blank(),
+      legend.position = "none",
+      plot.title = element_blank(),
+      strip.text = element_text(size = 13, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = color_strip),
+      axis.line = element_line(colour = "black"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.x = element_text(size = 18, face = "plain"),
+      axis.title.y = element_text(size = 18, face = "plain"),
+      axis.text.x = element_text(size = 18),
+      axis.text.y = element_text(size = 18)
+    ) +
+    facet_grid(. ~ Marker) +
+    scale_fill_manual(values = values)
+  
+  return(boxplot)
+}

@@ -186,6 +186,8 @@ regions_df <- genotype_wheat %>%
   mutate(color = colors[region],
          shape = shapes[region])
 
+write_csv(regions_df[, 1:3], file = 'data/modified_data/info_wheat.csv')
+
 # create pca and screeplot
 PCA_plot_wheat <- plotPCA(genotype = genotype_wheat,
                regions = regions_df$region,

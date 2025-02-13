@@ -27,11 +27,10 @@ s2_accuracy <- combine_elements(s2, "accuracy")
 s3_ability <- combine_elements(s3, "ability")
 s3_accuracy <- combine_elements(s3, "accuracy")
 
-colors <- c("G/G" = "#DD5129FF",
-            "G/I" = "#0F7BA2FF",
-            "I/G" = "#43B284FF",
-            "I/I" = "#FAB255FF")
-
+colors <- c("G/G" = "#72A8D4",  # Azul claro
+            "G/I" = "#F7D77A",  # Amarillo claro
+            "I/G" = "#A67C52",  # Marrón
+            "I/I" = "#7D3243") 
 
 
 ability_list <- list(s1_ability, s2_ability, s3_ability)

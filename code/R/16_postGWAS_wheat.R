@@ -9,6 +9,7 @@ library(biomaRt)
 library(ggdist)
 library(CMplot)
 library(here)
+library(LDcorSV)
 source("code/R/function_septoria_GS.R")
 
 #==============================================================================
@@ -278,4 +279,14 @@ hist <- plotHist(blues_wheat,
 png(paste0("outputs/plots/hist_blues.png"), width = 5000, height = 2000, res = 400)
 grid.arrange(grobs = hist, ncol = 3)
 dev.off()
+
+#==============================================================================
+# LD decay
+#==============================================================================
+
+
+# Honestly maybe the best think is to do it as with zymo. We will see
+
+
+
  

@@ -193,6 +193,8 @@ pca_data <- as.data.frame(PCs) %>%
   mutate(GenoID = genotype[,1], 
          shape = str_extract(GenoID, "([0-9]{2})_", group = T))
 
+save(pca_data, file = 'data/modified_data/8_pca.Rdata')
+
 right_group <- pca_data |> 
   filter(PC1 > 100) |> 
   pull(GenoID)

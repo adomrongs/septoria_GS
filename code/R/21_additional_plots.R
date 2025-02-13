@@ -9,6 +9,9 @@ library(vcfR)
 library(ggside)
 library(scales)
 library(ggpattern)
+library(gridExtra)
+library(janitor)
+library(ggpattern)
 source("code/R/function_septoria_GS.R")
 
 load('data/modified_data/1_septoria.Rdata')
@@ -80,7 +83,8 @@ info <- read_csv('data/modified_data/info_strain_complete.csv')
 # associate each isolate to a region
 gh1_pheno <- read_csv('data/modified_data/gh1_clean_pheno.csv') |> 
   left_join(info) |> 
-  mutate(across(c(Line, Region), as.factor))
+  mutate(across(c(Line, Region), as.factor)) |> 
+  filter(Leaf == 2)
 
 gh1_pheno |>
   dplyr::select(Isolate, Region) |> 
@@ -143,54 +147,17 @@ png(paste0("outputs/plots/map.png"), width = 4000, height = 3000, res = 400)
 map
 dev.off()
 
-
-# plot boxplot
-plot_regions <- ggplot(gh1_pheno) +
-  geom_boxplot(aes(x = Region, y = PLACL, fill = Region), width = 0.2, size = 0.5) +
-  scale_fill_manual(values = colors) +  
-  theme(
-    panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "lightgrey", linewidth = 0.4),
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(size = 16, margin = margin(t = 10)),  # Espacio para etiquetas
-    axis.text.y = element_text(size = 13), 
-    axis.title.y = element_text(size = 16)
-  ) +
-  scale_x_discrete(labels = paste0(counts$Region," (n = ", counts$n, ")"))
-
 mean_stats <- gh1_pheno |> 
   group_by(Line) |> 
-  summarize(mean_df = round(mean(PLACL), 2))
+  summarize(mean_PLACL = round(mean(PLACL), 2),
+            mean_pycnidiaPerCm2Leaf = round(mean(pycnidiaPerCm2Leaf), 2),
+            mean_pycnidiaPerCm2Lesion = round(mean(pycnidiaPerCm2Lesion), 2))
 
-boxplot_line_region <- ggplot(gh1_pheno) +
-  geom_boxplot(aes(x = Line, y = PLACL, fill = Region), 
-               width = 0.4,
-               size = 0.5, fatten = NULL) + 
-  stat_summary(aes(x = Line, y = PLACL, fill = Region),
-               fun = mean, 
-               geom = "crossbar", 
-               width = 0.35,  # Same width as the boxplot
-               color = "black", 
-               size = 0.4, 
-               position = position_dodge(width = 0.4)) +
-  scale_fill_manual(values = colors) +  
-  theme(
-    panel.background = element_rect(fill = "white"), 
-    panel.grid.major = element_line(colour = "lightgrey", linewidth = 0.4),
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(size = 16, margin = margin(t = 10)),  
-    axis.text.y = element_text(size = 13), 
-    axis.title.y = element_text(size = 16)
-  ) +
-  scale_x_discrete(labels = paste0(mean_stats$Line,"\n (μ = ", mean_stats$mean_df, ")"))
+traits <- c("PLACL", "pycnidiaPerCm2Lesion", "pycnidiaPerCm2Leaf")
+plots <- map(traits, ~plot_pheno_boxplot(gh1_pheno, .x, mean_stats, colors))
 
-
-png(paste0("outputs/plots/boxplot_regions.png"), width = 5000, height = 1500, res = 400)
-plot_regions
-dev.off()
-
-png(paste0("outputs/plots/boxplot_line_regions.png"), width = 5000, height = 2000, res = 400)
-boxplot_line_region
+png(paste0("outputs/plots/boxplot_line_regions.png"), width = 13000, height = 2000, res = 400)
+grid.arrange(grobs = plots, ncol = 3)
 dev.off()
 
 #===============================================================================
@@ -291,15 +258,15 @@ tables <- list.files('outputs/ld', full.names = T)
 tables_data <- map(tables, \(x) read.table(x, header = T, stringsAsFactors = F))
 names <- list("Córdoba", "Cádiz", "Sevilla", "Huelva")
 # here we will apply the HW function to calculate LD decay for Region and be able to plot it
-ld_dfs <- map2(tables_data, names, computeLD)
+ld_dfs <- map2(tables_data, names, \(x, y) computeLD(table = x, name = y, n = ncol(genotype_septoria) - 1))
 ld_combined <- bind_rows(ld_dfs) |> 
   mutate(Region = as.factor(Region))
 
 # where (in distance) does LD decay reach 0.2 R2
-ld_threshold <- ld_combined %>%
-  filter(LD <= 0.2) %>%            # Filtrar valores donde LD <= 0.2
-  group_by(Region) %>%             # Agrupar por región
-  slice_min(distance) %>%          # Extraer la primera distancia mínima
+ld_threshold <- ld_combined |>
+  filter(LD <= 0.2) |>            # Filtrar valores donde LD <= 0.2
+  group_by(Region) |>             # Agrupar por región
+  slice_min(distance) |>          # Extraer la primera distancia mínima
   ungroup()
 
 #plot LD decay per Region
@@ -415,8 +382,27 @@ colnames(maf_df) <- c('SNP', 'MAF')
 table <- table |> 
   left_join(maf_df) |> 
   dplyr::select(Trait, SNP, Chr, Pos, MAF, P.value, P.impact, Annotation, Distance, Gene)
-
 write_csv(table, file = 'outputs/postGWAS_sep/gwas_sep_table_all.csv')
+
+table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
+  left_join(fix_df, by = c("SNP" = 'snp')) |> 
+  mutate(P.impact = tolower(putative_impact)) |> 
+  dplyr::select(Cultivar, Trait = Traits, SNP, P.value, Effect, P.impact, Annotation = annotation, Distance, Gene, Protein) |> 
+  distinct()
+
+snp_sep <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
+  pull(SNP) |> 
+  unique()
+
+maf_df <- data.frame(colMeans(genotype_septoria[genotype_septoria[,1] %in% blues_all$Isolate, colnames(genotype_septoria) %in% snp_sep])) |> 
+  rownames_to_column('SNP')
+colnames(maf_df) <- c('SNP', 'MAF')
+table <- table |> 
+  left_join(maf_df) |> 
+  dplyr::relocate(Cultivar, Trait, SNP, P.value, Effect, MAF) |> 
+  arrange(Cultivar, Trait, SNP, P.value, MAF) |> 
+  mutate(across(Effect:MAF, \(x) round(x, 2)))
+write_csv(table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
 
 #===============================================================================
 # Additiional genomic info
@@ -475,5 +461,238 @@ mix_info_df <- data.frame(mix1 = mix1, mix2 = mix2, mix3 = mix3, mix4 = mix4) |>
   left_join(info) |> 
   dplyr::select(Mix, Isolate, Region) |>  
   distinct(Mix, Region) 
+
+
+#===============================================================================
+# candidate gene expression
+#===============================================================================
+
+genes <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
+  distinct(Cultivar, Gene)
+
+table_expression <- readxl::read_xlsx('data/raw_data/S3_gene_expression.xlsx')
+expression_df <- table_expression |> 
+  janitor::clean_names() |> 
+  dplyr::select(ensembl_gene, secreted_y_n,  day1:day21, annotation = ipr_annotation) |> 
+  filter(ensembl_gene %in% genes$Gene) |> 
+  dplyr::rename(Gene = ensembl_gene) |> 
+  left_join(genes) |> 
+  mutate(Cultivar = as.factor(Cultivar)) |> 
+  pivot_longer(cols = c(day1:day21), names_to = 'Day', values_to = 'FPKM')
+
+colors <- c("Athoris" = "#8E6B3D", 
+            "Don Ricardo" = "#D8B06A", 
+            "Sculptur" = "#5B4C44",
+            "Svevo" = "#9E5B40")
+
+cultivar_counts <- expression_df |>
+  distinct(Cultivar, Gene) |> 
+  group_by(Cultivar) |> 
+  summarise(n = n()) |>
+  mutate(label = paste0(Cultivar, " (n = ", n, ")")) |>
+  dplyr::select(Cultivar, label) |>
+  deframe()  # Convierte a un named vector para usar en labeller
+
+expression_df$Day_numeric <- as.numeric(gsub("day", "", expression_df$Day))
+
+bg_rects <- data.frame(
+  xmin = c(-Inf, 8, 14),    
+  xmax = c(8, 14, Inf),   
+  ymin = -Inf,
+  ymax = Inf,
+  fill = c("#A7D397", "#2E604A", "#707070")  # Colores de fondo
+)
+
+expression_plot <- ggplot(expression_df, aes(x = Day_numeric, y = FPKM, color = Cultivar, group = Gene)) + 
+  geom_rect(data = bg_rects, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), 
+            alpha = 0.2, inherit.aes = FALSE) + 
+  scale_fill_identity() +  
+  geom_line(linewidth = 0.7) + 
+  scale_color_manual(values = colors) +
+  facet_grid(. ~ Cultivar, labeller = labeller(Cultivar = cultivar_counts)) + 
+  theme(
+    plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
+    legend.title = element_blank(), 
+    legend.position = "top",
+    panel.background = element_rect(fill = "white"),
+    panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+    plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+    strip.text = element_text(size = 10, color = "black", family = "Arial"),
+    strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),
+    panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+    axis.title.y = element_text(size = 13, family = "Arial"),
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 13, family = "Arial"),
+    plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20))
+  ) + 
+  scale_x_continuous(
+    breaks = unique(expression_df$Day_numeric), 
+    labels = unique(gsub('day', '', expression_df$Day))
+  )
+
+
+png(paste0("outputs/postGWAS_sep/expression_plot.png"), width = 4000, height = 1500, res = 400)
+expression_plot
+dev.off()
+
+barplot_expression <- expression_df %>%
+  distinct(Cultivar, Gene) %>%   # Asegúrate de que cada combinación Cultivar-Gene sea única
+  group_by(Cultivar) %>%         # Agrupa por cultivar
+  summarise(n = n()) %>%         # Cuenta cuántos genes únicos hay por cultivar
+  ggplot(aes(x = Cultivar, y = n, fill = Cultivar)) + 
+  geom_bar(stat = "identity", width = 0.4) +  # Usa stat = "identity" porque ya tenemos los valores de y (n)
+  scale_fill_manual(values = colors) +  # Aplica la paleta de colores que tienes definida
+  theme_minimal() + 
+  theme(
+    plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
+    legend.title = element_blank(), 
+    legend.position = "top",
+    panel.background = element_rect(fill = "white"),
+    panel.grid.major = element_line(colour = "lightgray", linewidth = 0.3),
+    plot.title = element_text(hjust = 0, size = 18, face = "bold", family = "Arial"),
+    strip.text = element_text(size = 10, color = "black", family = "Arial"),
+    strip.background = element_rect(fill = "lightgray", colour = "black", size = 0.5),
+    panel.border = element_rect(colour = "darkgrey", fill = NA, size = 0.5),
+    axis.title.y = element_text(size = 12, family = "Arial"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 14, family = "Arial"),
+    plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20))
+  ) + 
+  scale_y_continuous(limits = c(0,17), expand = c(0, 0)) +
+  labs(x = NULL, y = 'Number of genes') +
+  coord_flip() 
+
+png(paste0("outputs/postGWAS_sep/expression_barplot.png"), width = 4000, height = 2000, res = 400)
+barplot_expression
+dev.off()
+
+View(expression_df |> 
+  distinct(Cultivar, Gene, annotation))
+
+#===============================================================================
+# boxplots from real phenotypes
+#===============================================================================
+
+library(tidyverse)
+
+gh1_pheno <- gh1_pheno |> 
+  dplyr::rename(PCm2Leaf = 'pycnidiaPerCm2Leaf', 
+                PCm2Lesion = 'pycnidiaPerCm2Lesion')
+gwas_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv')
+
+colors_1 <- c(
+  "Athoris_0" = "#8E6B3D",  "Athoris_1" = "#43B284FF",
+  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#43B284FF",
+  "Sculptur_0" = "#5B4C44", "Sculptur_1" = "#43B284FF",
+  "Svevo_0" = "#9E5B40", "Svevo_1" = "#43B284FF"
+) 
+
+colors_2 <- c(
+  "Athoris_0" = "#8E6B3D",  "Athoris_1" = "#0F7BA2FF",
+  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#0F7BA2FF"
+) 
+
+colors_3 <- c(
+  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#DD5129FF"
+) 
+
+colors_list <- list(colors_1, colors_2, colors_3)
+traits <- list('PCm2Lesion', 'PCm2Leaf', 'PLACL')
+
+boxplots <- map2(traits, colors_list, \(x,y)  generate_pheno_boxplot(genotype, phenotype, gwas_table, x, y))
+
+png(paste0("outputs/postGWAS_sep/boxplots_cultivars.png"), width = 6000, height = 2000, res = 400)
+grid.arrange(grobs = boxplots, ncol= 3)
+dev.off()
+
+
+#===============================================================================
+# complet table
+#===============================================================================
+
+genes <- read_csv('outputs/postGWAS_sep/cultivars_genes.csv') 
+complete_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
+  mutate(Gene = gsub('G', '_', Gene)) |> 
+  left_join(genes, by = c('Gene' = 'Ensembl')) |> 
+  distinct()
+
+write_csv(complete_table, 'outputs/postGWAS_sep/complete_info_cultivars.csv')
+
+
+#===============================================================================
+# boxplots fenotipos
+#===============================================================================
+
+mix_df <- data.frame(Isolate = c(mix1, mix2, mix3, mix4),
+                     Mixes = c('Mix1', 'Mix1', 'Mix1',
+                               'Mix2', 'Mix2', 'Mix2',
+                               'Mix3', 'Mix3', 'Mix3', 
+                               'Mix4')) |> 
+  mutate(Mixes = tolower(Mixes))
+gh1_pheno <- gh1_pheno |> 
+  mutate(Isolate = as.factor(Isolate)) |> 
+  left_join(mix_df) |> 
+  mutate(Mixes = coalesce(Mixes, "Not selected"),
+         Mixes = as.factor(Mixes),
+         Isolate = fct_reorder2(Isolate, Line, PLACL, .desc = T, .fun = mean())) 
+
+colors_mixes <- c("mix1" = "#43B284FF",
+                  "mix2" = "#DD5129FF",
+                  "mix3" = "#0F7BA2FF",
+                  "mix4" = alpha("#DD5129FF", alpha = 0.5),
+                  "Not selected" = "grey")
+
+png(paste0("outputs/plots/boxplot_gh1.png"), width = 8000, height = 8000, res = 400)
+ggplot(gh1_pheno) + 
+  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Region), outliers = F) + 
+  scale_fill_manual(values = colors) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  facet_grid(.~Line) + 
+  coord_flip()
+dev.off()
+
+png(paste0("outputs/plots/boxplot_gh12.png"), width = 4000, height = 7000, res = 400)
+ggplot(gh1_pheno) + 
+  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Mixes), outliers = F) + 
+  scale_fill_manual(values = colors_mixes) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  facet_grid(.~Line) +
+  coord_flip()
+dev.off()
+
+info_wheat <- read_csv('data/modified_data/info_wheat.csv') |> 
+  dplyr::rename(Plant = GenoID)
+ft_pheno <- read_csv('data/modified_data/clean_phenotype_no_outliers.csv') |> 
+  left_join(info_wheat) |> 
+  mutate(across(Set:Rep, as.factor),
+         across(Name:region, as.factor))
+
+ggplot(ft_pheno) + 
+  geom_boxplot(aes(x = Strain, y = PLACL, fill = Strain),
+               outliers = F, fatten = NULL, width = 0.6) + 
+  stat_summary(aes(x = Strain, y = PLACL, fill = Strain), 
+               fun = mean, geom = "crossbar", width = 0.6, color = "black", size = 0.3, 
+               position = position_dodge(width = 0.6)) +
+  scale_fill_manual(values = colors_mixes)
+
+colors_wheat <- c("CHECK" = "#DD5129FF",
+            "Landraces" = "#0F7BA2FF",
+            "Lines" = "#43B284FF",
+            "Cultivars" = "#FAB255FF")
+
+ggplot(ft_pheno) + 
+  geom_boxplot(aes(x = reorder(Plant, -PLACL), y = PLACL, fill = region), outliers = F) +
+  scale_fill_manual(values = colors_wheat) +
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  coord_flip() 
+  
+
+
+
+
+
 
 

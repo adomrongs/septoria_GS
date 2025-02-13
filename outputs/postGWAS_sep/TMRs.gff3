@@ -1,0 +1,200 @@
+##gff-version 3
+# ZtIPO323_000480 Length: 176
+# ZtIPO323_000480 Number of predicted TMRs: 0
+ZtIPO323_000480	inside	1	176				
+//
+# ZtIPO323_000490 Length: 257
+# ZtIPO323_000490 Number of predicted TMRs: 0
+ZtIPO323_000490	signal	1	21				
+ZtIPO323_000490	outside	22	257				
+//
+# ZtIPO323_000500 Length: 317
+# ZtIPO323_000500 Number of predicted TMRs: 0
+ZtIPO323_000500	inside	1	317				
+//
+# ZtIPO323_000800 Length: 877
+# ZtIPO323_000800 Number of predicted TMRs: 0
+ZtIPO323_000800	inside	1	877				
+//
+# ZtIPO323_000810 Length: 145
+# ZtIPO323_000810 Number of predicted TMRs: 0
+ZtIPO323_000810	inside	1	145				
+//
+# ZtIPO323_000820 Length: 498
+# ZtIPO323_000820 Number of predicted TMRs: 0
+ZtIPO323_000820	inside	1	498				
+//
+# ZtIPO323_000830 Length: 216
+# ZtIPO323_000830 Number of predicted TMRs: 0
+ZtIPO323_000830	inside	1	216				
+//
+# ZtIPO323_000840 Length: 712
+# ZtIPO323_000840 Number of predicted TMRs: 0
+ZtIPO323_000840	inside	1	712				
+//
+# ZtIPO323_003810 Length: 479
+# ZtIPO323_003810 Number of predicted TMRs: 0
+ZtIPO323_003810	inside	1	479				
+//
+# ZtIPO323_003820 Length: 833
+# ZtIPO323_003820 Number of predicted TMRs: 2
+ZtIPO323_003820	inside	1	179				
+ZtIPO323_003820	TMhelix	180	194				
+ZtIPO323_003820	outside	195	211				
+ZtIPO323_003820	TMhelix	212	229				
+ZtIPO323_003820	inside	230	833				
+//
+# ZtIPO323_003830 Length: 567
+# ZtIPO323_003830 Number of predicted TMRs: 7
+ZtIPO323_003830	outside	1	33				
+ZtIPO323_003830	TMhelix	34	54				
+ZtIPO323_003830	inside	55	94				
+ZtIPO323_003830	TMhelix	95	113				
+ZtIPO323_003830	outside	114	128				
+ZtIPO323_003830	TMhelix	129	145				
+ZtIPO323_003830	inside	146	163				
+ZtIPO323_003830	TMhelix	164	184				
+ZtIPO323_003830	outside	185	202				
+ZtIPO323_003830	TMhelix	203	222				
+ZtIPO323_003830	inside	223	229				
+ZtIPO323_003830	TMhelix	230	248				
+ZtIPO323_003830	outside	249	256				
+ZtIPO323_003830	TMhelix	257	270				
+ZtIPO323_003830	inside	271	567				
+//
+# ZtIPO323_006430 Length: 357
+# ZtIPO323_006430 Number of predicted TMRs: 2
+ZtIPO323_006430	inside	1	22				
+ZtIPO323_006430	TMhelix	23	41				
+ZtIPO323_006430	outside	42	52				
+ZtIPO323_006430	TMhelix	53	72				
+ZtIPO323_006430	inside	73	357				
+//
+# ZtIPO323_006440 Length: 746
+# ZtIPO323_006440 Number of predicted TMRs: 0
+ZtIPO323_006440	inside	1	746				
+//
+# ZtIPO323_006450 Length: 236
+# ZtIPO323_006450 Number of predicted TMRs: 0
+ZtIPO323_006450	inside	1	236				
+//
+# ZtIPO323_039400 Length: 542
+# ZtIPO323_039400 Number of predicted TMRs: 0
+ZtIPO323_039400	outside	1	542				
+//
+# ZtIPO323_039410 Length: 513
+# ZtIPO323_039410 Number of predicted TMRs: 0
+ZtIPO323_039410	inside	1	513				
+//
+# ZtIPO323_059010 Length: 205
+# ZtIPO323_059010 Number of predicted TMRs: 0
+ZtIPO323_059010	inside	1	205				
+//
+# ZtIPO323_059020 Length: 478
+# ZtIPO323_059020 Number of predicted TMRs: 12
+ZtIPO323_059020	inside	1	43				
+ZtIPO323_059020	TMhelix	44	55				
+ZtIPO323_059020	outside	56	81				
+ZtIPO323_059020	TMhelix	82	94				
+ZtIPO323_059020	inside	95	109				
+ZtIPO323_059020	TMhelix	110	125				
+ZtIPO323_059020	outside	126	138				
+ZtIPO323_059020	TMhelix	139	149				
+ZtIPO323_059020	inside	150	169				
+ZtIPO323_059020	TMhelix	170	185				
+ZtIPO323_059020	outside	186	204				
+ZtIPO323_059020	TMhelix	205	223				
+ZtIPO323_059020	inside	224	276				
+ZtIPO323_059020	TMhelix	277	297				
+ZtIPO323_059020	outside	298	312				
+ZtIPO323_059020	TMhelix	313	333				
+ZtIPO323_059020	inside	334	342				
+ZtIPO323_059020	TMhelix	343	360				
+ZtIPO323_059020	outside	361	368				
+ZtIPO323_059020	TMhelix	369	386				
+ZtIPO323_059020	inside	387	403				
+ZtIPO323_059020	TMhelix	404	420				
+ZtIPO323_059020	outside	421	432				
+ZtIPO323_059020	TMhelix	433	453				
+ZtIPO323_059020	inside	454	478				
+//
+# ZtIPO323_059030 Length: 179
+# ZtIPO323_059030 Number of predicted TMRs: 0
+ZtIPO323_059030	inside	1	179				
+//
+# ZtIPO323_088980 Length: 343
+# ZtIPO323_088980 Number of predicted TMRs: 2
+ZtIPO323_088980	inside	1	5				
+ZtIPO323_088980	TMhelix	6	27				
+ZtIPO323_088980	outside	28	278				
+ZtIPO323_088980	TMhelix	279	299				
+ZtIPO323_088980	inside	300	343				
+//
+# ZtIPO323_089000 Length: 452
+# ZtIPO323_089000 Number of predicted TMRs: 0
+ZtIPO323_089000	inside	1	452				
+//
+# ZtIPO323_088990 Length: 314
+# ZtIPO323_088990 Number of predicted TMRs: 0
+ZtIPO323_088990	signal	1	18				
+ZtIPO323_088990	outside	19	314				
+//
+# ZtIPO323_089890 Length: 493
+# ZtIPO323_089890 Number of predicted TMRs: 0
+ZtIPO323_089890	inside	1	493				
+//
+# ZtIPO323_089900 Length: 282
+# ZtIPO323_089900 Number of predicted TMRs: 0
+ZtIPO323_089900	inside	1	282				
+//
+# ZtIPO323_089910 Length: 310
+# ZtIPO323_089910 Number of predicted TMRs: 0
+ZtIPO323_089910	inside	1	310				
+//
+# ZtIPO323_090540 Length: 512
+# ZtIPO323_090540 Number of predicted TMRs: 0
+ZtIPO323_090540	inside	1	512				
+//
+# ZtIPO323_102580 Length: 375
+# ZtIPO323_102580 Number of predicted TMRs: 0
+ZtIPO323_102580	inside	1	375				
+//
+# ZtIPO323_102590 Length: 447
+# ZtIPO323_102590 Number of predicted TMRs: 0
+ZtIPO323_102590	inside	1	447				
+//
+# ZtIPO323_102600 Length: 511
+# ZtIPO323_102600 Number of predicted TMRs: 12
+ZtIPO323_102600	inside	1	64				
+ZtIPO323_102600	TMhelix	65	77				
+ZtIPO323_102600	outside	78	104				
+ZtIPO323_102600	TMhelix	105	114				
+ZtIPO323_102600	inside	115	131				
+ZtIPO323_102600	TMhelix	132	148				
+ZtIPO323_102600	outside	149	161				
+ZtIPO323_102600	TMhelix	162	175				
+ZtIPO323_102600	inside	176	191				
+ZtIPO323_102600	TMhelix	192	207				
+ZtIPO323_102600	outside	208	228				
+ZtIPO323_102600	TMhelix	229	246				
+ZtIPO323_102600	inside	247	295				
+ZtIPO323_102600	TMhelix	296	316				
+ZtIPO323_102600	outside	317	331				
+ZtIPO323_102600	TMhelix	332	352				
+ZtIPO323_102600	inside	353	358				
+ZtIPO323_102600	TMhelix	359	379				
+ZtIPO323_102600	outside	380	386				
+ZtIPO323_102600	TMhelix	387	407				
+ZtIPO323_102600	inside	408	417				
+ZtIPO323_102600	TMhelix	418	435				
+ZtIPO323_102600	outside	436	451				
+ZtIPO323_102600	TMhelix	452	471				
+ZtIPO323_102600	inside	472	511				
+//
+# ZtIPO323_113470 Length: 1037
+# ZtIPO323_113470 Number of predicted TMRs: 0
+ZtIPO323_113470	inside	1	1037				
+//
+# ZtIPO323_124400 Length: 2626
+# ZtIPO323_124400 Number of predicted TMRs: 0
+ZtIPO323_124400	inside	1	2626				

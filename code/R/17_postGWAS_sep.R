@@ -11,6 +11,8 @@ library(hrbrthemes)
 library(ggdist)
 library(gridExtra)
 library(scales)
+library(patchwork)
+library(ape)
 source('code/R/function_septoria_GS.R')
 
 load("data/modified_data/1_septoria.Rdata")
@@ -103,7 +105,9 @@ table3 <- candidate_genes |>
   arrange(desc(Hits), desc(Genes))
 
 #===============================================================================
-# Post GWAS for the hits identified using all cultivars and leaf 2
+#===============================================================================
+# Overall Hits on Leaf2
+#===============================================================================
 #===============================================================================
 
 # generate both gwas and genes tables
@@ -163,7 +167,9 @@ write_csv(genes_sep, file = 'outputs/postGWAS_sep/genes_sep_all.csv')
 write_csv(go_ids_sep, file = 'outputs/postGWAS_sep/go_ids_sep_all.csv')
 
 
-# plot manhattan and qqplot
+#===============================================================================
+# Plot Manhattan and QQplot
+#===============================================================================
 leaf <- read_csv('outputs/GWAS_sep/GAPIT.Association.GWAS_Results.BLINK.pycnidiaPerCm2Leaf.csv') # file corresponding to all cultivars leaf2
 lesion <- read_csv('outputs/GWAS_sep/GAPIT.Association.GWAS_Results.BLINK.pycnidiaPerCm2Lesion.csv')
 
@@ -200,7 +206,9 @@ setwd(here())
 plotCMqq(leaf[,1:4], "Leaf", '#0F7BA2FF', 'outputs/postGWAS_sep/')
 plotCMqq(lesion[,1:4], "Lesion", '#43B284FF', 'outputs/postGWAS_sep/')
 
-# plot LDheatmap
+#===============================================================================
+# Plot LDHeatmap
+#===============================================================================
 snps <- colnames(genotype_septoria)[-1]
 snps_df <- data.frame(SNPs = snps, 
                       Chromosome = as.numeric(str_extract(snps, 'X([0-9])_', group = T)),
@@ -208,8 +216,9 @@ snps_df <- data.frame(SNPs = snps,
 
 hits <- plotLD(gwas_table = gwas_sep_table_all, genotype = genotype_septoria[, -1], df_info = snps_df)
 
-
-# plot boxplot of allelic diffferences
+#===============================================================================
+# Plot Boxplot allelic differences
+#===============================================================================
 load("data/modified_data/GWASdataBefGapit.RData")
 
 blups_sep <- BLUPS |> dplyr::select(1:4)
@@ -244,7 +253,9 @@ png(paste0("outputs/postGWAS_sep/boxplot_sep.png"), width = 3000, height = 4000,
 grid.arrange(grobs = boxplot_list)
 dev.off()
 
-# marker density plot
+#===============================================================================
+# Marker Density plot
+#===============================================================================
 setwd("outputs/postGWAS_sep/")
 CMplot(pvalues[,1:4],
        bin.breaks= seq(0, 650, 100),
@@ -262,7 +273,9 @@ CMplot(pvalues[,1:4],
 setwd(here())
 
 
-# blast results
+#===============================================================================
+# Blast Results
+#===============================================================================
 
 genes <- c('Mycgr3G107386',
            'Mycgr3G67942',
@@ -318,11 +331,13 @@ new_names <- c('Z.tritici genes', 'Protein', 'Species', '%Identity', 'Accesion')
 names(blast_df) <- new_names
 write_csv(blast_df, file = 'outputs/postGWAS_sep/blast_table.csv')
 
-
+#===============================================================================
 #===============================================================================
 # Cultivar-sepecific hits 
 #===============================================================================
+#===============================================================================
 
+# obtain all the hits for each cultivar specific analysis and arrange them in a df
 hits <- read_csv('outputs/postGWAS_sep/gwas_sep_table_all.csv') |> 
   distinct(SNP)
 
@@ -338,50 +353,32 @@ dfs_cultivars <- bind_rows(tmp_dfs) |>
   mutate(traits = gsub('BLINK.', '', traits)) |> 
   filter(!grepl('log', traits))
 
-pvalues_dfs <- map(dirs, \(x) {
-  cultivar <- basename(x)
-  tmp_files <- list.files(x, full.names = TRUE)
-  tmp_files <- tmp_files[!grepl('Filter', tmp_files)]
-  tmp_dfs <- map(tmp_files, read_csv) |> 
-    bind_cols()
-  
-  # Seleccionar columnas según la cantidad de archivos
-  cols_to_select <- if (length(tmp_files) == 1) {
-    1:5
-  } else if (length(tmp_files) == 2) {
-    c(1:5, 12)
-  } else if (length(tmp_files) == 3) {
-    c(1:5, 12, 20)
-  } else {
-    1:5  
-  }
-  
-  traits <- map(tmp_files, \(x) gsub(paste0('outputs/GWAS_sep/', cultivar,'/GAPIT.Association.GWAS_Results.BLINK.'), '', x))
-  traits <- unlist(map(traits, \(x) gsub('.csv', '', x)))
-  def_traits <- paste0(cultivar, '_', traits)
-  tmp_dfs <- tmp_dfs |> 
-    dplyr::select(all_of(cols_to_select)) |> 
-    dplyr::select(-5)
-  
-  colnames(tmp_dfs) <- c('SNP', 'Chr', 'Pos', def_traits)
-  
-  return(tmp_dfs)
-})
+# transform the dataframes in order to join the differente pvalues for the traits identififed in each 
+# cultivar, and them arranged them to be able to plot a multi trait manhattan plot
+pvalues_dfs <- map(dirs, process_pvalues)
 
+# bind all the lists from the previous steps
 final_df <- pvalues_dfs |> 
   purrr::reduce(left_join, by = c('SNP', 'Chr', 'Pos'))
+
+# Renaming to match the paper traits names
 names(final_df) <- gsub('pycnidiaPerCm2Leaf', 'PCm2Leaf', names(final_df))
 names(final_df) <- gsub('pycnidiaPerCm2Lesion', 'PCm2Lesion', names(final_df))
 
+final_df_plot <- final_df |> 
+  dplyr::select(-matches('Effect')) |> 
+  dplyr::select(-matches('MAF')) 
+
+# plot Multi trait manhattan 
 colors_trigo <- c("#8E6B3D", "#8E6B3D", "#D8B06A", "#D8B06A", "#D8B06A", "#5B4C44", "#5B4C44", "#9E5B40", "#9E5B40")
 shapes <- c(15,16,17,15,16,15,16,15,16)
 
 setwd("outputs/postGWAS_sep/")
-CMplot(final_df,
+CMplot(final_df_plot,
        col = colors_trigo,
        plot.type="m",
        multraits=TRUE,
-       threshold= 0.05/nrow(final_df),
+       threshold= 0.05/nrow(final_df_plot),
        threshold.lty =1,
        threshold.lwd = 1,
        threshold.col=c("black"),
@@ -399,6 +396,19 @@ CMplot(final_df,
        legend.pos="left")
 setwd(here())
 
+traits <- names(final_df_plot)[-c(1:3)]  # Exclude the first 3 columns
+traits <- gsub('.*_', '', traits)
+dir <- 'outputs/postGWAS_sep/'
+
+map2(4:ncol(final_df_plot), traits, \(x, y) {
+  fastqqplot(x, final_df_plot, y, dir)
+})
+
+
+#===============================================================================
+# Post Gwas on the cultivar-sepcific traits
+#===============================================================================
+
 gwas_cultivars_table <- dfs_cultivars |> 
   mutate(traits = case_when(
     traits == "pycnidiaPerCm2Leaf" ~ "PCm2Leaf",
@@ -406,11 +416,63 @@ gwas_cultivars_table <- dfs_cultivars |>
     TRUE ~ traits  # Mantener el valor original si no coincide con ninguna condición
   )) |> 
   dplyr::relocate(Cultivar, Traits = traits)
+  
+# add also effects
+effects <- final_df |> 
+  dplyr::select(c(SNP, matches('_Effect'))) |> 
+  filter(SNP %in% gwas_cultivars_table$SNP) |> 
+  pivot_longer(cols = -c(SNP),   # Keep the first 3 columns
+               names_to = "Traits",         # Name of the new column for traits
+               values_to = "Effect") |> 
+  mutate(Traits = gsub('_Effect$', '', Traits))  |> 
+  separate(Traits, into = c("Cultivar", "Traits"), sep = "_") |> 
+  mutate(Traits = case_when(
+    Traits == "pycnidiaPerCm2Lesion" ~ "PCm2Lesion", 
+    Traits == "pycnidiaPerCm2Leaf" ~ "PCm2Leaf",
+    TRUE ~ Traits  # Keeps other Trait values unchanged if needed
+  )) |> 
+  left_join(gwas_cultivars_table, by = c('Cultivar', 'Traits', 'SNP')) |> 
+  na.omit()
+  
+# define everything you need to obtain genes and GOs associated to those markers
+attributes <- c("ensembl_gene_id", "start_position", "end_position", "strand", "description", "peptide")
+filters <- c("chromosome_name", "start", "end")
+distances <- list(500, 1000, 2000) #base pairs (bp)
+chr_all <- gwas_cultivars_table$Chr
+traits_all <- gwas_cultivars_table$Traits
+markers_all <- as.numeric(map(strsplit(gwas_cultivars_table$SNP, "_"), \(x) x[[2]]))
+out_dir_all <- 'outputs/postGWAS_sep/FASTA_cultivars'
+cultivars_genes <- find_genes(mart = mart,
+                                  attributes = attributes,
+                                  filters = filters,
+                                  distances = distances,
+                                  chr = chr_all,
+                                  traits = traits_all,
+                                  out_dir = out_dir_all,
+                                  markers = markers_all)
 
-write_csv(gwas_cultivars_table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
+inter_table <- cultivars_genes |> 
+  mutate(GO_class = Ontology(GO_id)) |> 
+  left_join(effects, by = c('marker' = "SNP"))
 
-# See which strains has the significant snps 
-# identify all markers 
+# Create GWas table
+gwas_table <- inter_table |> 
+  dplyr::select(-start, end_position, GO_id:GO_class) |> 
+  dplyr::select(Cultivar, Traits, SNP = marker, P.value, Effect, MAF, Distance = distance, Gene = gene, Protein = accesion) |> 
+  distinct()
+# Create genes table
+genes_table <- inter_table |> 
+  dplyr::select(-c(trait, marker, distance, Cultivar, Traits, Pos, P.value, MAF, pos, GO_id, GO_class, Go_name)) |> 
+  distinct() |> 
+  dplyr::relocate(Gene = gene, Chr) |> 
+  arrange((as.numeric(Chr)))
+
+# save tables
+write_csv(gwas_table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
+
+#===============================================================================
+# Identify which strains have each significant snps
+#===============================================================================
 snps <- unique(c(all_l2$SNP, dfs_cultivars$SNP))
 search_info <- function(df, marker) {
   new_df <- df |> 
@@ -441,5 +503,144 @@ region_per_variant <- search_results |>
   distinct(Isolate, Region) |>
   group_by(Region) |> 
   summarize(n = n())
+
+#===============================================================================
+# merge table with new JGI annotation
+#===============================================================================
+
+genes_table <- genes_table |> 
+  mutate(Gene = gsub('G', '_', Gene))
+
+translate_genes <- read_csv('data/raw_data/new_annotations.csv')
+translate_genes <- translate_genes |>
+  separate(JGI_genes, into = c('delete', 'Gene'), sep = '\\|') |> 
+  filter(Gene %in% genes_table$Gene) |> 
+  janitor::clean_names() |> 
+  dplyr::select(gene:seq_length, gene_2) |> 
+  dplyr::relocate(Ensembl = gene_2)
+
+fasta_file <- "data/raw_data/z.tritici.IP0323.reannot.proteins.fasta"
+fasta <- read.fasta(file = fasta_file, seqtype = "AA",as.string = TRUE, set.attributes = FALSE)
+names(fasta) <- gsub('\\.1$', '', names(fasta))
+subset <- fasta[names(fasta) %in% translate_genes$gene]
+write.fasta(subset, names(subset), file.out="outputs/postGWAS_sep/FASTA_cultivars/new_proteins.fasta")
+
+effectorp <- readxl::read_excel('outputs/postGWAS_sep/EffectorP.xlsx') |> 
+  janitor::remove_empty() |> 
+  janitor::clean_names() |> 
+  mutate(number_identifier = gsub('\\.1$', '', number_identifier)) |> 
+  dplyr::rename(gene = number_identifier) |> 
+  dplyr::select(-c(non_effector, prediction))
+signalp <- read_table('outputs/postGWAS_sep/SignalP.txt', col_names = T) |> 
+  janitor::clean_names() |> 
+  mutate(id = gsub('\\.1$', '', id),
+         sp_sec_spi = round(sp_sec_spi, 2)) |> 
+  dplyr::select(gene = id, SignalP = sp_sec_spi)
+
+lines <- readLines('outputs/postGWAS_sep/TMRs.gff3')
+tmrs_df <- tibble(
+    line = lines
+  ) |> 
+  filter(str_detect(line, "Number of predicted TMRs")) |> 
+  mutate(
+    gene = str_extract(line, "#\\s*(\\S+)"),  # Extrae el ID de la proteína
+    tmrs = as.numeric(str_extract(line, "(?<=Number of predicted TMRs:\\s)\\d+"))  # Extrae el número de TMRs
+  ) |> 
+  dplyr::select(gene, tmrs) |> 
+  mutate(gene = gsub('# ', '', gene))
+
+fasta_files <- as.list(grep('.faa', list.files('outputs/postGWAS_sep/FASTA_cultivars/', full.names = T), value = T))
+aa_length <- map(fasta_files, count_characters)
+length_df <- data.frame(Ensembl = unlist(map(fasta_files, \(x) gsub('.faa', '', basename(x)))),
+                        Ensembl_length = unlist(aa_length)) |> 
+  mutate(Ensembl = gsub('G', '_', Ensembl))
+
+IPR <- readxl::read_xlsx('outputs/postGWAS_sep/IPR_cultivars.xlsx')
+
+
+final_gene_table <- translate_genes |> 
+  left_join(effectorp) |> 
+  left_join(signalp) |> 
+  left_join(length_df) |> 
+  left_join(tmrs_df) |> 
+  left_join(IPR) |> 
+  dplyr::relocate(Ensembl, Ensembl_length)
+  
+write_csv(final_gene_table, file = 'outputs/postGWAS_sep/cultivars_genes.csv')
+
+#===============================================================================
+# BBoxplot per region + pca
+#===============================================================================
+load('data/modified_data/8_pca.Rdata')
+gh1_pheno <- read_csv('data/modified_data/gh1_clean_pheno.csv') |> 
+  left_join(info) |> 
+  mutate(across(c(Line, Region), as.factor)) |> 
+  filter(Leaf == 2)
+info <- read_csv('data/modified_data/info_strain_complete.csv') |> 
+  dplyr::select(Isolate, Region)
+snps <- as.list((dfs_cultivars$SNP))
+cultivars <- as.list((dfs_cultivars$Cultivar))
+traits <- as.list((dfs_cultivars$traits))
+genotype <- genotype_septoria[, colnames(genotype_septoria) %in% c('Isolate', snps)]
+genotype[, -1] <- round(genotype[,-1], 0)
+pca <- pca_data |> 
+  left_join(info, by = c('GenoID' = 'Isolate'))
+
+colors <- c("Córdoba" = "#DD5129FF",
+            "Cádiz" = "#0F7BA2FF",
+            "Sevilla" = "#43B284FF",
+            "Huelva" = "#FAB255FF", 
+            'Non_selected' = 'grey')
+
+load('data/modified_data/blues_cultivars/athoris.RData')
+athoris_blues <- BLUPS
+load('data/modified_data/blues_cultivars/don_Ricardo.RData')
+donR_blues <- BLUPS
+load('data/modified_data/blues_cultivars/Sculptur.RData')
+sculptur_blues <- BLUPS
+load('data/modified_data/blues_cultivars/Svevo.RData')
+svevo_blues <- BLUPS
+
+translate_names <- data.frame(Isolate = genotype_septoria[,1], 
+                              lower_names = tolower(genotype_septoria[,1])) |> 
+  left_join(info) |> 
+  dplyr::rename(true_names = 'Isolate')
+
+blues_df <- list(athoris_blues, donR_blues, sculptur_blues, svevo_blues) |> 
+  map(\(x) x |> dplyr::select(1:4)) |> 
+  map(\(x) x |> 
+        left_join(translate_names, by = c('Isolate' = 'lower_names')) |> 
+        dplyr::select(Isolate.y, PLACL:pycnidiaPerCm2Lesion, Region) |> 
+        dplyr::rename(Isolate = Isolate.y)
+        ) 
+
+blues_list <- list(blues_df[[1]], blues_df[[1]],
+                   blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]],blues_df[[2]],
+                   blues_df[[3]], blues_df[[3]], 
+                   blues_df[[4]], blues_df[[4]])
+
+plot <- pmap(list(snps, traits, cultivars, blues_list), \(x,y,z,k) pca_boxplot(pca, genotype, colors, x, y, z, k))
+out_dir <- 'outputs/postGWAS_sep/pca_boxplot'
+dir.create(out_dir)
+
+map2(plot, snps, \(x, y) {
+  png(paste0(out_dir, '/', y, ".png"), width = 6000, height = 4000, res = 400)
+  print(x)  # Imprimir el gráfico para que se guarde
+  dev.off()  # Cerrar el dispositivo gráfico
+})
+
+#===============================================================================
+# Boxplot per cultivar
+#===============================================================================
+
+cultivars_boxplot <- pmap(list(snps, traits, cultivars, blues_list), \(x,y,z,k) boxplot_cultivars(genotype, colors, x, y, z, k))
+
+png(paste0("outputs/postGWAS_sep/cultivar_pt1.png"), width = 5000, height = 10000, res = 400)
+grid.arrange(grobs = cultivars_boxplot[1:15], ncol = 3)
+dev.off()
+
+
+
+
 
 
