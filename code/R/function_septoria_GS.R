@@ -2531,3 +2531,37 @@ boxplot_cultivars <- function(genotype, colors, marker, trait, cultivar, phenoty
   
   return(boxplot)
 }
+
+cv_cultivar <- function(phenotype, kinship, test, trait, blues_all){
+  #===============================================
+  # Create data for train and test
+  # ==============================================
+  train <- setdiff(rownames(kinship), test)
+  ptrain <- phenotype %>% filter(Isolate %in% train)
+  #===============================================
+  # Run predictions with/without markers
+  # ==============================================
+  
+  formula_blups <- as.formula(paste(trait, "~ Trial + Year + BRep + Region"))
+  results <- data.frame()
+  
+  model <- mmer(formula_blups,
+                random = ~ vsr(Isolate, Gu = as.matrix(kinship)),
+                rcov = ~ units,
+                data = ptrain,
+                verbose = TRUE)
+  
+  blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
+    mutate(!!trait := model$U[[1]][[1]]) %>% 
+    filter(Isolate %in% test) %>% 
+    arrange(Isolate)
+  
+  blues_test <- blues_all %>% 
+    filter(Isolate %in% test) %>% 
+    arrange(Isolate)
+  
+  ability <- cor(blups_test[,trait], blues_test[,trait])
+  
+  results <- ability
+  return(results)
+}
