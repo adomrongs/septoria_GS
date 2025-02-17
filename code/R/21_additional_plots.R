@@ -462,53 +462,135 @@ mix_info_df <- data.frame(mix1 = mix1, mix2 = mix2, mix3 = mix3, mix4 = mix4) |>
   dplyr::select(Mix, Isolate, Region) |>  
   distinct(Mix, Region) 
 
+#===============================================================================
+# complete table
+#===============================================================================
+
+genes <- read_csv('outputs/postGWAS_sep/cultivars_genes.csv') 
+complete_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
+  mutate(Gene = gsub('G', '_', Gene)) |> 
+  left_join(genes, by = c('Gene' = 'Ensembl')) |> 
+  distinct()
+
+write_csv(complete_table, 'outputs/postGWAS_sep/complete_info_cultivars.csv')
+
+
+#===============================================================================
+# boxplots fenotipos
+#===============================================================================
+
+mix_df <- data.frame(Isolate = c(mix1, mix2, mix3, mix4),
+                     Mixes = c('Mix1', 'Mix1', 'Mix1',
+                               'Mix2', 'Mix2', 'Mix2',
+                               'Mix3', 'Mix3', 'Mix3', 
+                               'Mix4')) |> 
+  mutate(Mixes = tolower(Mixes))
+gh1_pheno <- gh1_pheno |> 
+  mutate(Isolate = as.factor(Isolate)) |> 
+  left_join(mix_df) |> 
+  mutate(Mixes = coalesce(Mixes, "Not selected"),
+         Mixes = as.factor(Mixes),
+         Isolate = fct_reorder2(Isolate, Line, PLACL, .desc = T, .fun = mean())) 
+
+colors_mixes <- c("mix1" = "#43B284FF",
+                  "mix2" = "#DD5129FF",
+                  "mix3" = "#0F7BA2FF",
+                  "mix4" = alpha("#DD5129FF", alpha = 0.5),
+                  "Not selected" = "grey")
+
+png(paste0("outputs/plots/boxplot_gh1.png"), width = 4000, height = 8000, res = 400)
+ggplot(gh1_pheno) + 
+  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Region), outliers = F) + 
+  scale_fill_manual(values = colors) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  coord_flip()
+dev.off()
+
+png(paste0("outputs/plots/boxplot_gh2.png"), width = 4000, height = 8000, res = 400)
+ggplot(gh1_pheno) + 
+  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Mixes), outliers = F) + 
+  scale_fill_manual(values = colors_mixes) + 
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  coord_flip()
+dev.off()
+
+info_wheat <- read_csv('data/modified_data/info_wheat.csv') |> 
+  dplyr::rename(Plant = GenoID)
+ft_pheno <- read_csv('data/modified_data/clean_phenotype_no_outliers.csv') |> 
+  left_join(info_wheat) |> 
+  mutate(across(Set:Rep, as.factor),
+         across(Name:region, as.factor)) 
+
+ggplot(ft_pheno) + 
+  geom_boxplot(aes(x = Strain, y = PLACL, fill = Strain),
+               outliers = F, fatten = NULL, width = 0.6) + 
+  stat_summary(aes(x = Strain, y = PLACL, fill = Strain), 
+               fun = mean, geom = "crossbar", width = 0.6, color = "black", size = 0.3, 
+               position = position_dodge(width = 0.6)) +
+  scale_fill_manual(values = colors_mixes)
+
+colors_wheat <- c("CHECK" = "#DD5129FF",
+            "Landraces" = "#0F7BA2FF",
+            "Lines" = "#43B284FF",
+            "Cultivars" = "#FAB255FF")
+
+png(paste0("outputs/plots/boxplot_ft.png"), width = 4000, height = 7000, res = 400)
+ggplot(ft_pheno) + 
+  geom_boxplot(aes(x = reorder(Plant, -PLACL), y = PLACL, fill = region), outliers = F) +
+  scale_fill_manual(values = colors_wheat) +
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey')) +
+  coord_flip()+
+  theme(panel.background = element_blank(),
+        panel.grid = element_line(color = 'grey'))
+dev.off()
+  
 
 #===============================================================================
 # candidate gene expression
 #===============================================================================
 
-genes <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
-  distinct(Cultivar, Gene)
+genes <- read_csv('outputs/postGWAS_sep/complete_info_cultivars.csv') |> 
+  distinct(Cultivar, gene)
 
-table_expression <- readxl::read_xlsx('data/raw_data/S3_gene_expression.xlsx')
-expression_df <- table_expression |> 
-  janitor::clean_names() |> 
-  dplyr::select(ensembl_gene, secreted_y_n,  day1:day21, annotation = ipr_annotation) |> 
-  filter(ensembl_gene %in% genes$Gene) |> 
-  dplyr::rename(Gene = ensembl_gene) |> 
+expression <- read_delim('data/raw_data/z.tritici.IP0323.annotations.txt') |> 
+  filter(gene %in% genes$gene) |> 
+  dplyr::select(gene, '4dpi':'20dpi') |> 
+  pivot_longer(cols = -gene, names_to = 'Day', values_to = 'mean_TPM') |> 
   left_join(genes) |> 
-  mutate(Cultivar = as.factor(Cultivar)) |> 
-  pivot_longer(cols = c(day1:day21), names_to = 'Day', values_to = 'FPKM')
+  mutate(Cultivar = as.factor(Cultivar),
+         Cgene = as.factor(gene),
+         Day = as.numeric(gsub('dpi', '', Day)))
 
-colors <- c("Athoris" = "#8E6B3D", 
+colors_wheat <- c("Athoris" = "#8E6B3D", 
             "Don Ricardo" = "#D8B06A", 
             "Sculptur" = "#5B4C44",
             "Svevo" = "#9E5B40")
 
-cultivar_counts <- expression_df |>
-  distinct(Cultivar, Gene) |> 
+cultivar_counts <- expression |>
+  distinct(Cultivar, gene) |> 
   group_by(Cultivar) |> 
   summarise(n = n()) |>
   mutate(label = paste0(Cultivar, " (n = ", n, ")")) |>
   dplyr::select(Cultivar, label) |>
   deframe()  # Convierte a un named vector para usar en labeller
 
-expression_df$Day_numeric <- as.numeric(gsub("day", "", expression_df$Day))
-
 bg_rects <- data.frame(
   xmin = c(-Inf, 8, 14),    
   xmax = c(8, 14, Inf),   
   ymin = -Inf,
   ymax = Inf,
-  fill = c("#A7D397", "#2E604A", "#707070")  # Colores de fondo
+  fill = c("white", "#2E604A", "darkgrey")  # Colores de fondo
 )
 
-expression_plot <- ggplot(expression_df, aes(x = Day_numeric, y = FPKM, color = Cultivar, group = Gene)) + 
+expression_plot <- ggplot(expression, aes(x = Day, y = mean_TPM, color = Cultivar, group = gene)) + 
   geom_rect(data = bg_rects, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill), 
-            alpha = 0.2, inherit.aes = FALSE) + 
+            alpha = 0.3, inherit.aes = FALSE) + 
   scale_fill_identity() +  
   geom_line(linewidth = 0.7) + 
-  scale_color_manual(values = colors) +
+  scale_color_manual(values = colors_wheat) +
   facet_grid(. ~ Cultivar, labeller = labeller(Cultivar = cultivar_counts)) + 
   theme(
     plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
@@ -526,8 +608,8 @@ expression_plot <- ggplot(expression_df, aes(x = Day_numeric, y = FPKM, color = 
     plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20))
   ) + 
   scale_x_continuous(
-    breaks = unique(expression_df$Day_numeric), 
-    labels = unique(gsub('day', '', expression_df$Day))
+    breaks = unique(expression$Day), 
+    labels = unique(expression$Day)
   )
 
 
@@ -566,129 +648,7 @@ png(paste0("outputs/postGWAS_sep/expression_barplot.png"), width = 4000, height 
 barplot_expression
 dev.off()
 
-View(expression_df |> 
-  distinct(Cultivar, Gene, annotation))
 
-#===============================================================================
-# boxplots from real phenotypes
-#===============================================================================
-
-library(tidyverse)
-
-gh1_pheno <- gh1_pheno |> 
-  dplyr::rename(PCm2Leaf = 'pycnidiaPerCm2Leaf', 
-                PCm2Lesion = 'pycnidiaPerCm2Lesion')
-gwas_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv')
-
-colors_1 <- c(
-  "Athoris_0" = "#8E6B3D",  "Athoris_1" = "#43B284FF",
-  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#43B284FF",
-  "Sculptur_0" = "#5B4C44", "Sculptur_1" = "#43B284FF",
-  "Svevo_0" = "#9E5B40", "Svevo_1" = "#43B284FF"
-) 
-
-colors_2 <- c(
-  "Athoris_0" = "#8E6B3D",  "Athoris_1" = "#0F7BA2FF",
-  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#0F7BA2FF"
-) 
-
-colors_3 <- c(
-  "Don Ricardo_0" = "#D8B06A", "Don Ricardo_1" = "#DD5129FF"
-) 
-
-colors_list <- list(colors_1, colors_2, colors_3)
-traits <- list('PCm2Lesion', 'PCm2Leaf', 'PLACL')
-
-boxplots <- map2(traits, colors_list, \(x,y)  generate_pheno_boxplot(genotype, phenotype, gwas_table, x, y))
-
-png(paste0("outputs/postGWAS_sep/boxplots_cultivars.png"), width = 6000, height = 2000, res = 400)
-grid.arrange(grobs = boxplots, ncol= 3)
-dev.off()
-
-
-#===============================================================================
-# complet table
-#===============================================================================
-
-genes <- read_csv('outputs/postGWAS_sep/cultivars_genes.csv') 
-complete_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
-  mutate(Gene = gsub('G', '_', Gene)) |> 
-  left_join(genes, by = c('Gene' = 'Ensembl')) |> 
-  distinct()
-
-write_csv(complete_table, 'outputs/postGWAS_sep/complete_info_cultivars.csv')
-
-
-#===============================================================================
-# boxplots fenotipos
-#===============================================================================
-
-mix_df <- data.frame(Isolate = c(mix1, mix2, mix3, mix4),
-                     Mixes = c('Mix1', 'Mix1', 'Mix1',
-                               'Mix2', 'Mix2', 'Mix2',
-                               'Mix3', 'Mix3', 'Mix3', 
-                               'Mix4')) |> 
-  mutate(Mixes = tolower(Mixes))
-gh1_pheno <- gh1_pheno |> 
-  mutate(Isolate = as.factor(Isolate)) |> 
-  left_join(mix_df) |> 
-  mutate(Mixes = coalesce(Mixes, "Not selected"),
-         Mixes = as.factor(Mixes),
-         Isolate = fct_reorder2(Isolate, Line, PLACL, .desc = T, .fun = mean())) 
-
-colors_mixes <- c("mix1" = "#43B284FF",
-                  "mix2" = "#DD5129FF",
-                  "mix3" = "#0F7BA2FF",
-                  "mix4" = alpha("#DD5129FF", alpha = 0.5),
-                  "Not selected" = "grey")
-
-png(paste0("outputs/plots/boxplot_gh1.png"), width = 8000, height = 8000, res = 400)
-ggplot(gh1_pheno) + 
-  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Region), outliers = F) + 
-  scale_fill_manual(values = colors) + 
-  theme(panel.background = element_blank(),
-        panel.grid = element_line(color = 'grey')) +
-  facet_grid(.~Line) + 
-  coord_flip()
-dev.off()
-
-png(paste0("outputs/plots/boxplot_gh12.png"), width = 4000, height = 7000, res = 400)
-ggplot(gh1_pheno) + 
-  geom_boxplot(aes(x = reorder(Isolate, -PLACL), y = PLACL, fill = Mixes), outliers = F) + 
-  scale_fill_manual(values = colors_mixes) + 
-  theme(panel.background = element_blank(),
-        panel.grid = element_line(color = 'grey')) +
-  facet_grid(.~Line) +
-  coord_flip()
-dev.off()
-
-info_wheat <- read_csv('data/modified_data/info_wheat.csv') |> 
-  dplyr::rename(Plant = GenoID)
-ft_pheno <- read_csv('data/modified_data/clean_phenotype_no_outliers.csv') |> 
-  left_join(info_wheat) |> 
-  mutate(across(Set:Rep, as.factor),
-         across(Name:region, as.factor))
-
-ggplot(ft_pheno) + 
-  geom_boxplot(aes(x = Strain, y = PLACL, fill = Strain),
-               outliers = F, fatten = NULL, width = 0.6) + 
-  stat_summary(aes(x = Strain, y = PLACL, fill = Strain), 
-               fun = mean, geom = "crossbar", width = 0.6, color = "black", size = 0.3, 
-               position = position_dodge(width = 0.6)) +
-  scale_fill_manual(values = colors_mixes)
-
-colors_wheat <- c("CHECK" = "#DD5129FF",
-            "Landraces" = "#0F7BA2FF",
-            "Lines" = "#43B284FF",
-            "Cultivars" = "#FAB255FF")
-
-ggplot(ft_pheno) + 
-  geom_boxplot(aes(x = reorder(Plant, -PLACL), y = PLACL, fill = region), outliers = F) +
-  scale_fill_manual(values = colors_wheat) +
-  theme(panel.background = element_blank(),
-        panel.grid = element_line(color = 'grey')) +
-  coord_flip() 
-  
 
 
 
