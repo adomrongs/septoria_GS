@@ -2,8 +2,6 @@ library(tidyverse)
 library(scales)
 library(ggh4x)
 
-load('data/modified_data/cv_cultivars/iter_1.Rdata')
-
 files <- list.files('data/modified_data/cv_cultivars/', full.names = T)
 dfs <- map(files, function(x) {
   env <- new.env()
@@ -18,10 +16,6 @@ accuracy_df <-  bind_rows(dfs) |>
   mutate(Cultivar = factor(str_remove(Cultivar, "\\.\\.\\..*"))) |> 
   pivot_longer(cols = -Cultivar, names_to = 'Trait', values_to = 'Accuracy') |> 
   mutate(Trait = factor(Trait))
-
-
-library(ggplot2)
-library(scales)
 
 # Definir los colores
 colors_wheat <- c("Athoris" = alpha("#8E6B3D", 0.7), 

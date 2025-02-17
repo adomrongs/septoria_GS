@@ -2554,14 +2554,22 @@ cv_cultivar <- function(phenotype, kinship, test, trait, blues_all){
   blups_test <- data.frame(Isolate = names(model$U[[1]][[1]])) %>%
     mutate(!!trait := model$U[[1]][[1]]) %>% 
     filter(Isolate %in% test) %>% 
-    arrange(Isolate)
+    arrange(Isolate) |> 
+    left_join(phenotype[, c('Isolate', 'Region')]) |> 
+    distinct()
   
   blues_test <- blues_all %>% 
     filter(Isolate %in% test) %>% 
     arrange(Isolate)
   
-  ability <- cor(blups_test[,trait], blues_test[,trait])
+  complete_df <- blups_test |> 
+    left_join(blues_test, by = 'Isolate') |> 
+    dplyr::select(Isolate, Region, BLUPs = paste0(trait, '.x'), BLUEs = paste0(trait, '.y')) |> 
+    arrange(Region)
   
-  results <- ability
-  return(results)
+  ability <- complete_df |> 
+    group_by(Region) |> 
+    summarize(ability = cor(BLUPs, BLUEs))
+  
+  return(ability)
 }
