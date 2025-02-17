@@ -9,7 +9,7 @@ i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 traits <- list('PLACL', 'pycnidiaPerCm2Leaf', 'pycnidiaPerCm2Lesion')
 test <- sample(rownames(kinship), ceiling(0.2 * nrow(kinship)))
 
-dir <- "data/modified_data/cv_septoria2/"
+dir <- "data/modified_data/cv_cultivars/"
 dir.create(dir, recursive = T, showWarnings = FALSE)
 
 result <- map(traits, function(trait) {
