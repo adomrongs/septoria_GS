@@ -19,4 +19,4 @@ result <- map(traits, function(trait) {
 df <- map2(result, traits, \(x, y) bind_rows(x) |> mutate(Trait = y))
 final_df <- bind_rows(df)
 
-save(df, file = paste0(dir, "iter_", i, ".Rdata"))
+save(final_df, file = paste0(dir, "iter_", i, ".Rdata"))
