@@ -2538,6 +2538,7 @@ cv_cultivar <- function(phenotype, kinship, test, trait, blues_all){
   # ==============================================
   train <- setdiff(rownames(kinship), test)
   ptrain <- phenotype %>% filter(Isolate %in% train)
+  cultivar <- unique(phenotype$Line)
   #===============================================
   # Run predictions with/without markers
   # ==============================================
@@ -2569,7 +2570,8 @@ cv_cultivar <- function(phenotype, kinship, test, trait, blues_all){
   
   ability <- complete_df |> 
     group_by(Region) |> 
-    summarize(ability = cor(BLUPs, BLUEs))
+    summarize(ability = cor(BLUPs, BLUEs)) |> 
+    mutate(Cultivar = cultivar)
   
   return(ability)
 }
