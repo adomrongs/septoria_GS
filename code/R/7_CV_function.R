@@ -15,11 +15,13 @@ pheno <- phenotype <- adjusted_phenotype
 genoW <- genotype_wheat
 map <- map_wheat
 wtest <- sample(rownames(Kw), ceiling(0.2 * nrow(Kw)))
-wModel <- TRUE
+wModel <- F
 sMix <- unique(adjusted_phenotype$Strain)[1]
 formula <- "~ -1 + Plant + Strain"
+name_kw <- 'G'
+name_km <- 'I'
 
-runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE){
+runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = FALSE, name_kw, name_km){
   #===============================================
   # Create data for train and test
   # ==============================================
@@ -109,6 +111,13 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     list(K = K12_mix, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  model1_parameters <- data.frame(varw = model1$ETA[[2]]$varU,
+                                  varm = model1$ETA[[3]]$varU,
+                                  vare = model1$varE, 
+                                  kw = name_kw, 
+                                  km = name_km, 
+                                  approach = ifelse(wModel == TRUE, 'weighted', 'normal'))
+  
   H2 <- computeH2(model1)
 
   model1_I <- BGLR(y = as.numeric(ptrain[[trait]]), ETA = list(
@@ -118,6 +127,14 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     list(K = K12_combined, model = "RKHS")
   ), nIter = 10000, burnIn = 2000, verbose = FALSE)
   
+  model1_I_parameters <- data.frame(varw = model1_I$ETA[[2]]$varU,
+                                  varm = model1_I$ETA[[3]]$varU,
+                                  vari = model1_I$ETA[[4]]$varU,
+                                  vare = model1$varE,
+                                  kw = name_kw, 
+                                  km = name_km, 
+                                  approach = ifelse(wModel == TRUE, 'weighted', 'normal'))
+  
   H2_I <- computeH2(model1_I, interaction = T)
   
   return(list(
@@ -126,7 +143,9 @@ runS1 <- function(trait, Kw, Kmix, pheno, genoW, map, wtest, formula, wModel = F
     wtest = wtest, # partition test 
     wtrain = wtrain,
     hits = results,
-    H_list = list(H2, H2_I)
+    H_list = list(H2, H2_I),
+    parameters = model1_parameters,
+    parameters_I = model1_I_parameters
   ))
 }
 
@@ -170,9 +189,10 @@ eval_S1 <- function(strategy, phenotype, trait) {
     hits <- strategy$hits,
     accuracy = accuracy_withinStrain,
     accuracy_I = accuracy_withinStrain_I,
-    H2 = strategy$H_list
+    H2 = strategy$H_list, 
+    parameters = strategy$parameters,
+    parameters_I = strategy$parameters_I
   )
-  
   return(cor_results)
 }
 

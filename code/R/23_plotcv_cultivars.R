@@ -2,6 +2,8 @@ library(tidyverse)
 library(scales)
 library(ggh4x)
 
+load('data/modified_data/cv_cultivars/iter_1.Rdata')
+
 files <- list.files('data/modified_data/cv_cultivars/', full.names = T)
 dfs <- map(files, function(x) {
   env <- new.env()
@@ -11,29 +13,33 @@ dfs <- map(files, function(x) {
 
 dfs <- map(dfs, as.data.frame)
 
-accuracy_df <-  bind_rows(dfs) |> 
-  rownames_to_column('Cultivar') |> 
-  mutate(Cultivar = factor(str_remove(Cultivar, "\\.\\.\\..*"))) |> 
-  pivot_longer(cols = -Cultivar, names_to = 'Trait', values_to = 'Accuracy') |> 
-  mutate(Trait = factor(Trait))
-
+accuracy_df <- bind_rows(dfs) |> 
+  mutate(Trait = case_when(
+    Trait == 'pycnidiaPerCm2Leaf' ~ 'PCm2Leaf', 
+    Trait == 'pycnidiaPerCm2Lesion' ~ 'PCm2Lesion',
+    TRUE ~ Trait  # Keep other Trait values unchanged
+  )) |> 
+  mutate(across(c(Region, Cultivar, Trait), as.factor)) |> 
+  as_tibble()
+ 
 # Definir los colores
 colors_wheat <- c("Athoris" = alpha("#8E6B3D", 0.7), 
                   "Don Ricardo" = alpha("#D8B06A", 0.7), 
                   "Sculptur" = alpha("#5B4C44", 0.7),
                   "Svevo" = alpha("#9E5B40", 0.7))
-colors_traits <- c("PLACL" = "#8A0000", 
-                   "PCm2Leaf" = "#B5A300", 
-                   "PCm2Lesion" = "#A8C300")
+colors_regions <- c("Córdoba" = "#DD5129FF",
+            "Cádiz" = "#0F7BA2FF",
+            "Sevilla" = "#43B284FF",
+            "Huelva" = "#FAB255FF")
 
 # Definir límites para el eje y
-max_y <- round(min(max(accuracy_df$Accuracy, na.rm = TRUE) + 0.1, 1), 1)
-min_val <- round(min(accuracy_df$Accuracy, na.rm = TRUE), 1)
+max_y <- round(min(max(accuracy_df$ability, na.rm = TRUE) + 0.1, 1), 1)
+min_val <- round(min(accuracy_df$ability, na.rm = TRUE), 1)
 min_y <- ifelse(min_val < 0, min_val - 0.1, 0)
 
 strip <- strip_themed(background_x = elem_list_rect(fill = colors_wheat))
 # Crear el gráfico
-cv_cultivars <- ggplot(accuracy_df, aes(x = Trait, y = Accuracy, fill = Trait)) + 
+cv_cultivars <- ggplot(accuracy_df, aes(x = Trait, y = ability, fill = Region)) + 
   stat_summary(
     fun.data = mean_sdl, 
     fun.args = list(mult = 1), 
@@ -51,10 +57,10 @@ cv_cultivars <- ggplot(accuracy_df, aes(x = Trait, y = Accuracy, fill = Trait)) 
     position = position_dodge(width = 0.7)
   ) +
   scale_y_continuous(
-    breaks = seq(min_y, max_y, by = 0.1),
+    breaks = seq(-1, 1, by = 0.1),
     labels = label_number(accuracy = 0.1)
   ) + 
-  scale_fill_manual(values = colors_traits) +
+  scale_fill_manual(values = colors_regions) +
   theme(
     plot.subtitle = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 10, b = 10)),
     legend.title = element_blank(), 
@@ -66,13 +72,13 @@ cv_cultivars <- ggplot(accuracy_df, aes(x = Trait, y = Accuracy, fill = Trait)) 
     strip.background = element_rect(fill = 'white', colour = "black", size = 0.5),
     panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
     axis.title.y = element_text(size = 12, family = "Arial"),
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
+    axis.title.x = element_text(size = 8),
+    axis.text.x = element_text(size = 8),
     plot.caption = element_text(hjust = 0, size = 11, lineheight = 1.2, family = "Arial", margin = margin(t = 20, b = 20)),
     axis.ticks.x = element_blank()
   ) + 
   facet_wrap2(~ Cultivar, strip = strip, ncol = 4) 
 
-png(paste0("outputs/plots/cv_cultivars.png"), width = 4000, height = 1500, res = 400)
+png(paste0("outputs/plots/cv_cultivars.png"), width = 5000, height = 1500, res = 400)
 cv_cultivars
 dev.off()

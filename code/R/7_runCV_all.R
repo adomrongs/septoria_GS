@@ -40,7 +40,9 @@ for (wheatKey in names(Kw_list)) {
                        genoW = genotype_wheat,
                        map = map_wheat,
                        wtest = wheat_test,
-                       formula = formula)
+                       formula = formula, 
+                       name_kw = wheatKey,
+                       name_km = mixKey)
     message("Strategy 1 completed")
     message("Running evaluation 1")
     scenarioResults$Scenario1 <- eval_S1(strategy = ST1Models,
