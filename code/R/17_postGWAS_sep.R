@@ -369,33 +369,6 @@ final_df_plot <- final_df |>
   dplyr::select(-matches('Effect')) |> 
   dplyr::select(-matches('MAF')) 
 
-# plot Multi trait manhattan 
-colors_trigo <- c("#8E6B3D", "#8E6B3D", "#D8B06A", "#D8B06A", "#D8B06A", "#5B4C44", "#5B4C44", "#9E5B40", "#9E5B40")
-shapes <- c(15,16,17,15,16,15,16,15,16)
-
-setwd("outputs/postGWAS_sep/")
-CMplot(final_df_plot,
-       col = colors_trigo,
-       plot.type="m",
-       multraits=TRUE,
-       threshold= 0.05/nrow(final_df_plot),
-       threshold.lty =1,
-       threshold.lwd = 1,
-       threshold.col=c("black"),
-       amplify=F,
-       pch = shapes, 
-       bin.size=1e6,
-       signal.cex=1,
-       file="jpg",
-       file.name="cultivars",
-       dpi=300,
-       file.output= T,
-       verbose=TRUE,
-       points.alpha=250,
-       legend.ncol=5,
-       legend.pos="left")
-setwd(here())
-
 traits <- names(final_df_plot)[-c(1:3)]  # Exclude the first 3 columns
 traits <- gsub('.*_', '', traits)
 dir <- 'outputs/postGWAS_sep/'
@@ -451,24 +424,99 @@ cultivars_genes <- find_genes(mart = mart,
                                   out_dir = out_dir_all,
                                   markers = markers_all)
 
-inter_table <- cultivars_genes |> 
-  mutate(GO_class = Ontology(GO_id)) |> 
-  left_join(effects, by = c('marker' = "SNP"))
+inter_table <- effects |> 
+  left_join(cultivars_genes, by = c('SNP' = "marker")) |> 
+  mutate(GO_class = Ontology(GO_id))
 
 # Create GWas table
 gwas_table <- inter_table |> 
   dplyr::select(-start, end_position, GO_id:GO_class) |> 
-  dplyr::select(Cultivar, Traits, SNP = marker, P.value, Effect, MAF, Distance = distance, Gene = gene, Protein = accesion) |> 
+  dplyr::select(Cultivar, Traits, SNP, P.value, Effect, MAF, Distance = distance, Gene = gene, Protein = accesion) |> 
   distinct()
 # Create genes table
 genes_table <- inter_table |> 
-  dplyr::select(-c(trait, marker, distance, Cultivar, Traits, Pos, P.value, MAF, pos, GO_id, GO_class, Go_name)) |> 
+  dplyr::select(-c(trait, SNP, distance, Cultivar, Traits, Pos, P.value, MAF, pos, GO_id, GO_class, Go_name)) |> 
   distinct() |> 
   dplyr::relocate(Gene = gene, Chr) |> 
   arrange((as.numeric(Chr)))
 
 # save tables
 write_csv(gwas_table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
+
+# Manhattan plot 
+
+mahattan_plot <- final_df_plot |> 
+  filter(SNP %in% unique(gwas_table$SNP) | row_number() %% 10 == 0) |> 
+  mutate(across(-c(SNP, Chr, Pos), as.numeric)) |>
+  rowwise() |> 
+  mutate(
+    Athoris = min(c_across(starts_with("Athoris")), na.rm = TRUE),
+    `Don Ricardo` = min(c_across(starts_with("Don Ricardo")), na.rm = TRUE),
+    Sculptur = min(c_across(starts_with("Sculptur")), na.rm = TRUE),
+    Svevo = min(c_across(starts_with("Svevo")), na.rm = TRUE)
+  ) |> 
+  ungroup()
+mahattan_plot <- mahattan_plot |> 
+  dplyr::select(SNP, Chr, Pos, Athoris, `Don Ricardo`, Sculptur, Svevo)
+
+colors_cultivars <- c('Athoris' = "#8E6B3D",
+                      'Don Ricardo' = "#D8B06A",
+                      'Sculptur' = "#5B4C44",
+                      'Svevo' = "#9E5B40")
+df_snps <- gwas_table |> 
+  distinct(Cultivar, SNP, Traits) |> 
+  mutate(color = colors_cultivars[Cultivar]) |> 
+  arrange(Cultivar)
+
+snp_list <- df_snps %>%
+  group_by(Cultivar) %>%
+  summarise(SNPs = list(SNP), .groups = 'drop') %>%
+  deframe()
+color_list <- df_snps |> 
+  group_by(Cultivar) |> 
+  summarise(color = list(unique(color)), .groups = 'drop') %>%
+  deframe()
+shape_vector <- df_snps[-1,] %>%
+  mutate(Shape = case_when(
+    Traits == "PCm2Leaf" ~ 16,
+    Traits == "PCm2Lesion" ~ 17,
+    Traits == "PLACL" ~ 18
+  )) %>%
+  pull(Shape)
+
+setwd("outputs/postGWAS_sep/")
+CMplot(mahattan_plot,
+       col = c('#98FB98', '#3CB371'),
+       type = 'p',
+       plot.type="c",
+       outward = T, 
+       multraits=TRUE,
+       H = 5, 
+       chr.labels=paste("Chr",c(1:13),sep=""), 
+       threshold= 0.05/nrow(final_df_plot),
+       threshold.lty =1,
+       threshold.lwd = 1,
+       threshold.col=c("black"),
+       amplify=T,
+       highlight = snp_list, 
+       highlight.col = color_list, 
+       highlight.pch = shape_vector,
+       highlight.cex = 1.6,
+       signal.cex = 0, 
+       chr.border = F,
+       cir.band = 1, 
+       bin.size=1e6,
+       file="jpg",
+       file.name="cultivars",
+       dpi=300,
+       file.output= T,
+       verbose=TRUE,
+       points.alpha=250,
+       legend.ncol=5,
+       legend.pos="left", 
+       cir.axis.col = 'black')
+setwd(here())
+
 
 #===============================================================================
 # Identify which strains have each significant snps

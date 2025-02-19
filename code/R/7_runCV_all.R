@@ -59,7 +59,9 @@ for (wheatKey in names(Kw_list)) {
                            map = map_wheat,
                            wtest = wheat_test,
                            wModel = TRUE,
-                           formula = formula)
+                           formula = formula, 
+                           name_kw = wheatKey,
+                           name_km = mixKey)
     message("Strategy 1 weighted completed")
     message("Running evaluation 1 weighted")
     scenarioResults$Scenario1w <- eval_S1(strategy = weightedModel,
