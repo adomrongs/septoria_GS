@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --job-name=cv_lesion
+#SBATCH --output=cv_lesion_%j.log
+#SBATCH --error=cv_lesion_%j.err
+#SBATCH --partition=medium
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --time=20:00:00
+#SBATCH --mem=50G
+#SBATCH --array=1-30
+
+module load R/4.2.0-foss-2021b
+srun Rscript code/R/7_runCV_lesion.R
