@@ -127,9 +127,9 @@ plotGO_class <- results_df %>%
   mutate(percentage = count / sum(count) * 100)
 
 colors <- c(
-  "BP" = "#795548FF", # Azul oscuro eléctrico
-  "CC" = "#F4A261FF", # Naranja pastel
-  "MF" = "#2A9D8FFF"  # Verde azulado suave
+  "BP" = "#795548FF", 
+  "CC" = "#F4A261FF", 
+  "MF" = "#2A9D8FFF"  
 )
 
 ggplot(plotGO_class, aes(x = traits_clean, y = percentage, fill = GO_class)) +
@@ -197,11 +197,11 @@ gwas_table <- gwas_table %>%
 # Change the name of the markers from IBW... to its assigned names
 markers_names <- read_delim("data/raw_data/90K.CSv2.Ann.info.txt", delim = "\t")
 markers_names <- markers_names %>% dplyr::select(ID, Name)
-gwas_table <- gwas_table %>% 
+gwas_table2 <- gwas_table %>% 
   left_join(markers_names, by = c("SNP" = "ID")) %>% 
   dplyr::select(Trait, SNP = Name, Chr, Pos, P.value, MAF, Effect, Gene, Distance)
 
-write_csv(gwas_table, file = "outputs/postGWAS_wheat/gwas_wheat_table.csv")
+write_csv(gwas_table2, file = "outputs/postGWAS_wheat/gwas_wheat_table.csv")
 
 attr <- c("ensembl_gene_id", "description")
 triticum <- useEnsemblGenomes(biomart = "plants_mart", dataset = "taestivum_eg_gene")
@@ -243,34 +243,59 @@ for(i in 1:nrow(gwas_table)){
                                        trait = trait)
 }
 
+png(paste0("outputs/postGWAS_wheat/boxplot_wheat.png"), width = 5000, height = 2000, res = 400)
+grid.arrange(grobs = boxplot_list, ncol = 2)
+dev.off()
+
 #==============================================================================
 # Plot Manhattan and QQplot
 #==============================================================================
 
 pvalues <- read_csv("outputs/GWAS_wheat/PC4/GAPIT.Association.GWAS_Results.BLINK.PLACL.csv")
 pvalues <- pvalues[,1:4]
-plotCMManhattan(
-  df = pvalues,
-  name = "PLACL",
-  color = "#DD5129FF",
-  dir = "outputs/postGWAS_wheat/"
-)
+png(paste0("outputs/plots/boxplot_wheat"), width = 5000, height = 2000, res = 400)
+
+setwd('outputs/postGWAS_wheat/')
+CMplot(pvalues,
+       plot.type = "m",
+       multraits = FALSE,
+       col = c('grey', 'darkgrey'),
+       threshold = 0.05/nrow(pvalues),
+       threshold.lty = c(1, 2), 
+       threshold.lwd = c(1, 1),
+       threshold.col = c("black", "grey"),
+       amplify = TRUE,
+       bin.size = 1e6,
+       chr.den.col = NULL,
+       highlight = unique(gwas_table$SNP),
+       highlight.text = unique(gwas_table2$SNP), 
+       highlight.col = '#F4A261FF', 
+       signal.cex = 1,
+       file = "jpg",
+       file.name = 'PLACL',
+       dpi = 300,
+       file.output = T,
+       verbose = FALSE,
+       points.alpha = 250,
+       legend.ncol = 2,
+       legend.pos = "middle",
+       main = 'PLACL')
+setwd(here())
 
 # QQ plot
 plotCMqq(
   df = pvalues,
   name = "PLACL",
-  color = "#DD5129FF",
+  color = '#F4A261FF',
   dir = "outputs/postGWAS_wheat/")
 
 #==============================================================================
 # Histogram for BLUEs
 #==============================================================================
 
-
-traits <- c("PLACL" = "#DD5129FF",
-            "pycnidiaPerCm2Leaf" = "#0F7BA2FF",
-            "pycnidiaPerCm2Lesion" = "#43B284FF")
+traits <- c("PLACL" = "#F4A261FF",
+            "pycnidiaPerCm2Leaf" = "#795548FF",
+            "pycnidiaPerCm2Lesion" = "#2A9D8FFF")
 
 hist <- plotHist(blues_wheat,
                  columns = colnames(blues_wheat)[-1],
@@ -281,12 +306,21 @@ grid.arrange(grobs = hist, ncol = 3)
 dev.off()
 
 #==============================================================================
-# LD decay
+# Which individuals have the snps
 #==============================================================================
 
+IWB11991_indv <- genotype_wheat[, c('GenoID', colnames(genotype_wheat)[colnames(genotype_wheat) %in% gwas_table$SNP])] |> 
+  dplyr::select(1,2) |> 
+  filter(IWB11991 == 1 | IWB11991 == 2) |> 
+  pull(GenoID)
 
-# Honestly maybe the best think is to do it as with zymo. We will see
+IWB74799_indv <-  genotype_wheat[, c('GenoID', colnames(genotype_wheat)[colnames(genotype_wheat) %in% gwas_table$SNP])] |> 
+  dplyr::select(1,3) |> 
+  filter(IWB74799 == 0) |> 
+  pull(GenoID)
 
-
+cultivars <- c('PyrSep_105', 'PyrSep_107', 'PyrSep_115')
+cross1 <- IWB11991_indv[IWB11991_indv %in% cultivars]
+cross2 <- IWB74799_indv[IWB74799_indv %in% cultivars]
 
  

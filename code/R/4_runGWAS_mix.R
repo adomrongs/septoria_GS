@@ -8,23 +8,25 @@ i <- as.numeric(Sys.getenv("SLURM_ARRAY_TASK_ID"))
 out_dir <- "outputs/GWAS_wheat"
 
 # adjust output directory
-out_dir_final <- file.path(out_dir, paste0("PC", i))
+out_dir_final <- file.path(out_dir, paste0("mix", i))
 dir.create(out_dir_final, recursive = TRUE, showWarnings = FALSE)
 setwd(out_dir_final)
-  
-  
-print(paste("Working on PC", i))
+blues <- mix_blues[[i]]
+genotype <- genotype_wheat[genotype_wheat[[1]] %in% blues[[1]], ]
+k <- mix_k[[i]]
+
+print(paste("Working on mix", i))
 
 myGAPIT <- GAPIT(
-      Y = blues_wheat,
-      GD = genotype_wheat,
-      GM = map_wheat,
-      KI = k_wheat,
-      CV = NULL,
-      PCA.total = i,
-      model = c("Blink", "MLM", 'FarmCPU')
+  Y = blues,
+  GD = genotype,
+  GM = map_wheat,
+  KI = k,
+  CV = NULL,
+  PCA.total = 3,
+  model = c("Blink", 'FarmCPU', 'MLM')
 )
-  # Reset working directory
+# Reset working directory
 setwd(here())
-  # Confirm progress
-print(paste("Completed model PC", i))
+# Confirm progress
+print(paste("Completed mix", i))

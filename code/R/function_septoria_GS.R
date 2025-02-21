@@ -1413,7 +1413,7 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
     mutate(across(all_of(marker), round))
   
   tmp_pheno <- phenotype %>%
-    left_join(tmp_geno, by = "GenoID")
+    left_join(tmp_geno, by = "GenoID") 
   
   clean_trait <- gsub("^BLINK.", "", trait)
   
@@ -1421,6 +1421,14 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
     filter(.data[[marker]] %in% c(0, 1, 2)) %>%
     mutate(SNP = marker) %>%
     dplyr::select(GenoID, all_of(marker), SNP, clean_trait)
+  
+  if(marker == 'IWB11991'){
+    tmp_pheno[tmp_pheno[[marker]] == 1, marker] <- 2
+  }
+  if(marker == 'IWB74799'){
+    tmp_pheno[tmp_pheno[[marker]] == 0, marker] <- 2
+    tmp_pheno[tmp_pheno[[marker]] == 1, marker] <- 0
+  }
   
   
   if(length(unique(tmp_pheno[[marker]])) == 2) {
@@ -1469,8 +1477,6 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
     summarise(n = n(), .groups = 'drop') %>%
     mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n))
   
-  
-  
   # Add a dataframe for significance annotations with larger spacing
   annotation_df <- pvalue_df %>%
     mutate(
@@ -1509,7 +1515,7 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
     geom_boxplot(width = 0.2, outlier.shape = NA, color = "black", aes(fill = as.factor(.data[[marker]]))) +
     
     # Escala de colores
-    scale_fill_manual(values = c("#DD5129FF", "#0F7BA2FF", "#43B284FF")) +
+    scale_fill_manual(values = c("grey", "#F4A261FF")) +
     scale_x_discrete(
       labels = counts$label,
       expand = c(0,0)) +# Ajusta los márgenes izquierdo (0.05) y derecho (0.1)
@@ -2315,12 +2321,11 @@ process_pvalues <- function(x) {
 fastqqplot <- function(x, final_df_plot, trait, dir){
   tmp_df <- final_df_plot |> 
     dplyr::select(c(1, 2, 3, x))  # Select SNP, Chr, Pos, and the current trait column
-  
-  
+
   color <- switch(trait,
-                  "PCm2Leaf" = "#0F7BA2FF",
-                  "PCm2Lesion" = "#43B284FF",
-                  "PLACL" = "#DD5129FF",
+                  "PCm2Leaf" = "#795548FF",
+                  "PCm2Lesion" = "#2A9D8FFF",
+                  "PLACL" = "#F4A261FF",
                   NULL)  # Default if trait doesn't match
   
   main <- names(final_df_plot)[x]
@@ -2511,9 +2516,9 @@ boxplot_cultivars <- function(genotype, colors, marker, trait, cultivar, phenoty
     mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n,  '\n (μ = ', mean_values$mean, ')'))
   
   values <- switch(trait,
-                   "pycnidiaPerCm2Leaf" = c("grey", "#0F7BA2FF"),
-                   "pycnidiaPerCm2Lesion" = c("grey", "#43B284FF"),
-                   "PLACL" = c("grey", "#DD5129FF"),
+                   "pycnidiaPerCm2Leaf" = c("grey", "#F4A261FF"),
+                   "pycnidiaPerCm2Lesion" = c("grey", "#795548FF"),
+                   "PLACL" = c("grey", "#2A9D8FFF"),
                    NULL)  # Default if trait doesn't match
   
   color_strip <- switch(cultivar,

@@ -438,7 +438,8 @@ genes_table <- inter_table |>
   dplyr::select(-c(trait, SNP, distance, Cultivar, Traits, Pos, P.value, MAF, pos, GO_id, GO_class, Go_name)) |> 
   distinct() |> 
   dplyr::relocate(Gene = gene, Chr) |> 
-  arrange((as.numeric(Chr)))
+  arrange((as.numeric(Chr))) |> 
+  na.omit()
 
 # save tables
 write_csv(gwas_table, file = 'outputs/postGWAS_sep/cultivars_hit.csv')
@@ -455,9 +456,14 @@ mahattan_plot <- final_df_plot |>
     Sculptur = min(c_across(starts_with("Sculptur")), na.rm = TRUE),
     Svevo = min(c_across(starts_with("Svevo")), na.rm = TRUE)
   ) |> 
-  ungroup()
-mahattan_plot <- mahattan_plot |> 
+  ungroup() |> 
   dplyr::select(SNP, Chr, Pos, Athoris, `Don Ricardo`, Sculptur, Svevo)
+
+add_snp <- final_df_plot |> 
+  filter(SNP == 'X11_849459') |> 
+  dplyr::select(SNP, Chr, Pos, Athoris = Athoris_PCm2Leaf) |> 
+  mutate(SNP = 'X11_849460')
+mahattan_plot <- bind_rows(mahattan_plot, add_snp)
 
 colors_cultivars <- c('Athoris' = "#8E6B3D",
                       'Don Ricardo' = "#D8B06A",
@@ -467,6 +473,7 @@ df_snps <- gwas_table |>
   distinct(Cultivar, SNP, Traits) |> 
   mutate(color = colors_cultivars[Cultivar]) |> 
   arrange(Cultivar)
+df_snps[1, 'SNP'] <- 'X11_849460'
 
 snp_list <- df_snps %>%
   group_by(Cultivar) %>%
@@ -476,13 +483,18 @@ color_list <- df_snps |>
   group_by(Cultivar) |> 
   summarise(color = list(unique(color)), .groups = 'drop') %>%
   deframe()
-shape_vector <- df_snps[-1,] %>%
+
+
+shape_vector <- df_snps %>%
   mutate(Shape = case_when(
     Traits == "PCm2Leaf" ~ 16,
     Traits == "PCm2Lesion" ~ 17,
     Traits == "PLACL" ~ 18
-  )) %>%
-  pull(Shape)
+  )) |> 
+  group_by(Cultivar) |> 
+  summarise(Shape = list((Shape)), .groups = 'drop') %>%
+  deframe()
+
 
 setwd("outputs/postGWAS_sep/")
 CMplot(mahattan_plot,
@@ -492,6 +504,7 @@ CMplot(mahattan_plot,
        outward = T, 
        multraits=TRUE,
        H = 5, 
+       LOG10 = T, 
        chr.labels=paste("Chr",c(1:13),sep=""), 
        threshold= 0.05/nrow(final_df_plot),
        threshold.lty =1,
@@ -500,17 +513,13 @@ CMplot(mahattan_plot,
        amplify=T,
        highlight = snp_list, 
        highlight.col = color_list, 
-       highlight.pch = shape_vector,
-       highlight.cex = 1.6,
-       signal.cex = 0, 
-       chr.border = F,
-       cir.band = 1, 
-       bin.size=1e6,
+       highlight.pch = 16,
+       highlight.cex = 1,
+       signal.cex = 0,
        file="jpg",
        file.name="cultivars",
        dpi=300,
        file.output= T,
-       verbose=TRUE,
        points.alpha=250,
        legend.ncol=5,
        legend.pos="left", 
@@ -626,11 +635,6 @@ gh1_pheno <- read_csv('data/modified_data/gh1_clean_pheno.csv') |>
   filter(Leaf == 2)
 info <- read_csv('data/modified_data/info_strain_complete.csv') |> 
   dplyr::select(Isolate, Region)
-snps <- as.list((dfs_cultivars$SNP))
-cultivars <- as.list((dfs_cultivars$Cultivar))
-traits <- as.list((dfs_cultivars$traits))
-genotype <- genotype_septoria[, colnames(genotype_septoria) %in% c('Isolate', snps)]
-genotype[, -1] <- round(genotype[,-1], 0)
 pca <- pca_data |> 
   left_join(info, by = c('GenoID' = 'Isolate'))
 
@@ -658,28 +662,34 @@ blues_df <- list(athoris_blues, donR_blues, sculptur_blues, svevo_blues) |>
   map(\(x) x |> dplyr::select(1:4)) |> 
   map(\(x) x |> 
         left_join(translate_names, by = c('Isolate' = 'lower_names')) |> 
-        dplyr::select(Isolate.y, PLACL:pycnidiaPerCm2Lesion, Region) |> 
-        dplyr::rename(Isolate = Isolate.y)
+        dplyr::select(Isolate, PLACL:pycnidiaPerCm2Lesion, Region)
         ) 
 
 blues_list <- list(blues_df[[1]], blues_df[[1]],
                    blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]], blues_df[[2]],blues_df[[2]],
                    blues_df[[3]], blues_df[[3]], 
                    blues_df[[4]], blues_df[[4]])
-
-plot <- pmap(list(snps, traits, cultivars, blues_list), \(x,y,z,k) pca_boxplot(pca, genotype, colors, x, y, z, k))
-out_dir <- 'outputs/postGWAS_sep/pca_boxplot'
-dir.create(out_dir)
-
-map2(plot, snps, \(x, y) {
-  png(paste0(out_dir, '/', y, ".png"), width = 6000, height = 4000, res = 400)
-  print(x)  # Imprimir el gráfico para que se guarde
-  dev.off()  # Cerrar el dispositivo gráfico
-})
+# 
+# plot <- pmap(list(snps, traits, cultivars, blues_list), \(x,y,z,k) pca_boxplot(pca, genotype, colors, x, y, z, k))
+# out_dir <- 'outputs/postGWAS_sep/pca_boxplot'
+# dir.create(out_dir)
+# 
+# map2(plot, snps, \(x, y) {
+#   png(paste0(out_dir, '/', y, ".png"), width = 6000, height = 4000, res = 400)
+#   print(x)  # Imprimir el gráfico para que se guarde
+#   dev.off()  # Cerrar el dispositivo gráfico
+# })
 
 #===============================================================================
 # Boxplot per cultivar
 #===============================================================================
+
+snps <- as.list((dfs_cultivars$SNP))
+cultivars <- as.list((dfs_cultivars$Cultivar))
+traits <- as.list((dfs_cultivars$traits))
+genotype <- genotype_septoria[, colnames(genotype_septoria) %in% c('Isolate', snps)]
+genotype[, -1] <- round(genotype[,-1], 0)
+genotype$Isolate <- tolower(genotype$Isolate)
 
 cultivars_boxplot <- pmap(list(snps, traits, cultivars, blues_list), \(x,y,z,k) boxplot_cultivars(genotype, colors, x, y, z, k))
 

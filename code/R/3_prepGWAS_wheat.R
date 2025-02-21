@@ -24,6 +24,39 @@ genotype_wheat <- genotype_wheat[genotype_wheat[, "GenoID"] %in% blues_wheat$Gen
 
 dim(genotype_wheat); dim(map_wheat); dim(k_wheat); dim(blues_wheat)
 str(blues_wheat)
-save(genotype_wheat, map_wheat, k_wheat, blues_wheat,
+
+# I am gonna nedd a list with 4 dataframes containing 4 different blues, one for each mix
+
+control <- cleaned_phenotype |> 
+  filter(!grepl('mix', Strain))
+mix_pheno <- cleaned_phenotype |> 
+  filter(grepl('mix', Strain))
+mix_split <- split(mix_pheno, mix_pheno$Strain) |> 
+  map(\(x) bind_rows(x, control)) |> 
+  map(\(x) extract_blues_df_adapted(x, traits, formula, 'Plant')) |> 
+  map(\(x) {
+    names(x)[1] <- 'GenoID'
+    return(x)  # Es importante devolver el dataframe modificado
+  })
+k_list <- list(k_wheat, k_wheat, k_wheat, k_wheat) |>
+  map(function(x) {
+    names(x) <- gsub("\\.", "_", names(x))  # Escapar el punto
+    return(x)  # Asegurarse de que el objeto modificado se devuelva
+  })
+k_blues <- map2(mix_split, k_list, \(x, y){
+  tmp_df <- y |> 
+    filter(GenoID %in% x$GenoID) |> 
+    dplyr::select(c('GenoID', all_of(x$GenoID)))
+  return(tmp_df)
+})
+mix_blues <- mix_split
+mix_k <- k_blues
+save(genotype_wheat, map_wheat, k_wheat, blues_wheat, mix_blues, mix_k,
      file = "data/modified_data/3_wheat_GWAS.Rdata")
+
+
+
+
+
+
 

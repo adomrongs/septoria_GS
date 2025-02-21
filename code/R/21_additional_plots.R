@@ -470,7 +470,15 @@ genes <- read_csv('outputs/postGWAS_sep/cultivars_genes.csv')
 complete_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
   mutate(Gene = gsub('G', '_', Gene)) |> 
   left_join(genes, by = c('Gene' = 'Ensembl')) |> 
-  distinct()
+  distinct() |> 
+  mutate(Pos = as.numeric(gsub('.*_', '', SNP)),  # Ensure Pos is numeric
+         Distance = case_when(
+           Pos >= start & Pos <= end ~ 0,  # If SNP is between start and end, set distance to 0
+           TRUE ~ pmin(abs(start - Pos), abs(end - Pos))  # Else calculate the minimum distance to start or end
+         )) |> 
+  filter(Distance < 2000) |> 
+  dplyr::select(-Pos)
+  
 
 write_csv(complete_table, 'outputs/postGWAS_sep/complete_info_cultivars.csv')
 
@@ -536,17 +544,45 @@ colors_wheat <- c("CHECK" = "#DD5129FF",
             "Lines" = "#43B284FF",
             "Cultivars" = "#FAB255FF")
 
-png(paste0("outputs/plots/boxplot_ft.png"), width = 4000, height = 7000, res = 400)
+ft_pheno <- ft_pheno |> 
+  filter(Strain %in% c('mix1', 'mix2', 'mix3', 'mix4')) |> 
+  droplevels()
+
+png(paste0("outputs/plots/boxplot_ft.png"), width = 5000, height = 8000, res = 400)
 ggplot(ft_pheno) + 
-  geom_boxplot(aes(x = reorder(Plant, -PLACL), y = PLACL, fill = region), outliers = F) +
+  geom_boxplot(aes(x = reorder(Plant, -PLACL), y = PLACL, fill = region), outlier.shape = NA) + 
   scale_fill_manual(values = colors_wheat) +
   theme(panel.background = element_blank(),
-        panel.grid = element_line(color = 'grey')) +
-  coord_flip()+
-  theme(panel.background = element_blank(),
-        panel.grid = element_line(color = 'grey'))
+        panel.grid = element_line(color = 'grey'),
+        legend.position = 'top') +
+  coord_flip() +
+  facet_wrap(~ Strain, ncol = 4)
 dev.off()
-  
+
+png(paste0("outputs/plots/hist_ft.png"), width = 5000, height = 2000, res = 400)
+ggplot(ft_pheno) + 
+  geom_histogram(aes(x = PLACL, fill = Strain), bins = 20, color = 'black') + 
+  scale_fill_manual(values = colors_mixes) +
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_line(color = 'lightgrey'),
+        panel.grid.mino = element_blank(), 
+        legend.position = 'top') +
+  facet_wrap(.~Strain, ncol = 4)
+dev.off()
+
+df_trial <- ft_pheno |> 
+  mutate(across(c(Strain, Plant), as.character)) |> 
+  group_by(Strain, Plant) |> 
+  reframe(mean_PLACL = mean(PLACL)) |> 
+  arrange(desc(mean_PLACL)) |> 
+  split(., .$Strain)
+
+IDs <- split(df_trial, df_trial$Strain) |> 
+  map(\(x) x[1:10, 'Plant']) |> 
+  bind_rows() |> 
+  group_by(Plant) |> 
+  summarize(n = n()) |> 
+  arrange(desc(n))
 
 #===============================================================================
 # candidate gene expression

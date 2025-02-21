@@ -18,6 +18,7 @@ for( i in 1:30){
   }
 }
 
+
 s1_ability <- combine_elements(s1, "ability")
 s1_accuracy <- combine_elements(s1, "accuracy")
 
@@ -89,15 +90,54 @@ png(paste0("outputs/plots/hist_cv_wheat.png"), width = 3000, height = 1500, res 
 hist_cv_wheat
 dev.off()
 
-# Plot Heritability
+# Genetic parameters
 
-datas <- as.list(list.files('data/modified_data/cv', full.names = T))
+files <- list.files('data/modified_data/cv', full.names = T)
 
-processed_h2 <- map(datas, \(x) processH2_results(x))
-H2_processed_df <- bind_rows(processed_h2)
+extract_parameters <- function(file){
+  load(file)
+  table <- map(allResults, \(x) x |> pluck('Scenario1', 'parameters')) |> bind_rows()
+  table_I <-  map(allResults, \(x) x |> pluck('Scenario1', 'parameters_I')) |> bind_rows()
+  table_w <- map(allResults, \(x) x |> pluck('Scenario1w', 'parameters')) |> bind_rows()
+  table_wI <- map(allResults, \(x) x |> pluck('Scenario1w', 'parameters_I')) |> bind_rows()
+  
+  no_I_table <- bind_rows(table, table_w)
+  I_table <- bind_rows(table_I, table_wI) |> 
+    mutate(approach = case_when(
+      approach == 'normal' ~ 'normal_I',
+      approach == 'weighted' ~ 'weighted_I',
+      TRUE ~ approach  # Esta línea cubre cualquier otro valor que no sea 'normal' ni 'weighted'
+    ))
+  
+  final_table <- bind_rows(no_I_table, I_table) |> 
+    dplyr::relocate(approach, kw, km)
+  return(final_table)
+}
 
-H2_split_list <- split(H2_processed_df, H2_processed_df$Strategy) |> 
-  map(~ droplevels(.))
+paramteres <- map(files, \(x) extract_parameters(x))
 
-# Aplicar la función a la lista de dataframes
-map(H2_split_list, plotH2)
+parameters_df <- bind_rows(paramteres) |> 
+  as.tibble() |> 
+  mutate(across(c(kw, km), ~ ifelse(grepl('Diagonal', .x), 'I', .x)),
+         Matrix = paste0(kw, '/', km),
+         vari = as.numeric(ifelse(is.na(vari), '0', vari)),
+         H2_wheat = varw/(varw + varm + vare + vari),
+         H2_mix = varm/(varw + varm + vare + vari)) |> 
+  dplyr::select(-c(kw, km)) |> 
+  group_by(approach, Matrix) |> 
+  summarize(across(contains('var'), ~ round(mean(.x, na.rm = TRUE), 2))) |> 
+  mutate(total = rowSums(across(c(varw, varm, vari, vare)), na.rm = TRUE),
+         across(contains('var'), ~ paste0(.x, ' (', round((.x / total) * 100, 2), '%)'))) |> 
+  mutate(vari = ifelse(grepl('0%', vari), '0', vari)) |> 
+  dplyr::select(Approach = approach, Matrix, Varw = varw, Varm = varm, VarI = vari, VarE = vare)
+
+write_csv(parameters_df, file = 'outputs/plots/genetic_parameters.csv')
+
+
+
+
+
+
+
+
+
