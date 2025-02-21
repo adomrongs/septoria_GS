@@ -23,7 +23,7 @@ for(j in 0:4){
     KI = k,
     CV = NULL,
     PCA.total = j,
-    model = c("Blink")
+    model = c("Blink", 'FarmCPU', 'MLM')
   )
   # Reset working directory
   setwd(here())
