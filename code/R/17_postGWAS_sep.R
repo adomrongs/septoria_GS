@@ -498,9 +498,10 @@ shape_vector <- df_snps %>%
 
 setwd("outputs/postGWAS_sep/")
 CMplot(mahattan_plot,
-       col = c('#98FB98', '#3CB371'),
+       col = c(alpha('#98DFFF', 0.4), alpha('#3C9DFF', 0.4)),
        type = 'p',
        plot.type="c",
+       cex = 0.5,
        outward = T, 
        multraits=TRUE,
        H = 5, 
@@ -514,7 +515,7 @@ CMplot(mahattan_plot,
        highlight = snp_list, 
        highlight.col = color_list, 
        highlight.pch = 16,
-       highlight.cex = 1,
+       highlight.cex = 1.3,
        signal.cex = 0,
        file="jpg",
        file.name="cultivars",
@@ -525,6 +526,58 @@ CMplot(mahattan_plot,
        legend.pos="left", 
        cir.axis.col = 'black')
 setwd(here())
+
+col_names <- c("Athoris", "Don Ricardo", "Sculptur", "Svevo")
+df_list <- map(col_names, \(x) mahattan_plot |> dplyr::select(SNP, Chr, Pos, x))
+
+manhattan_dir <- 'outputs/postGWAS_sep/manhattan'
+dir.create(manhattan_dir)
+
+manhattan_cultivar <- function(df, cultivar){
+  tmp_df <- df |> 
+    dplyr::select(SNP, Chr, Pos, cultivar)
+  
+  bonferroni <- (0.05/nrow(tmp_df))
+  color_snps <- switch(cultivar,
+                        "Athoris" = "#8E6B3D",  # Lighter by adjusting opacity
+                        "Don Ricardo" = "#D8B06A",
+                        "Sculptur" = "#5B4C44",
+                        "Svevo" = "#9E5B40",
+                        NULL)
+  snps <- tmp_df |> 
+    filter(!!sym(cultivar) < bonferroni) |> 
+    mutate(color = color_snps) |> 
+    dplyr::select(SNP, color)
+  
+  setwd(manhattan_dir)
+  CMplot(tmp_df,
+         col = c(alpha('#98DFFF', 0.4), alpha('#3C9DFF', 0.4)),
+         type = 'p',
+         plot.type="m",
+         cex = 0.5,
+         multraits=F,
+         chr.labels=paste("Chr",c(1:13),sep=""), 
+         threshold= bonferroni,
+         threshold.lty =1,
+         threshold.lwd = 1,
+         threshold.col=c("black"),
+         amplify=T,
+         highlight = snps$SNP, 
+         highlight.col = snps$color, 
+         highlight.pch = 16,
+         highlight.cex = 1.3,
+         signal.cex = 0,
+         file="jpg",
+         file.name=cultivar,
+         dpi=300,
+         file.output= T,
+         points.alpha=250,
+         legend.ncol=5,
+         legend.pos="left", 
+         cir.axis.col = 'black')
+  setwd(here())
+}
+map2(df_list, col_names, \(x, y) manhattan_cultivar(x, y))
 
 
 #===============================================================================
@@ -569,9 +622,16 @@ genes_table <- genes_table |>
   mutate(Gene = gsub('G', '_', Gene))
 
 translate_genes <- read_csv('data/raw_data/new_annotations.csv')
+closest_gene <- translate_genes  |> 
+  filter(chromosome == 'chr_13')  |>   # Filtrar por chromosome == chr_13
+  mutate(distance = pmin(abs(start - 1047926), abs(end - 1047926)))  |>   # Calcular la distancia
+  arrange(distance) |>   # Ordenar por distancia
+  slice_head(n = 1) |> 
+  separate(JGI_genes, into = c('delete', 'Gene'), sep = '\\|')
+
 translate_genes <- translate_genes |>
   separate(JGI_genes, into = c('delete', 'Gene'), sep = '\\|') |> 
-  filter(Gene %in% genes_table$Gene) |> 
+  filter(Gene %in% c(genes_table$Gene, closest_gene$Gene)) |> 
   janitor::clean_names() |> 
   dplyr::select(gene:seq_length, gene_2) |> 
   dplyr::relocate(Ensembl = gene_2)

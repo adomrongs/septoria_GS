@@ -323,4 +323,269 @@ cultivars <- c('PyrSep_105', 'PyrSep_107', 'PyrSep_115')
 cross1 <- IWB11991_indv[IWB11991_indv %in% cultivars]
 cross2 <- IWB74799_indv[IWB74799_indv %in% cultivars]
 
+
+#==============================================================================
+# Mix specific GWAS
+#==============================================================================
+
+
+# Results for PC1
+hits_mixes <- list('outputs/GWAS_wheat/mix1/PC1/GAPIT.Association.Filter_GWAS_results.csv',
+                   'outputs/GWAS_wheat/mix2/PC1/GAPIT.Association.Filter_GWAS_results.csv',
+                   'outputs/GWAS_wheat/mix3/PC1/GAPIT.Association.Filter_GWAS_results.csv')
+
+hits <- hits_mixes |> 
+  map_df(\(x) read_csv(x)  |> 
+        mutate(Mix = str_extract(x, '(mix[0-9])'),
+               Pos_MB = Pos/1000000, 
+               Chr = gsub('C', 'c', Chr))
+  ) 
+
+suplementary <- readxl::read_xlsx('data/raw_data/Review_table.xlsx', sheet = 3, col_names = T) |>
+  row_to_names(1) |> 
+  clean_names() |> 
+  mutate(start_interval_mb = as.numeric(start_interval_mb), 
+         end_interval_mb = as.numeric(end_interval_mb))
+
+find_closest <- function(chr, pos, table){
+  tmp_df <- table |> 
+    filter(chromosome == chr) |> 
+    mutate(Distance = case_when(
+      pos >= start_interval_mb & pos <= end_interval_mb ~ 0,  # Si está dentro del intervalo, distancia = 0
+      TRUE ~ pmin(abs(start_interval_mb - pos), abs(end_interval_mb - pos))  # Si está fuera, calcular la menor distancia
+    )) |> 
+    arrange(Distance) |> 
+    slice_head(n = 1) 
+  
+  return(tmp_df)
+}
+
+closest_qtl <- map2_df(hits$Chr, hits$Pos_MB, \(x, y) find_closest(x, y, suplementary))
+closest_qtl_df <- bind_cols(hits, closest_qtl |> dplyr::select(Distance, gene_qtl_name, start_interval_mb, end_interval_mb, doi))
+
+pvalues <- hits |> 
+  distinct(traits, Mix) |> 
+  (\(df) map2(df$traits, df$Mix, \(x, y) {
+    file <- paste0('outputs/GWAS_wheat/', y, '/PC1/GAPIT.Association.GWAS_Results.', x, '.csv')
+    tmp_pvalue <- read_csv(file)
+    return(tmp_pvalue)
+  }))() |> 
+  map(\(x) x |> dplyr::select(SNP, Chr, Pos, P.value, Effect)) |> 
+  bind_cols() |> 
+  mutate(min_P_value = pmin(`P.value...4`, `P.value...9`, `P.value...14`)) |> 
+  dplyr::select(SNP = 1, Chr = 2, Pos = 3, P.value = min_P_value)
+  
+
+markers_names <- read_delim("data/raw_data/90K.CSv2.Ann.info.txt", delim = "\t")
+markers_names <- markers_names %>% dplyr::select(SNP = ID, Name)
+colors_mixes <- c("mix1" = "#43B284FF",
+                  "mix2" = "#DD5129FF",
+                  "mix3" = "#0F7BA2FF",
+                  "mix4" = "#DD5129FF",
+                  "Not selected" = "grey")
+shape_traits <- c(
+  "pycnidiaPerCm2Leaf" = 16,
+  "pycnidiaPerCm2Lesion" = 17,
+  "PLACL" = 18
+)
+plot_df <- hits |> 
+  dplyr::select(SNP, traits, Mix) |> 
+  mutate(traits = gsub('^BLINK.', '', traits),
+         color = colors_mixes[Mix],
+         shape = shape_traits[traits]) |> 
+  left_join(markers_names)
+
+setwd('outputs/postGWAS_wheat/')
+CMplot(pvalues,
+       plot.type = "m",
+       multraits = FALSE,
+       col = c('grey', 'darkgrey', 'dimgray'),
+       threshold = 0.05/nrow(pvalues),
+       threshold.lty = c(1, 2), 
+       threshold.lwd = c(1, 1),
+       threshold.col = c("black", 'grey'),
+       amplify = TRUE,
+       bin.size = 1e6,
+       cex = 1, 
+       chr.den.col = NULL,
+       highlight = unique(plot_df$SNP),
+       highlight.col = unlist(plot_df$color),
+       highlight.pch = plot_df$shape, 
+       highlight.cex = 1.3,
+       signal.cex = 0,
+       signal.col = 'white', 
+       file = "jpg",
+       file.name = 'mixes',
+       dpi = 300,
+       file.output = T,
+       verbose = FALSE,
+       points.alpha = 250,
+       legend.ncol = 2,
+       legend.pos = "middle",
+       main = 'Mixes_specific hits')
+setwd(here())
+
+
+load('data/modified_data/3_wheat_GWAS.Rdata')
+snps <- as.list(hits$SNP)
+traits <- as.list(gsub('^BLINK.', '', hits$traits))
+mixes <- as.list(hits$Mix)
+blues_list <- list(mix_blues[[1]], mix_blues[[1]], mix_blues[[1]], mix_blues[[1]],
+                   mix_blues[[2]], mix_blues[[2]], 
+                   mix_blues[[3]])
+
+cultivars_boxplot <- pmap(list(snps, traits, mixes, blues_list), \(x,y,z,k) boxplot_mixes(genotype_wheat, x, y, z, k))
+
+png(paste0("outputs/postGWAS_wheat/boxplot_mixes.png"), width = 5000, height = 9000, res = 400)
+grid.arrange(grobs = cultivars_boxplot, ncol = 2)
+dev.off()
+
+hits <- hits |> 
+  dplyr::select(-1) |> 
+  dplyr::mutate(Chr = gsub('c', 'C', Chr),
+                traits = gsub('^BLINK.', '', traits))
+ 
+results <- data.frame(SNP = character(), Chr = integer(), Pos = integer(),
+                      Gene = character(), Distance = numeric(), traits = character(),
+                      stringsAsFactors = FALSE)
+for (i in 1:nrow(hits)) {
+  # Subset the genes on the same chromosome as the current GWAS hit
+  chr_genes <- gff %>% filter(Chr == hits$Chr[i])
+  # Loop through each gene on the chromosome
+  for (j in 1:nrow(chr_genes)) {
+    gene <- chr_genes[j, ]
+    # Calculate the distance from the SNP to the gene
+    if (hits$Pos[i] >= gene$start & hits$Pos[i] <= gene$end) {
+      # If the SNP is within the gene, distance is 0
+      distance <- 0
+    } else if (hits$Pos[i] < gene$start) {
+      # SNP is upstream of the gene, distance is the difference from start of gene
+      distance <- gene$start - hits$Pos[i]
+    } else if (hits$Pos[i] > gene$end) {
+      # SNP is downstream of the gene, distance is the difference from end of gene
+      distance <- hits$Pos[i] - gene$end
+    }
+    
+    # Keep genes with distance 0 (SNP inside the gene) or within the max distance
+    if (distance == 0 || distance <= max_distance) {
+      results <- rbind(results, data.frame(SNP = hits$SNP[i],
+                                           Chr = hits$Chr[i],
+                                           Pos = hits$Pos[i],
+                                           Gene = gene$Gene,
+                                           Start = gene$start,
+                                           End = gene$end,
+                                           Distance = distance, 
+                                           traits = hits$traits[i]))
+    }
+  }
+}
+
+yes <- results |> 
+  distinct(SNP, Gene) |> 
+  na.omit() |> 
+  pull(SNP) |> 
+  unique()
+
+no <- hits |> 
+  filter(!SNP %in% yes) 
+
+find_closest_gene <- function(gff, chr, pos) {
+  tmp_df <- gff |> 
+    filter(Chr == chr) |> 
+    mutate(Distance = pmin(abs(start - pos), abs(end - pos))) |> 
+    arrange(Distance) |> 
+    slice_head(n = 1)
+  
+  return(tmp_df)
+}
+
+new_df <- map2_dfr(no$Chr, no$Pos, \(x, y) find_closest_gene(gff, x, y))
+add <- new_df |> 
+  left_join(hits) |> 
+  dplyr::select(SNP, Chr, Pos, Gene, Start = start, End = end, Distance, traits)
+results <- bind_rows(results, add)
+
+unique_genes <- unique(results$Gene)
+GOs <- list()
+remove_by_exp <- c()
+
+for (i in seq_along(unique_genes)) {
+  url_gene <- unique_genes[i]
+  if (!i %% 25) { print(i) }
+  
+  if (!url_gene %in% remove_by_exp) {
+    url_init = "https://rest.uniprot.org/uniprotkb/stream?fields=accession%2Cgo%2Cprotein_name%2Cprotein_existence&format=tsv&query=%28"
+    url_fin = "%29"
+    url <- paste0(url_init, url_gene, url_fin)
+    
+    r <- httr::GET(url)
+    
+    # Usar tryCatch para manejar errores en GOwide2long
+    GOs[[i]] <- tryCatch(
+      {
+        data.frame(Gene = url_gene, GOwide2long(content2table(r)))
+      },
+      error = function(e) {
+        # Agregar el gene a remove_by_exp en caso de error
+        remove_by_exp <<- c(remove_by_exp, url_gene)
+        return(NULL)  # Retorna NULL si hay un error
+      }
+    )
+  }
+}
+GO_final <- do.call('rbind', GOs)
+rownames(GO_final) = NULL
+
+
+GO_final$GO_code <- sapply(GO_final$GO_code, function(x) gsub("^\\[(.*)\\]$", "\\1", x))
+GO_final$GO_class <- sapply(GO_final$GO_code, function(x) Ontology(x))
+
+results_df <- hits %>% 
+  left_join(results, by = "SNP") %>% 
+  left_join(GO_final, by = "Gene") %>% 
+  dplyr::select(Mix, traits.x, SNP, Chr.x, Pos.x, P.value, Distance,
+                Gene, Entry, Prot_name, GO_code, GO_name, GO_class, MAF) |> 
+  distinct()
+
+effects  <- hits |> 
+  distinct(traits, Mix, SNP) |> 
+  (\(df) pmap(df, \(traits, Mix, SNP) {  
+    file <- paste0('outputs/GWAS_wheat/', Mix, '/PC1/GAPIT.Association.GWAS_Results.BLINK.', traits, '.csv')
+    tmp_pvalue <- read_csv(file)
+    
+    effect <- tmp_pvalue |> 
+      filter(SNP == !!SNP) |> 
+      dplyr::select(SNP, Effect)
+    
+    return(effect)
+  }))() |> 
+  bind_rows()
+
+gwas_table <- results_df |> 
+  left_join(effects) |> 
+  dplyr::select(Mix, Trait = traits.x, SNP, Chr = Chr.x, Pos = Pos.x, MAF, P.value, Effect) |> 
+  distinct() |> 
+  mutate(Trait = case_when(
+    Trait == 'pycnidiaPerCm2Leaf' ~ 'PCm2Leaf',
+    Trait == 'pycnidiaPerCm2Lesion' ~ 'PCm2Lesion', 
+    TRUE ~ Trait  # Mantiene los valores originales si no cumplen las condiciones
+  ))
+
+write_csv(gwas_table, file = 'outputs/postGWAS_wheat/gwas_mixes.csv')
+
+markers_names <- read_delim("data/raw_data/90K.CSv2.Ann.info.txt", delim = "\t") |> 
+  filter(ID %in% gwas_table$SNP) |> 
+  dplyr::select(ID, Name)
+
+genes_table <- results_df |> 
+  dplyr::select(Mix, SNP, Distance, Gene:GO_code) |> 
+  group_by(Mix, SNP, Distance, Gene, Entry, Prot_name) |> 
+  summarise(GO_code = paste(unique(GO_code), collapse = ", "), .groups = "drop") |> 
+  na.omit()
+
+write_csv(genes_table, file = 'outputs/postGWAS_wheat/genes_mixes.csv')
+
+
+
+
  

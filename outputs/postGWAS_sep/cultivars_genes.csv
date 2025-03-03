@@ -1,32 +1,31 @@
-Ensembl,Ensembl_length,gene,chromosome,start,end,seq_description,seq_length,cytoplasmic_effector,apoplastic_effector,SignalP,tmrs,IPR
-Mycgr3_88620,147,ZtIPO323_000480,chr_1,236211,236788,unnamed protein product,177,Y (0.826),-,0,0,NA
-Mycgr3_106743,257,ZtIPO323_000490,chr_1,237794,238957,uncharacterized protein MYCGRDRAFT_106743,258,-,Y (0.687),1,0,NA
-Mycgr3_88622,317,ZtIPO323_000500,chr_1,239195,240148,uncharacterized protein MYCGRDRAFT_88622,318,Y (0.515),-,0,0,NA
-Mycgr3_88644,2595,ZtIPO323_000800,chr_1,316103,318736,Ca2+/calmodulin-dependent protein kinase,878,-,-,0,0,NA
-Mycgr3_88644,2595,ZtIPO323_000810,chr_1,319127,319619,serine/threonine protein kinase,146,Y (0.677),-,0,0,Proteijn kinase
-Mycgr3_88644,2595,ZtIPO323_000820,chr_1,319885,321381,Ca2+/calmodulin-dependent protein kinase,499,Y (0.596),-,0,0,Queuine tRNA-ribosyltransferase 
-Mycgr3_88644,2595,ZtIPO323_000830,chr_1,321577,322227,Ca2+/calmodulin-dependent protein kinase,217,-,-,0.04,0,NEK Serine/Threonine Protein Kinase
-Mycgr3_88644,2595,ZtIPO323_000840,chr_1,323663,325963,Ca2+/calmodulin-dependent protein kinase,713,-,-,0,0,NEK Serine/Threonine Protein Kinase
-Mycgr3_65205,479,ZtIPO323_003810,chr_1,1141409,1143547,KJX96606.1 aldehyde dehydrogenase (NAD+) like protein,480,-,-,0,0,Aldehyde dehydrogenase LUC3-l
-Mycgr3_106868,1666,ZtIPO323_003820,chr_1,1143611,1146585,putative ABC transporter,834,-,-,0,2,ATP-binding cassette sub-family D 
-Mycgr3_88868,366,ZtIPO323_003830,chr_1,1146594,1148506,ferric reductase-like transmembrane component,568,-,-,0,7,Ferric/Cupric Reductase Transmembrane Component
-Mycgr3_89073,357,ZtIPO323_006430,chr_1,1804779,1809107,putative oxidoreductase,358,-,-,0,2,Short-chain dehydrogenase/reductase SDR 
-Mycgr3_98331,746,ZtIPO323_006440,chr_1,1809298,1811836,CAT2 catalase,747,-,-,0,0,"Catalase, mono-functional, haem-containing"
-Mycgr3_65563,236,ZtIPO323_006450,chr_1,1812393,1814082,26S proteasome non-ATPase regulatory subunit 9,237,Y (0.521),-,0,0,26S Proteasome non-ATPase regulatory subunit 9 (IPR035269)
-Mycgr3_108444,684,ZtIPO323_039400,chr_3,527862,529824,Choline oxidase,543,-,-,0,0,Glucose-methanol-choline oxidoreductase
-Mycgr3_108445,516,ZtIPO323_039410,chr_3,530530,532485,NAD/NADP-dependent betaine aldehyde dehydrogenase,514,-,-,0,0,Aldehyde dehydrogenase
-Mycgr3_104294,205,ZtIPO323_059010,chr_4,2427396,2428509,benzoquinone reductase,206,-,-,0,0,Flavoprotein WrbA-like 
-Mycgr3_41214,478,ZtIPO323_059020,chr_4,2429578,2431254,phthalate transporter like protein,479,-,-,0,12,Major facilitator superfamily 
-Mycgr3_92832,179,ZtIPO323_059030,chr_4,2431895,2432434,uncharacterized protein MYCGRDRAFT_92832,180,Y (0.675),-,0,0,NA
-Mycgr3_74362,343,ZtIPO323_088980,chr_8,187972,189785,glycosyltransferase family 32 protein,344,-,-,0.22,2,Glycosyltransferase domain-containing protein
-Mycgr3_46958,444,ZtIPO323_089000,chr_8,189780,192636,tRNA-guanine transglycosylase family protein,453,-,-,0,0,NA
-Mycgr3_46279,300,ZtIPO323_088990,chr_8,189828,190891,Altered inheritance of mitochondria protein 6,315,-,-,1,0,Histone acetyltransferase RTT109-like 
-Mycgr3_94965,545,ZtIPO323_089890,chr_8,459383,463143,uncharacterized protein MYCGRDRAFT_94965,494,-,-,0,0,Histone acetyltransferase RTT109-like (IPR051236)
-Mycgr3_94966,282,ZtIPO323_089900,chr_8,459956,463652,"oligomeric golgi complex component, COG2-domain-containing protein",283,Y (0.6),-,0,0,"COG complex component, COG2"
-Mycgr3_74460,310,ZtIPO323_089910,chr_8,463960,465126,mitochondrial 54S ribosomal protein MRPL1,311,-,-,0,0,Ribosomal protein uL1/ribosomal biogenesis protein
-Mycgr3_74536,512,ZtIPO323_090540,chr_8,708975,710975,Glutathione synthetase,513,-,-,0,0,Glutathione synthase
-Mycgr3_95893,830,ZtIPO323_102580,chr_9,1646494,1648399,unnamed protein product,376,Y (0.622),-,0,0,NA
-Mycgr3_95893,830,ZtIPO323_102590,chr_9,1648629,1650432,unnamed protein product,448,Y (0.64),-,0,0,NA
-Mycgr3_47943,481,ZtIPO323_102600,chr_9,1650610,1653327,putative transporter,512,-,-,0,12,Major facilitator superfamily
-Mycgr3_50095,2074,ZtIPO323_113470,chr_11,849569,853734,ochratoxin A non-ribosomal peptide synthetase like protein,1038,-,-,0,0,Adenylate-forming Reductase
-Mycgr3_51018,2622,ZtIPO323_124400,chr_13,679175,687422,polyketide synthase,2627,-,-,0,0,Polyketide and Nonribosomal Peptide Biosynthesis Enzymes
+gene,position,seq_description,seq_length,cytoplasmic_effector,apoplastic_effector,SignalP,tmrs,IPR
+ZtIPO323_000480,chr_1:236211-236788,unnamed protein product,177,Y,-,0,0,NA
+ZtIPO323_000490,chr_1:237794-238957,uncharacterized protein MYCGRDRAFT_106743,258,-,Y,1,0,NA
+ZtIPO323_000500,chr_1:239195-240148,uncharacterized protein MYCGRDRAFT_88622,318,Y,-,0,0,NA
+ZtIPO323_000840,chr_1:323663-325963,Ca2+/calmodulin-dependent protein kinase,713,-,-,0,0,NEK Serine/Threonine Protein Kinase
+ZtIPO323_003810,chr_1:1141409-1143547,KJX96606.1 aldehyde dehydrogenase (NAD+) like protein,480,-,-,0,0,Aldehyde dehydrogenase LUC3-l
+ZtIPO323_003820,chr_1:1143611-1146585,putative ABC transporter,834,-,-,0,2,ATP-binding cassette sub-family D 
+ZtIPO323_003820,chr_1:1143611-1146585,putative ABC transporter,834,-,-,0,2,ATP-binding cassette sub-family D 
+ZtIPO323_003830,chr_1:1146594-1148506,ferric reductase-like transmembrane component,568,-,-,0,7,Ferric/Cupric Reductase Transmembrane Component
+ZtIPO323_006430,chr_1:1804779-1809107,putative oxidoreductase,358,-,-,0,2,Short-chain dehydrogenase/reductase SDR 
+ZtIPO323_006440,chr_1:1809298-1811836,CAT2 catalase,747,-,-,0,0,"Catalase, mono-functional, haem-containing"
+ZtIPO323_006450,chr_1:1812393-1814082,26S proteasome non-ATPase regulatory subunit 9,237,Y,-,0,0,26S Proteasome non-ATPase regulatory subunit 9 (IPR035269)
+ZtIPO323_113470,chr_11:849569-853734,ochratoxin A non-ribosomal peptide synthetase like protein,1038,-,-,0,0,Adenylate-forming Reductase
+ZtIPO323_113470,chr_11:849569-853734,ochratoxin A non-ribosomal peptide synthetase like protein,1038,-,-,0,0,Adenylate-forming Reductase
+ZtIPO323_124400,chr_13:679175-687422,polyketide synthase,2627,-,-,0,0,Polyketide and Nonribosomal Peptide Biosynthesis Enzymes
+ZtIPO323_125710,chr_13:1053026-1056780,histidine kinase like protein,999,-,-,0,NA,Two-component histidine protein kinase
+ZtIPO323_039400,chr_3:527862-529824,Choline oxidase,543,-,-,0,0,Glucose-methanol-choline oxidoreductase
+ZtIPO323_039410,chr_3:530530-532485,NAD/NADP-dependent betaine aldehyde dehydrogenase,514,-,-,0,0,Aldehyde dehydrogenase
+ZtIPO323_059010,chr_4:2427396-2428509,benzoquinone reductase,206,-,-,0,0,Flavoprotein WrbA-like 
+ZtIPO323_059020,chr_4:2429578-2431254,phthalate transporter like protein,479,-,-,0,12,Major facilitator superfamily 
+ZtIPO323_059030,chr_4:2431895-2432434,uncharacterized protein MYCGRDRAFT_92832,180,Y,-,0,0,NA
+ZtIPO323_088980,chr_8:187972-189785,glycosyltransferase family 32 protein,344,-,-,0.22,2,Glycosyltransferase domain-containing protein
+ZtIPO323_089000,chr_8:189780-192636,tRNA-guanine transglycosylase family protein,453,-,-,0,0,NA
+ZtIPO323_088990,chr_8:189828-190891,Altered inheritance of mitochondria protein 6,315,-,-,1,0,Histone acetyltransferase RTT109-like 
+ZtIPO323_089890,chr_8:459383-463143,uncharacterized protein MYCGRDRAFT_94965,494,-,-,0,0,Histone acetyltransferase RTT109-like (IPR051236)
+ZtIPO323_089900,chr_8:459956-463652,"oligomeric golgi complex component, COG2-domain-containing protein",283,Y,-,0,0,"COG complex component, COG2"
+ZtIPO323_089910,chr_8:463960-465126,mitochondrial 54S ribosomal protein MRPL1,311,-,-,0,0,Ribosomal protein uL1/ribosomal biogenesis protein
+ZtIPO323_090540,chr_8:708975-710975,Glutathione synthetase,513,-,-,0,0,Glutathione synthase
+ZtIPO323_102580,chr_9:1646494-1648399,unnamed protein product,376,Y,-,0,0,NA
+ZtIPO323_102590,chr_9:1648629-1650432,unnamed protein product,448,Y,-,0,0,NA
+ZtIPO323_102600,chr_9:1650610-1653327,putative transporter,512,-,-,0,12,Major facilitator superfamily

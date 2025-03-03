@@ -1497,8 +1497,7 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
   marker <- markers_names$Name
   # Create the plot
   p <- ggplot(tmp_pheno, aes(x = as.factor(.data[[marker]]),    
-                             y = .data[[clean_trait]],
-                             fill = as.factor(.data[[marker]]))) +
+                             y = .data[[clean_trait]])) +
     
     # Half violin plot
     stat_halfeye(adjust = .5, width = .3, justification = -.7, .width = 0, point_colour = NA) +
@@ -1515,7 +1514,7 @@ plotAllelicdiff <- function(phenotype, genotype, marker, trait){
     geom_boxplot(width = 0.2, outlier.shape = NA, color = "black", aes(fill = as.factor(.data[[marker]]))) +
     
     # Escala de colores
-    scale_fill_manual(values = c("grey", "#F4A261FF")) +
+    # scale_fill_manual(values = c("grey", "#F4A261FF")) +
     scale_x_discrete(
       labels = counts$label,
       expand = c(0,0)) +# Ajusta los márgenes izquierdo (0.05) y derecho (0.1)
@@ -2599,4 +2598,97 @@ cv_cultivar <- function(phenotype, kinship, test, trait, blues_all){
     mutate(Cultivar = cultivar)
   
   return(ability)
+}
+
+boxplot_mixes <- function(genotype, marker, trait, mix, phenotype){
+  tmp_geno <- genotype[, colnames(genotype) %in% c("GenoID", marker)] |> 
+    mutate(!!marker := round(as.numeric(!!sym(marker)), 0))
+  
+  # Filtrar los aislados que tienen el valor 1 en el marcador
+  highlight_isolates <- tmp_geno |> 
+    filter(!!sym(marker) == 1 | !!sym(marker) == 2) |>  # Usar sym(marker) para referenciar correctamente
+    pull(GenoID)  # Extraer la columna "GenoID" como vector
+  
+  
+  if(marker == 'IWB69435'){
+    tmp_geno[tmp_geno[[marker]] == 1, marker] <- 0
+  }
+  if(marker == 'IWB2868'){
+    tmp_geno[tmp_geno[[marker]] == 1, marker] <- 2
+  }
+  if(marker == 'IWB15209'){
+    tmp_geno[tmp_geno[[marker]] == 1, marker] <- 0
+  }
+  if(marker == 'IWB25763'){
+    tmp_geno[tmp_geno[[marker]] == 1, marker] <- 2
+  }
+  
+  tmp_pheno <- phenotype |> 
+    left_join(tmp_geno) |> 
+    dplyr::select(GenoID, marker, trait)  |> 
+    mutate(Marker = marker)
+  mean_values <- tmp_pheno |> 
+    group_by(!!sym(marker)) |> 
+    summarize(mean = round(mean(!!sym(trait)), 2))
+  counts <- tmp_pheno |> 
+    distinct(!!sym(marker), GenoID) |> 
+    group_by(!!sym(marker)) |> 
+    summarise(n = n(), .groups = 'drop') %>%
+    mutate(label = paste0(as.factor(!!sym(marker)), "\n", "n = ", n,  '\n (μ = ', mean_values$mean, ')'))
+  
+  values <- switch(trait,
+                   "pycnidiaPerCm2Leaf" = c("grey", "#F4A261FF", 'grey'),
+                   "pycnidiaPerCm2Lesion" = c("grey", "#795548FF", 'grey'),
+                   "PLACL" = c("grey", "#2A9D8FFF", 'grey'),
+                   NULL)  # Default if trait doesn't match
+  
+  color_strip <- switch(mix,
+                        "mix1" = alpha("#43B284FF", 0.7),  # Lighter by adjusting opacity
+                        "mix2" = alpha("#DD5129FF", 0.7),
+                        "mix3" = alpha("#0F7BA2FF", 0.7),
+                        "mix4" = alpha("#9E5B40", 0.7),
+                        NULL)
+  
+  markers_names <- read_delim("data/raw_data/90K.CSv2.Ann.info.txt", delim = "\t")
+  markers_names <- markers_names %>% dplyr::select(ID, Name) %>% 
+    filter(ID %in% marker)
+  colnames(tmp_pheno)[2] <- markers_names$Name
+  tmp_pheno[['Marker']] <- markers_names$Name
+  marker <- markers_names$Name
+  
+  boxplot <- ggplot(tmp_pheno, aes(x = factor(!!sym(marker)), y = !!sym(trait), fill = factor(!!sym(marker)))) +
+    stat_halfeye(adjust = .5, width = .3, justification = -.7, .width = 0, point_colour = NA) +
+    stat_dots(side = "left",
+              justification = 1.5,
+              binwidth = NA,
+              dotsize = 0.8,
+              overflow = "compress",
+              scale = 0.4) +
+    geom_boxplot(outliers = F, fatten = NULL, width = 0.15) +
+    stat_summary(fun = mean, geom = "crossbar", width = 0.15, color = "black", size = 0.3, 
+                 position = position_dodge(width = 0.15)) +
+    labs(x = mix, y = trait) +
+    scale_x_discrete(
+      labels = counts$label) +
+    theme_ipsum() + 
+    theme(
+      panel.grid = element_blank(),
+      legend.position = "none",
+      plot.title = element_blank(),
+      strip.text = element_text(size = 13, face = "plain", color = "black", hjust = 0.5),
+      strip.background = element_rect(fill = color_strip),
+      axis.line = element_line(colour = "black"),
+      panel.border = element_rect(colour = "black", fill = NA, size = 0.5),
+      axis.title.x = element_text(size = 18, face = "plain"),
+      axis.title.y = element_text(size = 18, face = "plain"),
+      axis.text.x = element_text(size = 18),
+      axis.text.y = element_text(size = 18)
+    ) +
+    facet_grid(. ~ Marker) +
+    scale_fill_manual(values = values) +
+    coord_cartesian(ylim = c(min(tmp_pheno[[trait]], na.rm = TRUE), max(tmp_pheno[[trait]], na.rm = TRUE) + 5),
+                    xlim = c(min = 0.3, max = ifelse(length(unique(tmp_pheno[[marker]])) == 3, 3.5, 2.5)))
+  
+  print(paste0('Marker ', marker, ' completed'))
+  return(boxplot)
 }

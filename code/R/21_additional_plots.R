@@ -468,18 +468,45 @@ mix_info_df <- data.frame(mix1 = mix1, mix2 = mix2, mix3 = mix3, mix4 = mix4) |>
 
 genes <- read_csv('outputs/postGWAS_sep/cultivars_genes.csv') 
 complete_table <- read_csv('outputs/postGWAS_sep/cultivars_hit.csv') |> 
-  mutate(Gene = gsub('G', '_', Gene)) |> 
-  left_join(genes, by = c('Gene' = 'Ensembl')) |> 
-  distinct() |> 
-  mutate(Pos = as.numeric(gsub('.*_', '', SNP)),  # Ensure Pos is numeric
-         Distance = case_when(
-           Pos >= start & Pos <= end ~ 0,  # If SNP is between start and end, set distance to 0
-           TRUE ~ pmin(abs(start - Pos), abs(end - Pos))  # Else calculate the minimum distance to start or end
+  mutate(Gene = gsub('G', '_', Gene),
+         Gene = case_when(
+           is.na(Gene) ~ 'Mycgr3_78016',  # Reemplazar NA en Gene por 'Mycgr3_78016'
+           TRUE ~ Gene  # Mantener el valor de Gene si no es NA
          )) |> 
-  filter(Distance < 2000) |> 
-  dplyr::select(-Pos)
-  
+  left_join(genes, by = c('Gene' = 'Ensembl')) |>  # Unir con los datos de genes
+  distinct() |>  # Eliminar duplicados
+  mutate(Pos = as.numeric(gsub('.*_', '', SNP)),  # Asegurar que Pos sea numérico
+         Distance = case_when(
+           Pos >= start & Pos <= end ~ 0,  # Si el SNP está entre el inicio y fin, establecer distancia a 0
+           TRUE ~ pmin(abs(start - Pos), abs(end - Pos))  # Sino, calcular la distancia mínima
+         )) |> 
+  filter(!(Distance > 2000 & Gene != 'Mycgr3_78016')) |>  # Filtrar solo las filas donde Distance > 2000, excepto cuando Gene sea 'Mycgr3_78016'
+  dplyr::select(-Pos) |>  # Eliminar la columna Pos
+  arrange(Cultivar) 
 
+
+gwas_table_final <- complete_table |> 
+  dplyr::select(Cultivar:Distance, gene) |> 
+  distinct() |> 
+  mutate(chr = as.numeric(gsub('X', '', gsub('_.*', '', SNP))), 
+         pos = as.numeric(gsub('.*_', '', SNP))) |> 
+  arrange(Cultivar, Traits, chr, pos) |> 
+  dplyr::select(-c(chr, pos))
+
+genes_table <- complete_table |> 
+  dplyr::select(gene:IPR) |> 
+  arrange(chromosome, start, end) |> 
+  mutate(position = paste0(chromosome, ':', start, '-', end),
+         across(
+           cytoplasmic_effector:apoplastic_effector,
+           \(x) ifelse(grepl('Y', x), 'Y', '-')
+           )
+         ) |> 
+  dplyr::select(-c(chromosome, start, end)) |> 
+  dplyr::relocate(gene, position)
+  
+write_csv(gwas_table_final, 'outputs/postGWAS_sep/cultivars_hit.csv')
+write_csv(genes_table, 'outputs/postGWAS_sep/cultivars_genes.csv')
 write_csv(complete_table, 'outputs/postGWAS_sep/complete_info_cultivars.csv')
 
 
@@ -685,7 +712,20 @@ barplot_expression
 dev.off()
 
 
+ft_pheno <- read_csv('data/modified_data/clean_phenotype_no_outliers.csv') |> 
+  pivot_longer(cols = c(PLACL, pycnidiaPerCm2Leaf, pycnidiaPerCm2Lesion), 
+               names_to = 'Trait', 
+               values_to = 'Value') |> 
+  filter(Strain %in% c('mix1', 'mix2', 'mix3', 'mix4'))
 
+plot2 <- ggplot(ft_pheno, aes(y = Value, fill = Strain)) + 
+  geom_histogram( color = 'black') + 
+  coord_flip() + 
+  scale_fill_manual(values = colors_mixes) + 
+  facet_grid(Strain ~ Trait, scales = "free_x")
+png(paste0("outputs/plots/trait_distribution.png"), width = 4000, height = 2000, res = 400)
+plot2
+dev.off()
 
 
 
